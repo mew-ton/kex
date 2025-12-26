@@ -17,6 +17,8 @@ var StartCommand = &cli.Command{
 }
 
 func runStart(c *cli.Context) error {
+	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
+
 	// 1. Resolve configuration
 	root := "contents"
 	if _, err := os.Stat(root); os.IsNotExist(err) {
@@ -39,6 +41,7 @@ func runStart(c *cli.Context) error {
 
 	// 4. Start Server
 	srv := server.New(idx)
+	fmt.Fprintf(os.Stderr, "Server listening on stdio...\n")
 	if err := srv.Serve(); err != nil {
 		return cli.Exit(fmt.Sprintf("Server error: %v", err), 1)
 	}

@@ -11,10 +11,11 @@ import (
 
 // Indexer manages the document collection and search index
 type Indexer struct {
-	Root      string
-	Documents map[string]*domain.Document   // ID -> Document
-	Index     map[string][]*domain.Document // Keyword -> Documents
-	Errors    []error                       // Validation errors found during load
+	Root          string
+	IncludeDrafts bool                          // If true, draft documents are indexed
+	Documents     map[string]*domain.Document   // ID -> Document
+	Index         map[string][]*domain.Document // Keyword -> Documents
+	Errors        []error                       // Validation errors found during load
 }
 
 // New creates a new Indexer
@@ -81,8 +82,8 @@ func (i *Indexer) parseDocuments(paths []string) ([]*domain.Document, []error) {
 			errs = append(errs, fmt.Errorf("%s: %w", path, err))
 			continue
 		}
-		// Skip drafts
-		if doc.Status == domain.StatusDraft {
+		// Skip drafts unless configured
+		if !i.IncludeDrafts && doc.Status == domain.StatusDraft {
 			continue
 		}
 		docs = append(docs, doc)

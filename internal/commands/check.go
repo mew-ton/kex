@@ -9,6 +9,7 @@ import (
 	"kex/internal/domain"
 	"kex/internal/indexer"
 
+	"github.com/pterm/pterm"
 	"github.com/urfave/cli/v2"
 )
 
@@ -19,57 +20,97 @@ var CheckCommand = &cli.Command{
 }
 
 func runCheck(c *cli.Context) error {
+	pterm.DefaultSection.Println("Checking documents...")
+
 	// 1. Resolve configuration (root directory)
-	// TODO: Load .kex.yaml properly. For now we assume defaults or check contents/
 	root := "contents"
-	configPath := ".kex.yaml" // Just check existence check?
+	configPath := ".kex.yaml"
 	if _, err := os.Stat(configPath); err == nil {
-		// Parse config if we had a config parser.
-		// For v1 we can just default to contents/ unless we really implement config loading.
+		// Parse config placeholder
 	}
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
-		return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
+		pterm.Error.Printf("Error: directory '%s' not found. Run 'kex init'?\n", root)
+		return cli.Exit("", 1)
 	}
 
-	fmt.Printf("Checking documents in: %s\n", root)
-
-	// 2. Load Indexer (Build Phase)
+	// 2. Load Indexer
+	spinner, _ := pterm.DefaultSpinner.Start("Loading documents...")
 	idx := indexer.New(root)
+	idx.IncludeDrafts = true
 	if err := idx.Load(); err != nil {
+		spinner.Fail("Failed to load documents")
 		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}
+	spinner.Success("Documents loaded")
 
 	// 3. Validation Logic
-	errorCount := 0
+	stats := struct {
+		Adopted       int
+		Draft         int
+		AdoptedErrors int
+		DraftWarnings int // Draft errors are warnings
+		ParseErrors   int
+	}{}
 
-	// 3.1 Report Parsing Errors
+	// 3.1 Report Parsing Errors (These are fatal to the specific file)
 	for _, err := range idx.Errors {
-		fmt.Printf("Error: %v\n", err)
-		errorCount++
+		pterm.Error.Printf("Parse Error: %v\n", err)
+		stats.ParseErrors++
 	}
 
-	// 3.2 Validate Valid Documents
+	// 3.2 Validate Documents
 	for _, doc := range idx.Documents {
+		if doc.Status == domain.StatusDraft {
+			stats.Draft++
+		} else {
+			stats.Adopted++
+		}
+
 		if err := validateDocument(doc); err != nil {
-			fmt.Printf("Error: [%s] %v\n", doc.Path, err)
-			errorCount++
+			if doc.Status == domain.StatusDraft {
+				pterm.Warning.Printf("[%s] (Draft) %v\n", doc.ID, err)
+				stats.DraftWarnings++
+			} else {
+				pterm.Error.Printf("[%s] (Adopted) %v\n", doc.ID, err)
+				stats.AdoptedErrors++
+			}
 		}
 	}
 
-	if errorCount > 0 {
-		return cli.Exit(fmt.Sprintf("\nFound %d errors.", errorCount), 1)
+	// 4. Statistics Table
+	pterm.Println() // Spacer
+	pterm.DefaultSection.Println("Statistics")
+
+	tableData := [][]string{
+		{"Metric", "Count"},
+		{"Total Documents", fmt.Sprintf("%d", len(idx.Documents))},
+		{"Adopted", fmt.Sprintf("%d", stats.Adopted)},
+		{"Draft", fmt.Sprintf("%d", stats.Draft)},
+		{"Parse Errors", fmt.Sprintf("%d", stats.ParseErrors)},
+		{"Adopted Errors", fmt.Sprintf("%d", stats.AdoptedErrors)},
+		{"Draft Warnings", fmt.Sprintf("%d", stats.DraftWarnings)},
 	}
 
-	fmt.Println("All checks passed.")
+	// Render table
+	// We use a simple table render
+	pterm.DefaultTable.WithHasHeader().WithData(tableData).Render()
+
+	pterm.Println()
+
+	// 5. Exit Code Logic
+	if stats.AdoptedErrors > 0 || stats.ParseErrors > 0 {
+		pterm.Error.Println("Check failed. Please fix errors.")
+		return cli.Exit("", 1)
+	}
+
+	pterm.Success.Println("All checks passed.")
 	return nil
 }
 
 func validateDocument(doc *domain.Document) error {
-	// Check Status
-	if doc.Status == domain.StatusDraft {
-		return fmt.Errorf("document is in 'draft' status")
-	}
+	// Note: We no longer fail simply for being Draft.
+	// We only check for inconsistencies (like filename mismatch)
 
 	// Check Filename matches ID
 	filename := filepath.Base(doc.Path)
