@@ -1,5 +1,8 @@
 # Kex (Knowledge Exchange)
 
+**English** | [日本語](./README.ja.md)
+
+
 **Kex** is a lightweight Document Librarian and MCP (Model Context Protocol) Server designed to manage and serve coding guidelines and project documentation. It helps AI agents (and humans) access the right documentation at the right time.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
