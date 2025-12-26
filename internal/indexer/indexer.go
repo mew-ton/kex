@@ -14,6 +14,7 @@ type Indexer struct {
 	Root      string
 	Documents map[string]*domain.Document   // ID -> Document
 	Index     map[string][]*domain.Document // Keyword -> Documents
+	Errors    []error                       // Validation errors found during load
 }
 
 // New creates a new Indexer
@@ -22,6 +23,7 @@ func New(root string) *Indexer {
 		Root:      root,
 		Documents: make(map[string]*domain.Document),
 		Index:     make(map[string][]*domain.Document),
+		Errors:    []error{},
 	}
 }
 
@@ -36,12 +38,9 @@ func (i *Indexer) Load() error {
 
 	// 2. Parse valid documents
 	docs, errs := i.parseDocuments(paths)
-	if len(errs) > 0 {
-		// In a real CLI we might want to log warnings,
-		// but for now we just proceed with valid ones or return error?
-		// Design says "Check" command validates. "Start" just loads valid ones.
-		// We'll proceed with valid docs.
-	}
+
+	// Store errors for validation tools
+	i.Errors = append(i.Errors, errs...)
 
 	// 3. Register documents to internal maps
 	for _, doc := range docs {
