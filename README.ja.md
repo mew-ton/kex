@@ -44,20 +44,21 @@ kex init
 
 ### 2. ドキュメントの作成
 
-`contents/` ディレクトリ内にマークダウンファイルを作成します。各ファイルには有効な YAML Frontmatter が**必須**です:
+`contents/` ディレクトリ内にマークダウンファイルを作成します。各ファイルには有効な YAML Frontmatter が**必須**です。
+また、**AI ファースト** なドキュメント管理を実現するため、ドキュメントの本文は**英語**で記述することを強く推奨します。（多言語対応の AI であっても、英語のほうがコンテキストの理解精度が高いためです）
 
 ```markdown
 ---
 id: my-guideline
-title: コーディング規約
-description: Go 開発のためのガイドライン
+title: Coding Standards
+description: Guidelines for Go development
 status: adopted
 keywords: [go, style, lint]
 ---
 
-# コーディング規約
+# Coding Standards
 
-ここにコンテンツを記述します...
+Write your content here...
 ```
 
 **ステータスの種類:**
