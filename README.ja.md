@@ -95,6 +95,21 @@ Kex は接続された AI エージェントに対して以下のツールを公
 -   `search_documents(keywords: string[])`: 特定のキーワードに一致するドキュメントを検索します。
 -   `read_document(id: string)`: ID を指定してドキュメントの完全な内容を取得します。
 
+## クライアント設定
+
+MCP クライアント (例: Claude Desktop) で Kex を使用するには、クライアントの設定ファイル (`claude_desktop_config.json`) に以下の設定を追加してください:
+
+```json
+{
+  "mcpServers": {
+    "kex": {
+      "command": "kex",
+      "args": ["start"]
+    }
+  }
+}
+```
+
 ## 設定
 
 `.kex.yaml`:

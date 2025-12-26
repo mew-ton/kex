@@ -95,6 +95,21 @@ Kex exposes the following tools to connected AI agents:
 -   `search_documents(keywords: string[])`: Find documents matching specific keywords.
 -   `read_document(id: string)`: Retrieve the full content of a document by its ID.
 
+## Client Configuration
+
+To use Kex with an MCP Client (e.g., Claude Desktop), add the following configuration to your client's settings file (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "kex": {
+      "command": "kex",
+      "args": ["start"]
+    }
+  }
+}
+```
+
 ## Configuration
 
 `.kex.yaml`:
