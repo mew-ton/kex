@@ -6,7 +6,7 @@ description: >
 keywords:
   - readability
   - maintainability
-  - function-design
+  - function
 ---
 
 ## Summary

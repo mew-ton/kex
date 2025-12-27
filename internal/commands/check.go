@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -23,45 +22,62 @@ var CheckCommand = &cli.Command{
 func runCheck(c *cli.Context) error {
 	pterm.DefaultSection.Println("Checking documents...")
 
-	// 1. Resolve configuration (root directory)
-	// 1. Resolve configuration
-	cfg, err := config.Load()
+	cfg, err := resolveConfig()
 	if err != nil {
 		pterm.Warning.Printf("Failed to load config, using defaults: %v\n", err)
 	}
-	root := cfg.Root
 
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		pterm.Error.Printf("Error: directory '%s' not found. Run 'kex init'?\n", root)
+	idx, err := loadIndexer(cfg.Root)
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
+	}
+
+	stats := validateAndReport(idx)
+	printStatistics(stats, len(idx.Documents))
+
+	if stats.AdoptedErrors > 0 || stats.ParseErrors > 0 {
+		pterm.Error.Println("Check failed. Please fix errors.")
 		return cli.Exit("", 1)
 	}
 
-	// 2. Load Indexer
+	pterm.Success.Println("All checks passed.")
+	return nil
+}
+
+func resolveConfig() (config.Config, error) {
+	return config.Load()
+}
+
+func loadIndexer(root string) (*indexer.Indexer, error) {
 	spinner, _ := pterm.DefaultSpinner.Start("Loading documents...")
 	idx := indexer.New(root)
 	idx.IncludeDrafts = true
 	if err := idx.Load(); err != nil {
 		spinner.Fail("Failed to load documents")
-		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
+		return nil, err
 	}
 	spinner.Success("Documents loaded")
+	return idx, nil
+}
 
-	// 3. Validation Logic
-	stats := struct {
-		Adopted       int
-		Draft         int
-		AdoptedErrors int
-		DraftWarnings int // Draft errors are warnings
-		ParseErrors   int
-	}{}
+type CheckStats struct {
+	Adopted       int
+	Draft         int
+	AdoptedErrors int
+	DraftWarnings int
+	ParseErrors   int
+}
 
-	// 3.1 Report Parsing Errors (These are fatal to the specific file)
+func validateAndReport(idx *indexer.Indexer) CheckStats {
+	var stats CheckStats
+
+	// Report Parsing Errors
 	for _, err := range idx.Errors {
 		pterm.Error.Printf("Parse Error: %v\n", err)
 		stats.ParseErrors++
 	}
 
-	// 3.2 Validate Documents
+	// Validate Documents
 	for _, doc := range idx.Documents {
 		if doc.Status == domain.StatusDraft {
 			stats.Draft++
@@ -79,14 +95,16 @@ func runCheck(c *cli.Context) error {
 			}
 		}
 	}
+	return stats
+}
 
-	// 4. Statistics Table
+func printStatistics(stats CheckStats, totalDocs int) {
 	pterm.Println() // Spacer
 	pterm.DefaultSection.Println("Statistics")
 
 	tableData := [][]string{
 		{"Metric", "Count"},
-		{"Total Documents", fmt.Sprintf("%d", len(idx.Documents))},
+		{"Total Documents", fmt.Sprintf("%d", totalDocs)},
 		{"Adopted", fmt.Sprintf("%d", stats.Adopted)},
 		{"Draft", fmt.Sprintf("%d", stats.Draft)},
 		{"Parse Errors", fmt.Sprintf("%d", stats.ParseErrors)},
@@ -94,20 +112,8 @@ func runCheck(c *cli.Context) error {
 		{"Draft Warnings", fmt.Sprintf("%d", stats.DraftWarnings)},
 	}
 
-	// Render table
-	// We use a simple table render
 	pterm.DefaultTable.WithHasHeader().WithData(tableData).Render()
-
 	pterm.Println()
-
-	// 5. Exit Code Logic
-	if stats.AdoptedErrors > 0 || stats.ParseErrors > 0 {
-		pterm.Error.Println("Check failed. Please fix errors.")
-		return cli.Exit("", 1)
-	}
-
-	pterm.Success.Println("All checks passed.")
-	return nil
 }
 
 func validateDocument(doc *domain.Document) error {

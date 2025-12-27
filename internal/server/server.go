@@ -58,7 +58,7 @@ func (s *Server) handleMessage(msg []byte) {
 	var req request
 	if err := json.Unmarshal(msg, &req); err != nil {
 		// Parse error
-		// Cannot reply with ID if parse failed, rely on std logging or strict JSON-RPC
+		fmt.Fprintf(os.Stderr, "failed to parse request: %v\n", err)
 		return
 	}
 
@@ -110,7 +110,11 @@ func (s *Server) handleMessage(msg []byte) {
 }
 
 func (s *Server) sendResponse(res response) {
-	bytes, _ := json.Marshal(res)
+	bytes, err := json.Marshal(res)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to marshal response: %v\n", err)
+		return
+	}
 	fmt.Printf("%s\n", bytes)
 }
 
@@ -169,64 +173,68 @@ func (s *Server) handleCallTool(paramsRaw json.RawMessage) (interface{}, *rpcErr
 
 	switch params.Name {
 	case "search_documents":
-		var args struct {
-			Keywords []string `json:"keywords"`
-		}
-		if err := json.Unmarshal(params.Arguments, &args); err != nil {
-			return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
-		}
-
-		docs := s.Indexer.Search(args.Keywords)
-
-		// Convert to MCP Content
-		var content []map[string]interface{}
-
-		if len(docs) == 0 {
-			content = append(content, map[string]interface{}{
-				"type": "text",
-				"text": "No matching documents found.",
-			})
-		} else {
-			text := "Found documents:\n"
-			for _, doc := range docs {
-				text += fmt.Sprintf("- **%s** (ID: `%s`): %s\n", doc.Title, doc.ID, doc.Description)
-			}
-			content = append(content, map[string]interface{}{
-				"type": "text",
-				"text": text,
-			})
-		}
-
-		return map[string]interface{}{"content": content}, nil
-
+		return s.handleSearchDocuments(params.Arguments)
 	case "read_document":
-		var args struct {
-			ID string `json:"id"`
-		}
-		if err := json.Unmarshal(params.Arguments, &args); err != nil {
-			return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
-		}
-
-		doc, ok := s.Indexer.Documents[args.ID]
-		if !ok {
-			return map[string]interface{}{
-				"content": []map[string]interface{}{
-					{"type": "text", "text": "Document not found."},
-				},
-				"isError": true,
-			}, nil
-		}
-
-		return map[string]interface{}{
-			"content": []map[string]interface{}{
-				{
-					"type": "text",
-					"text": fmt.Sprintf("# %s\n\n%s", doc.Title, doc.Body),
-				},
-			},
-		}, nil
-
+		return s.handleReadDocument(params.Arguments)
 	default:
 		return nil, &rpcError{Code: -32601, Message: "Tool not found"}
 	}
+}
+
+func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *rpcError) {
+	var args struct {
+		Keywords []string `json:"keywords"`
+	}
+	if err := json.Unmarshal(argsRaw, &args); err != nil {
+		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
+	}
+
+	docs := s.Indexer.Search(args.Keywords)
+	var content []map[string]interface{}
+
+	if len(docs) == 0 {
+		content = append(content, map[string]interface{}{
+			"type": "text",
+			"text": "No matching documents found.",
+		})
+	} else {
+		text := "Found documents:\n"
+		for _, doc := range docs {
+			text += fmt.Sprintf("- **%s** (ID: `%s`): %s\n", doc.Title, doc.ID, doc.Description)
+		}
+		content = append(content, map[string]interface{}{
+			"type": "text",
+			"text": text,
+		})
+	}
+
+	return map[string]interface{}{"content": content}, nil
+}
+
+func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcError) {
+	var args struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(argsRaw, &args); err != nil {
+		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
+	}
+
+	doc, ok := s.Indexer.Documents[args.ID]
+	if !ok {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{"type": "text", "text": "Document not found."},
+			},
+			"isError": true,
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("# %s\n\n%s", doc.Title, doc.Body),
+			},
+		},
+	}, nil
 }
