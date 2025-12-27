@@ -153,6 +153,7 @@ Documents are organized by **Domain**, **Platform** (optional), and **Technology
 #### Examples
 - `coding/typescript/no-any.md` (Domain: `coding`, Tech: `typescript`)
 - `coding/frontend/react/use-hooks.md` (Domain: `coding`, Platform: `frontend`, Tech: `react`)
+- `coding/go/handle-errors-explicitly.md` (Domain: `coding`, Tech: `go`)
 - `vcs/git/conventional-commits.md` (Domain: `vcs`, Tech: `git`)
 - `documentation/kex/use-imperative-filenames.md` (Domain: `documentation`, Tech: `kex`)
 
