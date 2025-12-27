@@ -62,7 +62,7 @@ Content 2`
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := idx.Search(tt.keywords)
+			got := idx.Search(tt.keywords, nil)
 			if len(got) != len(tt.wantIDs) {
 				t.Errorf("Search() got %d docs, want %d", len(got), len(tt.wantIDs))
 			}

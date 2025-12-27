@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -33,9 +34,9 @@ type Document struct {
 	Body string `yaml:"-"`
 
 	// Metadata derived from file path
-	Path        string `yaml:"-"`
-	Language    string `yaml:"-"` // e.g. "typescript", "go" (from path)
-	IsUniversal bool   `yaml:"-"` // true if under universal/
+	Path     string   `yaml:"-"`
+	Language string   `yaml:"-"` // Deprecated: derived from Scopes logic if needed
+	Scopes   []string `yaml:"-"` // Derived from directory structure
 }
 
 // ParseDocument reads a markdown file and parses its frontmatter
@@ -52,7 +53,45 @@ func ParseDocument(path string) (*Document, error) {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	return parseDocumentContent(path, content)
+	doc, err := parseDocumentContent(path, content)
+	if err != nil {
+		return nil, err
+	}
+
+	// Derive scopes from path
+	// Example path: contents/coding/typescript/foo.md
+	// Scopes: ["coding", "typescript"]
+
+	// Normalize path separators
+	cleanPath := filepath.ToSlash(path)
+
+	// Find where "contents/" ends (or rely on relative path from root if passed that way)
+	// Currently path seems to be absolute or relative to cwd.
+	// Let's assume we get a consistent path. Ideally ParseDocument receives a relative path from the index root.
+	// But indexer passes full path.
+
+	// We need to extract segments between root and filename.
+	// Since we don't know the root here easily without changing signature,
+	// let's look for known domains or assume standard structure.
+
+	// Better approach: Use the relative path logic in Indexer or pass root here.
+	// However, to keep it simple and stateless:
+	// "examples/contents/coding/typescript/foo.md" -> split
+
+	dirs := strings.Split(filepath.Dir(cleanPath), "/")
+	var scopes []string
+
+	// Heuristic: Collect all segments that are likely scopes.
+	// We can skip "examples", "contents".
+	for _, d := range dirs {
+		if d == "." || d == "examples" || d == "contents" {
+			continue
+		}
+		scopes = append(scopes, d)
+	}
+	doc.Scopes = scopes
+
+	return doc, nil
 }
 
 func parseDocumentContent(path string, content []byte) (*Document, error) {

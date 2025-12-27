@@ -102,12 +102,11 @@ func (i *Indexer) addDocument(doc *domain.Document) {
 	}
 }
 
-// Search returns documents matching the keywords
-func (i *Indexer) Search(keywords []string) []*domain.Document {
-	// Simple OR search for now
-	// To improve: scoring, AND search, etc.
+// Search returns documents matching the keywords and scopes
+func (i *Indexer) Search(keywords []string, scopes []string) []*domain.Document {
+	// 1. Find matches by keywords (OR logic)
 	seen := make(map[string]struct{})
-	var results []*domain.Document
+	var candidates []*domain.Document
 
 	for _, keyword := range keywords {
 		k := strings.ToLower(keyword)
@@ -118,9 +117,35 @@ func (i *Indexer) Search(keywords []string) []*domain.Document {
 		for _, doc := range docs {
 			if _, exists := seen[doc.ID]; !exists {
 				seen[doc.ID] = struct{}{}
-				results = append(results, doc)
+				candidates = append(candidates, doc)
 			}
 		}
 	}
+
+	// 2. Filter by scopes (Intersection logic)
+	// If requestsScopes is empty, return all candidates (no filter).
+	if len(scopes) == 0 {
+		return candidates
+	}
+
+	var results []*domain.Document
+	for _, doc := range candidates {
+		if hasIntersection(doc.Scopes, scopes) {
+			results = append(results, doc)
+		}
+	}
+
 	return results
+}
+
+func hasIntersection(a, b []string) bool {
+	// Optimize for small slices
+	for _, vA := range a {
+		for _, vB := range b {
+			if vA == vB {
+				return true
+			}
+		}
+	}
+	return false
 }

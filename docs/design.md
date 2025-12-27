@@ -138,54 +138,41 @@ No severity field exists by design.
 - Content correctness is not validated
 - Body text is not indexed
 
-## 7. Scope and Directory Structure
+### 7.1 General Structure
 
-### 7.1 Root Directory
-
-- Default: contents/
-- Configurable (single directory only)
-
-### 7.2 Universal Rules (Special Handling)
+Documents are organized by **Domain**, **Platform** (optional), and **Technology**.
 
 ```plaintext
-contents/universal/
-  <no-language-guideline>.md
-  <language>/
-    <language-specific-guideline>.md
+<root>/<domain>/<platform?>/<technology>/<id>.md
 ```
 
-#### Semantics
+- **Domain**: Broad category (e.g., `coding`, `documentation`, `vcs`).
+- **Platform**: Execution environment (e.g., `web`, `mobile`, `node`). Optional.
+- **Technology**: Specific language or tool (e.g., `typescript`, `go`, `react`, `git`, `kex`).
 
-- `universal/*.md`
-  Language- and environment-independent principles
-  (Readable Code, design principles, patterns)
-- universal/<language>/*.md
-  Language-specific rules that apply universally
-  (language semantics, not runtime-specific)
+#### Examples
+- `coding/typescript/no-any.md` (Domain: `coding`, Tech: `typescript`)
+- `coding/frontend/react/use-hooks.md` (Domain: `coding`, Platform: `frontend`, Tech: `react`)
+- `vcs/git/conventional-commits.md` (Domain: `vcs`, Tech: `git`)
+- `documentation/kex/use-imperative-filenames.md` (Domain: `documentation`, Tech: `kex`)
 
-#### Constraints
+### 7.2 Directory-Based Scoping
 
-- Maximum depth: 2 levels
-- <language> must be a known language identifier
-- No platform or framework under universal
+Scopes are derived directly from the directory path relative to the root.
 
-### 7.3 General Structure
+- `coding/` -> Scopes: `["coding"]`
+- `coding/typescript/` -> Scopes: `["coding", "typescript"]`
+- `vcs/git/` -> Scopes: `["vcs", "git"]`
 
-```plaintext
-<root>/<domain>/<platform>/<technology>/<id>.md
-```
+### 7.3 Implied Scoping (Extensions)
 
-- Maximum depth: 3 levels
-- Language names appear only as technology
-- Structure represents context hints, not strict taxonomy
+The MCP server infers scopes from the user's active file extension to find relevant documents.
 
-#### Layer Roles
+- `.ts` -> `["coding", "typescript"]`
+- `.go` -> `["coding", "go"]`
+- `.md` -> `["documentation"]`
 
-|Layer|Meaning|Examples|
-|---|---|---|
-|domain|Application context|frontend, backend|
-|platform|Execution environment|web, nodejs|
-|technology|Language or framework|javascript, typescript, react
+This ensures that general `coding` rules are found when working on specific languages.
 
 
 ## 8. Keyword Index
@@ -384,53 +371,7 @@ This document:
 - Lives under `universal/`
 - Provides rationale and guidance without enforcing severity
 
-### 14.2 Language-Specific Universal Rule
 
-#### Path
-
-```txt
-contents/universal/typescript/avoid-any.md
-```
-
-#### Document
-
-````markdown
----
-id: avoid-any
-title: Avoid using the any type
-description: >
-  Avoid the any type to preserve type safety in TypeScript.
-keywords:
-  - typescript
-  - type-safety
-  - any
----
-
-## Summary
-The any type disables type checking and should be avoided.
-
-## Rationale
-Using any bypasses TypeScript’s type system and hides potential bugs.
-
-## Guidance
-Use unknown, generics, or proper union types instead of any.
-
-## Examples
-
-### Bad
-```ts
-function parse(input: any): any {
-  return JSON.parse(input);
-}
-```
-
-### Good
-```ts
-function parse(input: string): unknown {
-  return JSON.parse(input);
-}
-```
-````
 
 ## 14.3 AI Usage Example (Normative)
 

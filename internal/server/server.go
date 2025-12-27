@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"os"
-
 	"kex/internal/indexer"
+	"os"
+	"path/filepath"
 )
 
 // Server handles MCP JSON-RPC requests
@@ -136,9 +136,9 @@ func (s *Server) handleListTools() interface{} {
 							},
 							"description": "Keywords related to the coding task",
 						},
-						"context": map[string]interface{}{
-							"type":        "object",
-							"description": "Project context (language, domain)",
+						"filePath": map[string]interface{}{
+							"type":        "string",
+							"description": "The path of the file you are working on. Used for scope filtering.",
 						},
 					},
 					"required": []string{"keywords"},
@@ -184,12 +184,16 @@ func (s *Server) handleCallTool(paramsRaw json.RawMessage) (interface{}, *rpcErr
 func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *rpcError) {
 	var args struct {
 		Keywords []string `json:"keywords"`
+		FilePath string   `json:"filePath"`
 	}
 	if err := json.Unmarshal(argsRaw, &args); err != nil {
 		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
 	}
 
-	docs := s.Indexer.Search(args.Keywords)
+	// Derive scopes from filePath
+	scopes := deriveScopes(args.FilePath)
+
+	docs := s.Indexer.Search(args.Keywords, scopes)
 	var content []map[string]interface{}
 
 	if len(docs) == 0 {
@@ -209,6 +213,31 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 	}
 
 	return map[string]interface{}{"content": content}, nil
+}
+
+func deriveScopes(path string) []string {
+	if path == "" {
+		return nil
+	}
+	ext := filepath.Ext(path)
+	switch ext {
+	// TypeScript / JavaScript
+	case ".ts", ".tsx", ".js", ".jsx":
+		// Implicitly include 'vcs' because code changes often imply version control ops
+		return []string{"coding", "typescript", "javascript", "frontend", "vcs"}
+
+	// Go
+	case ".go":
+		return []string{"coding", "go", "backend", "vcs"}
+
+	// Markdown / Documentation
+	case ".md", ".txt":
+		return []string{"documentation", "vcs"} // text files also version controlled
+
+	default:
+		// Default for unknown code files
+		return []string{"coding", "vcs"}
+	}
 }
 
 func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcError) {
