@@ -143,12 +143,18 @@ No severity field exists by design.
 Documents are organized by **Domain**, **Platform** (optional), and **Technology**.
 
 ```plaintext
-<root>/<domain>/<platform?>/<technology?>/<id>.md
+<root>/<path-to-document>/<id>.md
 ```
 
-- **Domain**: Broad category (e.g., `coding`, `documentation`, `vcs`).
-- **Platform**: Execution environment (e.g., `web`, `mobile`, `node`). Optional.
-- **Technology**: Specific language or tool (e.g., `typescript`, `go`, `react`, `git`, `kex`). Optional.
+Documents can be organized in any directory hierarchy. The folder names serve as **scopes** for search filtering.
+
+### Recommended Default Structure
+
+For consistency, we recommend the following convention, which is used by `kex init` generated content:
+
+- **Domain**: Broad category (e.g., `coding`, `vcs`).
+- **Platform**: Execution environment (e.g., `frontend`). Optional.
+- **Technology**: Specific language or tool (e.g., `typescript`, `git`). Optional.
 
 #### Examples
 - `coding/typescript/no-any.md` (Domain: `coding`, Tech: `typescript`)
