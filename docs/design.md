@@ -112,12 +112,15 @@ keywords:
 #### Optional Fields
 
 ```yaml
-source:
-  url: https://example.com
+sources:
+  - name: Biome
+    url: https://biomejs.dev/linter/rules/no-explicit-any/
+  - name: ESLint
+    url: https://eslint.org/docs/latest/rules/no-explicit-any
 status: draft | adopted
 ```
 
-- `source.url`: provenance transparency (URL only)
+- `sources`: List of provenance references. Must link directly to the **rule definition**, not the tool homepage.
 - If `status: draft` exists → omit document from index
 - If omitted, status is treated as `adopted`
 

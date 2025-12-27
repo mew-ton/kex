@@ -24,16 +24,17 @@ type Document struct {
 	Description string         `yaml:"description"`
 	Keywords    []string       `yaml:"keywords"`
 	Status      DocumentStatus `yaml:"status"`
-	Source      struct {
-		URL string `yaml:"url"`
-	} `yaml:"source"`
+	Sources     []struct {
+		Name string `yaml:"name"`
+		URL  string `yaml:"url"`
+	} `yaml:"sources"`
 
 	// Body content (markdown)
 	Body string `yaml:"-"`
 
 	// Metadata derived from file path
-	Path       string `yaml:"-"`
-	Language   string `yaml:"-"` // e.g. "typescript", "go" (from path)
+	Path        string `yaml:"-"`
+	Language    string `yaml:"-"` // e.g. "typescript", "go" (from path)
 	IsUniversal bool   `yaml:"-"` // true if under universal/
 }
 
@@ -80,7 +81,7 @@ func parseDocumentContent(path string, content []byte) (*Document, error) {
 
 	doc.Body = body
 	doc.Path = path
-	
+
 	// Basic validation
 	if doc.ID == "" {
 		return nil, fmt.Errorf("id is required")
