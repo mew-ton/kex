@@ -18,8 +18,12 @@ sources:
 Follow this standard to create guidelines that are easily discoverable by AI agents and useful for humans.
 
 ## Filename Convention
-- Use **Imperative Mood**: `verb-adjective-object.md` (e.g., `keep-functions-short.md`, `handle-errors-explicitly.md`).
+- **Be an Instruction**: The filename must be an imperative instruction (e.g., `keep-functions-short.md`, `handle-errors-explicitly.md`).
 - Must match the `id` field in frontmatter.
+
+## Conciseness
+- **Text**: Keep explanations brief and direct. Avoid fluff.
+- **Code Examples**: Can be as long as necessary to demonstrate the pattern or anti-pattern clearly. Do not truncate essential context.
 
 ## Keyword Strategy (The 3 Dimensions)
 To ensure guidelines are found during various stages of development, provide keywords covering three dimensions:
