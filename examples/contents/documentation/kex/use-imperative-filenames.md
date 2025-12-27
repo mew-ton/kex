@@ -22,7 +22,6 @@ Name guideline files using the imperative mood (verb-adjective-object) to act as
 1.  Start with a **Verb** (e.g., `Keep`, `Use`, `Avoid`, `Handle`).
 2.  Follow with the **Object** or **Condition**.
 3.  Ensure the `id` in frontmatter matches the filename (minus extension).
-4.  Place the file in the correct directory hierarchy (`domain/platform/technology`).
 
 ## Examples
 

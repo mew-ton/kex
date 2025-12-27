@@ -143,12 +143,12 @@ No severity field exists by design.
 Documents are organized by **Domain**, **Platform** (optional), and **Technology**.
 
 ```plaintext
-<root>/<domain>/<platform?>/<technology>/<id>.md
+<root>/<domain>/<platform?>/<technology?>/<id>.md
 ```
 
 - **Domain**: Broad category (e.g., `coding`, `documentation`, `vcs`).
 - **Platform**: Execution environment (e.g., `web`, `mobile`, `node`). Optional.
-- **Technology**: Specific language or tool (e.g., `typescript`, `go`, `react`, `git`, `kex`).
+- **Technology**: Specific language or tool (e.g., `typescript`, `go`, `react`, `git`, `kex`). Optional.
 
 #### Examples
 - `coding/typescript/no-any.md` (Domain: `coding`, Tech: `typescript`)
