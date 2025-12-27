@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"kex/internal/config"
 	"kex/internal/domain"
 	"kex/internal/indexer"
 
@@ -23,11 +24,12 @@ func runCheck(c *cli.Context) error {
 	pterm.DefaultSection.Println("Checking documents...")
 
 	// 1. Resolve configuration (root directory)
-	root := "contents"
-	configPath := ".kex.yaml"
-	if _, err := os.Stat(configPath); err == nil {
-		// Parse config placeholder
+	// 1. Resolve configuration
+	cfg, err := config.Load()
+	if err != nil {
+		pterm.Warning.Printf("Failed to load config, using defaults: %v\n", err)
 	}
+	root := cfg.Root
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		pterm.Error.Printf("Error: directory '%s' not found. Run 'kex init'?\n", root)

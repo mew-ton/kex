@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"kex/internal/config"
 	"kex/internal/indexer"
 	"kex/internal/server"
 
@@ -20,7 +21,13 @@ func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
 	// 1. Resolve configuration
-	root := "contents"
+	// 1. Resolve configuration
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
+	}
+	root := cfg.Root
+
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
 	}

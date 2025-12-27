@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "kex-workspace": {
+      "command": "./kex",
+      "args": ["start"]
+    }
+  }
+}
