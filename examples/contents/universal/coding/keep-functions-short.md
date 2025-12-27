@@ -7,6 +7,10 @@ keywords:
   - readability
   - maintainability
   - function
+  - length
+  - complexity
+  - size
+  - decomposition
 ---
 
 ## Summary
