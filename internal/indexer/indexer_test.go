@@ -44,17 +44,17 @@ Content 2`
 		wantIDs  []string
 	}{
 		{
-			name:     "search apple",
+			name:     "it should return relevant documents for apple",
 			keywords: []string{"apple"},
 			wantIDs:  []string{"doc1"},
 		},
 		{
-			name:     "search banana (both)",
+			name:     "it should return all documents containing banana",
 			keywords: []string{"banana"},
 			wantIDs:  []string{"doc1", "doc2"},
 		},
 		{
-			name:     "search unknown",
+			name:     "it should return no documents for unknown keywords",
 			keywords: []string{"durian"},
 			wantIDs:  nil,
 		},

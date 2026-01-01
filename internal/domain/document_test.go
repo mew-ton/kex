@@ -14,7 +14,7 @@ func TestParseDocumentContent(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid document",
+			name: "it should parse valid documents correctly",
 			content: `---
 id: test-doc
 title: Test Document
@@ -27,13 +27,13 @@ Body content`,
 			wantErr: false,
 		},
 		{
-			name:    "missing frontmatter",
+			name:    "it should fail when frontmatter is missing",
 			content: `# Just markdown`,
 			wantID:  "",
 			wantErr: true,
 		},
 		{
-			name: "missing id",
+			name: "it should fail when the ID is missing",
 			content: `---
 title: No ID
 ---
