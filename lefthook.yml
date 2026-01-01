@@ -1,0 +1,9 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: go vet ./...
+    test:
+      run: go test -v ./...
+    build:
+      run: go build -o /dev/null ./cmd/kex
