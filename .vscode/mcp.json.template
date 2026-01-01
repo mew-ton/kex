@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "kex": {
-      "command": "./kex",
-      "args": ["start"]
-    }
-  }
-}
