@@ -6,7 +6,8 @@ import (
 
 	"kex/internal/infrastructure/config"
 	"kex/internal/infrastructure/fs"
-	server "kex/internal/interfaces/mcp"
+	"kex/internal/interfaces/mcp"
+	"kex/internal/usecase/validator"
 
 	"github.com/urfave/cli/v2"
 )
@@ -31,22 +32,34 @@ func runStart(c *cli.Context) error {
 		return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
 	}
 
-	// 2. Load Indexer
-	idx := fs.New(root)
-	if err := idx.Load(); err != nil {
+	// 2. Load Indexer (Infrastructure)
+	repo := fs.New(root)
+	if err := repo.Load(); err != nil {
 		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}
 
-	// 3. Strict validation on start (as per design)
-	if len(idx.Errors) > 0 {
-		for _, e := range idx.Errors {
+	// 3. Strict validation on start (Use Case)
+	// We use the Validator use case to determine validity
+	report := validator.Validate(repo)
+
+	// Check for Parse Errors (Critical for start)
+	if len(report.GlobalErrors) > 0 {
+		for _, e := range report.GlobalErrors {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", e)
 		}
 		return cli.Exit("Failed to start due to document errors. Run 'kex check' for details.", 1)
 	}
 
-	// 4. Start Server
-	srv := server.New(idx)
+	// Note: We might allow "AdoptedErrors" but block on "ParseErrors".
+	// For strictness, let's block if Valid is false (excluding Drafts which are warnings)
+	// But validator.Validate returns Valid=false if AdoptedErrors > 0.
+	// As per previous design: "Failed to start due to document errors".
+	if !report.Valid {
+		return cli.Exit("Validation failed (documents contain errors). Run 'kex check' for details.", 1)
+	}
+
+	// 4. Start Server (Interface)
+	srv := mcp.New(repo)
 	fmt.Fprintf(os.Stderr, "Server listening on stdio...\n")
 	if err := srv.Serve(); err != nil {
 		return cli.Exit(fmt.Sprintf("Server error: %v", err), 1)

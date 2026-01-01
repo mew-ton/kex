@@ -41,6 +41,12 @@ Contains **Interface Adapters**.
     -   `cli`: CLI commands.
     -   `http` / `mcp`: Server handlers.
 
+### Thin Interface Layer
+The Interface layer (Controllers, Presenters, Gateways) should be **thin**.
+-   It should **only** handle transport logic (CLI flags, HTTP decoding, JSON-RPC unmarshalling).
+-   It should **never** contain business rules (e.g., validation, complex mapping, deriving logic).
+-   It should delegate all business logic to the Use Case layer.
+
 ### 4. Infrastructure (`internal/infrastructure`)
 Contains **Frameworks & Drivers**.
 -   **Dependencies**: `domain` (implements interfaces defined there).
@@ -49,3 +55,4 @@ Contains **Frameworks & Drivers**.
 ## dependency Rule
 
 Source code dependencies must point only **inward**, toward higher-level policies. Inner circles must know nothing about outer circles.
+```

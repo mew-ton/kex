@@ -1,12 +1,12 @@
-package server
+package mcp
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
 	"kex/internal/domain"
+	"kex/internal/usecase/search"
 	"os"
-	"path/filepath"
 )
 
 // Server handles MCP JSON-RPC requests
@@ -190,20 +190,20 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
 	}
 
-	// Derive scopes from filePath
-	scopes := deriveScopes(args.FilePath)
+	// Use Search Use Case
+	uc := search.New(s.Repo)
+	result := uc.Execute(args.Keywords, args.FilePath)
 
-	docs := s.Repo.Search(args.Keywords, scopes)
 	var content []map[string]interface{}
 
-	if len(docs) == 0 {
+	if len(result.Documents) == 0 {
 		content = append(content, map[string]interface{}{
 			"type": "text",
 			"text": "No matching documents found.",
 		})
 	} else {
 		text := "Found documents:\n"
-		for _, doc := range docs {
+		for _, doc := range result.Documents {
 			text += fmt.Sprintf("- **%s** (ID: `%s`): %s\n", doc.Title, doc.ID, doc.Description)
 		}
 		content = append(content, map[string]interface{}{
@@ -213,31 +213,6 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 	}
 
 	return map[string]interface{}{"content": content}, nil
-}
-
-func deriveScopes(path string) []string {
-	if path == "" {
-		return nil
-	}
-	ext := filepath.Ext(path)
-	switch ext {
-	// TypeScript / JavaScript
-	case ".ts", ".tsx", ".js", ".jsx":
-		// Implicitly include 'vcs' because code changes often imply version control ops
-		return []string{"coding", "typescript", "javascript", "frontend", "vcs"}
-
-	// Go
-	case ".go":
-		return []string{"coding", "go", "backend", "vcs"}
-
-	// Markdown / Documentation
-	case ".md", ".txt":
-		return []string{"documentation", "vcs"} // text files also version controlled
-
-	default:
-		// Default for unknown code files
-		return []string{"coding", "vcs"}
-	}
 }
 
 func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcError) {
