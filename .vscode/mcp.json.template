@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "kex": {
-      "command": "/home/mew-ton/Workspaces/kex/kex",
+      "command": "./kex",
       "args": ["start"]
     }
   }
