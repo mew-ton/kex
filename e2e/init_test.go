@@ -8,21 +8,30 @@ import (
 )
 
 func TestKexInit(t *testing.T) {
-	tempDir := t.TempDir()
+	t.Run("it should create default config and content structure", func(t *testing.T) {
+		tempDir := t.TempDir()
 
-	cmd := exec.Command(kexBinary, "init")
-	cmd.Dir = tempDir
-	output, err := cmd.CombinedOutput()
+		cmd := exec.Command(kexBinary, "init")
+		cmd.Dir = tempDir
+		output, err := cmd.CombinedOutput()
 
-	if err != nil {
-		t.Fatalf("kex init failed: %v\nOutput: %s", err, output)
-	}
+		if err != nil {
+			t.Fatalf("kex init failed: %v\nOutput: %s", err, output)
+		}
 
-	// Verify .kex.yaml exists
-	if _, err := os.Stat(filepath.Join(tempDir, ".kex.yaml")); os.IsNotExist(err) {
-		t.Error(".kex.yaml was not created")
-	}
+		// Verify .kex.yaml exists
+		if _, err := os.Stat(filepath.Join(tempDir, ".kex.yaml")); os.IsNotExist(err) {
+			t.Error(".kex.yaml was not created")
+		}
 
-	// NOTE: We rely on exit code (err == nil) and file existence for success.
-	// Avoid asserting exact stdout text to prevent flakiness.
+		// Verify contents directory exists
+		if _, err := os.Stat(filepath.Join(tempDir, "contents")); os.IsNotExist(err) {
+			t.Error("contents directory was not created")
+		}
+
+		// Verify universal/intro.md exists (actual template)
+		if _, err := os.Stat(filepath.Join(tempDir, "contents", "universal", "intro.md")); os.IsNotExist(err) {
+			t.Error("contents/universal/intro.md was not extracted")
+		}
+	})
 }

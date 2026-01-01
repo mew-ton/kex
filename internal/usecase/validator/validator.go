@@ -90,6 +90,13 @@ func validateDocument(doc *domain.Document) error {
 	ext := filepath.Ext(filename)
 	basename := strings.TrimSuffix(filename, ext)
 
+	if doc.ID == "" {
+		return fmt.Errorf("id is required")
+	}
+	if doc.Title == "" {
+		return fmt.Errorf("title is required")
+	}
+
 	if basename != doc.ID {
 		return fmt.Errorf("filename must match id (filename: %s, id: %s)", filename, doc.ID)
 	}
