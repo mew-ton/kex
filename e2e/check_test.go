@@ -66,3 +66,38 @@ func TestKexCheck_NoDocuments_WithConfig(t *testing.T) {
 		t.Errorf("Expected success with config, failed: %v\nOutput: %s", err, output)
 	}
 }
+
+func TestKexCheck_JSONOutput(t *testing.T) {
+	t.Run("it should output valid JSON when --json flag is passed", func(t *testing.T) {
+		tempDir := t.TempDir()
+		// Create a dummy document
+		doc := `---
+id: test-json
+title: JSON Test
+keywords: [json]
+---
+Content`
+		os.Mkdir(filepath.Join(tempDir, "contents"), 0755)
+		os.WriteFile(filepath.Join(tempDir, "contents", "test-json.md"), []byte(doc), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: contents\n"), 0644)
+
+		cmd := exec.Command(kexBinary, "check", "--json")
+		cmd.Dir = tempDir
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			t.Fatalf("Check failed: %v\nOutput: %s", err, output)
+		}
+
+		// Simple JSON validation
+		if !strings.HasPrefix(string(output), "{") {
+			t.Errorf("Output does not start with '{': %s", output)
+		}
+		if !strings.Contains(string(output), `"valid": true`) {
+			t.Errorf("JSON output missing 'valid': true: %s", output)
+		}
+		if !strings.Contains(string(output), `"id": "test-json"`) {
+			t.Errorf("JSON output missing document ID: %s", output)
+		}
+	})
+}

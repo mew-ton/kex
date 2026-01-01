@@ -1,4 +1,4 @@
-package indexer
+package fs
 
 import (
 	"fmt"
@@ -136,6 +136,23 @@ func (i *Indexer) Search(keywords []string, scopes []string) []*domain.Document 
 	}
 
 	return results
+}
+
+func (i *Indexer) GetAll() []*domain.Document {
+	docs := make([]*domain.Document, 0, len(i.Documents))
+	for _, doc := range i.Documents {
+		docs = append(docs, doc)
+	}
+	return docs
+}
+
+func (i *Indexer) GetErrors() []error {
+	return i.Errors
+}
+
+func (i *Indexer) GetByID(id string) (*domain.Document, bool) {
+	doc, ok := i.Documents[id]
+	return doc, ok
 }
 
 func hasIntersection(a, b []string) bool {

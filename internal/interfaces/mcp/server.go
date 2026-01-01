@@ -4,18 +4,18 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"kex/internal/indexer"
+	"kex/internal/domain"
 	"os"
 	"path/filepath"
 )
 
 // Server handles MCP JSON-RPC requests
 type Server struct {
-	Indexer *indexer.Indexer
+	Repo domain.DocumentRepository
 }
 
-func New(idx *indexer.Indexer) *Server {
-	return &Server{Indexer: idx}
+func New(repo domain.DocumentRepository) *Server {
+	return &Server{Repo: repo}
 }
 
 // JSON-RPC types
@@ -193,7 +193,7 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 	// Derive scopes from filePath
 	scopes := deriveScopes(args.FilePath)
 
-	docs := s.Indexer.Search(args.Keywords, scopes)
+	docs := s.Repo.Search(args.Keywords, scopes)
 	var content []map[string]interface{}
 
 	if len(docs) == 0 {
@@ -248,7 +248,7 @@ func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcE
 		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
 	}
 
-	doc, ok := s.Indexer.Documents[args.ID]
+	doc, ok := s.Repo.GetByID(args.ID)
 	if !ok {
 		return map[string]interface{}{
 			"content": []map[string]interface{}{

@@ -1,12 +1,12 @@
-package commands
+package cli
 
 import (
 	"fmt"
 	"os"
 
-	"kex/internal/config"
-	"kex/internal/indexer"
-	"kex/internal/server"
+	"kex/internal/infrastructure/config"
+	"kex/internal/infrastructure/fs"
+	server "kex/internal/interfaces/mcp"
 
 	"github.com/urfave/cli/v2"
 )
@@ -32,7 +32,7 @@ func runStart(c *cli.Context) error {
 	}
 
 	// 2. Load Indexer
-	idx := indexer.New(root)
+	idx := fs.New(root)
 	if err := idx.Load(); err != nil {
 		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}

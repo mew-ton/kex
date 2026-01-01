@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"kex/internal/commands"
+	kexcli "kex/internal/interfaces/cli"
 
 	"github.com/urfave/cli/v2"
 )
@@ -14,9 +14,9 @@ func main() {
 		Name:  "kex",
 		Usage: "Document Librarian MCP",
 		Commands: []*cli.Command{
-			commands.InitCommand,
-			commands.CheckCommand,
-			commands.StartCommand,
+			kexcli.InitCommand,
+			kexcli.CheckCommand,
+			kexcli.StartCommand,
 		},
 	}
 

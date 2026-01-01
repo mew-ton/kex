@@ -3,6 +3,12 @@ module kex
 go 1.25.5
 
 require (
+	github.com/pterm/pterm v0.12.82
+	github.com/urfave/cli/v2 v2.27.7
+	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/keyboard v0.2.9 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
@@ -49,14 +55,12 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/pterm/pterm v0.12.82 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cobra v1.10.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
-	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.yaml.in/yaml/v3 v3.0.3 // indirect
@@ -64,7 +68,6 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 tool github.com/evilmartians/lefthook
