@@ -51,7 +51,7 @@ Body`,
 				t.Fatal(err)
 			}
 
-			doc, err := ParseDocument(tmpfile)
+			doc, err := ParseDocument(tmpfile, t.TempDir())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseDocument() error = %v, wantErr %v", err, tt.wantErr)
 				return

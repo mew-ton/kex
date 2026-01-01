@@ -77,7 +77,7 @@ func (i *Indexer) parseDocuments(paths []string) ([]*domain.Document, []error) {
 	var errs []error
 
 	for _, path := range paths {
-		doc, err := domain.ParseDocument(path)
+		doc, err := domain.ParseDocument(path, i.Root)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", path, err))
 			continue
