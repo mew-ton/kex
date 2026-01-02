@@ -1,0 +1,79 @@
+name: "🧪 Test & Build"
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: "🧪 Unit Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: 📦 Install Dependencies
+        run: go mod download
+
+      - name: 🧪 Run Unit Tests
+        run: go test -v ./...
+
+  build:
+    name: "🏗️ Build"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: 🏗️ Build Binary
+        run: go build -o kex ./cmd/kex
+
+      - name: � Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kex-binary
+          path: kex
+          retention-days: 1
+
+  e2e:
+    name: "🔄 E2E Test"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: 📥 Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kex-binary
+
+      - name: 🔄 Run E2E Tests
+        # Add current directory to PATH so 'kex' binary is found
+        run: |
+          chmod +x kex
+          export PATH=$PWD:$PATH
+          go test -v ./e2e/...
