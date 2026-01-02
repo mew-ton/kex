@@ -1,4 +1,4 @@
-# Kex (Knowledge Exchange)
+# Kex
 
 **English** | [日本語](./README.ja.md)
 
@@ -18,18 +18,16 @@
 -   **CLI Tooling**:
     -   `init`: Scaffolds a new Knowledge Base.
     -   `check`: Validates all documents and reports integrity issues.
-    -   `start`: Starts the MCP server over Stdio.
+    -   `start`: Starts the MCP server (communicates via stdio).
+
+## Use Cases
+
+-   **Efficient Context Management**: Retrieve only the necessary guidelines during coding or design phases to prevent context bloating in LLMs.
+-   **Structured Knowledge Base**: Enforce a strict schema and lifecycle (draft vs adopted) to keep documentation clean, trustworthy, and AI-ready.
 
 ## Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/mew-ton/kex.git
-cd kex
-
-# Build and Install
-go install ./cmd/kex
-```
+See [docs/installation.md](docs/installation.md).
 
 ## Getting Started
 
@@ -63,7 +61,7 @@ Write your content here...
 
 **Status Types:**
 -   `draft`: Ignored by the server by default. Useful for work-in-progress.
--   `adopted`: Active and indexed. Must pass all checks.
+-   `adopted`: Active and indexed. Must pass all checks. Errors prevent startup.
 
 ### 3. Validate Documents
 
@@ -86,7 +84,7 @@ Start the MCP server to allow AI connections:
 kex start
 ```
 
-*Note: This starts an interactive JSON-RPC session on Stdio. It is meant to be run by an MCP Client (like Claude Desktop).*
+*Note: This starts an interactive JSON-RPC session using stdio for communication. It is meant to be run by an MCP Client (like Claude Desktop).*
 
 ## MCP Tools Provided
 
@@ -97,18 +95,7 @@ Kex exposes the following tools to connected AI agents:
 
 ## Client Configuration
 
-To use Kex with an MCP Client (e.g., Claude Desktop), add the following configuration to your client's settings file (`claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "kex": {
-      "command": "kex",
-      "args": ["start"]
-    }
-  }
-}
-```
+Please refer to [docs/editors.md](docs/editors.md) for configuring your specific MCP client (e.g., Claude Desktop, Windsurf, etc).
 
 ## Configuration
 
@@ -118,12 +105,9 @@ To use Kex with an MCP Client (e.g., Claude Desktop), add the following configur
 root: contents # Directory containing markdown files
 ```
 
-## Release Workflow
+## Contributing
 
-This project uses **Tagpr** for automated releases.
-
-1.  **Pull Request**: When a PR is merged into `main`, a "Release PR" is automatically created/updated by the GitHub Actions bot. This PR increments the version in `README.md` (if applicable) and updates `CHANGELOG.md`.
-2.  **Release**: When you merge the "Release PR", a new git tag is created, and **GoReleaser** automatically builds the binaries and publishes a GitHub Release.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on the release workflow and development process.
 
 
 ## License

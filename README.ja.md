@@ -1,4 +1,4 @@
-# Kex (Knowledge Exchange)
+# Kex
 
 [English](./README.md) | **日本語**
 
@@ -13,22 +13,20 @@
 -   **構造の強制**: Frontmatter (ID, タイトル, ステータス, キーワード) を使用して、ドキュメントの厳密なスキーマを強制します。
 -   **ライフサイクル管理**: `draft` (下書き) と `adopted` (採用済み) のドキュメントを区別します。
     -   **Draft**: 進行中の作業。エラーは警告として扱われます。
-    -   **Adopted**: 正当な情報源 (Source of truth)。エラーがある場合、起動を阻止します。
+    -   **Adopted**: 信頼できる情報源 (Source of truth)。エラーがある場合、起動を阻止します。
 -   **CLI ツール**:
     -   `init`: 新しいナレッジベースの雛形を作成します。
     -   `check`: すべてのドキュメントを検証し、整合性の問題を報告します。
-    -   `start`: Stdio 経由で MCP サーバーを起動します。
+    -   `start`: MCP サーバーを起動します (stdio で通信)。
+
+## ユースケース
+
+-   **コンテキスト肥大化の防止**: コーディングや設計時に、必要なガイドラインのみを最小範囲で取得することで、LLM のコンテキストウィンドウが無駄に消費されるのを防ぎます。
+-   **構造化されたナレッジベース**: 厳格なスキーマとライフサイクル（下書き vs 採用済み）を強制することで、ドキュメントの品質を保ち、AI が信頼できる情報源を構築します。
 
 ## インストール
 
-```bash
-# リポジトリをクローン
-git clone https://github.com/mew-ton/kex.git
-cd kex
-
-# ビルドとインストール
-go install ./cmd/kex
-```
+[docs/installation.ja.md](docs/installation.ja.md) を参照してください。
 
 ## はじめに
 
@@ -86,7 +84,7 @@ MCP サーバーを起動して、AI との接続を許可します:
 kex start
 ```
 
-*注意: これは Stdio 上でインタラクティブな JSON-RPC セッションを開始します。これは (Claude Desktop のような) MCP クライアントによって実行されることを意図しています。*
+*注意: これは stdio を使用してインタラクティブな JSON-RPC セッションを開始します。これは (Claude Desktop のような) MCP クライアントによって実行されることを意図しています。*
 
 ## 提供される MCP ツール
 
@@ -97,18 +95,7 @@ Kex は接続された AI エージェントに対して以下のツールを公
 
 ## クライアント設定
 
-MCP クライアント (例: Claude Desktop) で Kex を使用するには、クライアントの設定ファイル (`claude_desktop_config.json`) に以下の設定を追加してください:
-
-```json
-{
-  "mcpServers": {
-    "kex": {
-      "command": "kex",
-      "args": ["start"]
-    }
-  }
-}
-```
+各 MCP クライアント（Claude Desktop, Windsurf など）ごとの設定については [docs/editors.ja.md](docs/editors.ja.md) を参照してください。
 
 ## 設定
 
@@ -118,12 +105,9 @@ MCP クライアント (例: Claude Desktop) で Kex を使用するには、ク
 root: contents # マークダウンファイルを含むディレクトリ
 ```
 
-## リリースフロー
+## 貢献 (Contributing)
 
-このプロジェクトは **Tagpr** を使用してリリースを自動化しています。
-
-1.  **プルリクエスト**: PR が `main` にマージされると、GitHub Actions ボットによって「リリース PR」が自動的に作成（または更新）されます。この PR にはバージョンの更新と `CHANGELOG.md` の更新が含まれます。
-2.  **リリース**: 「リリース PR」をマージすると、新しい git tag が作成され、**GoReleaser** が自動的にバイナリをビルドして GitHub Release を公開します。
+リリースフローや開発プロセスの詳細については [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
 
 
 ## ライセンス
