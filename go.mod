@@ -1,4 +1,4 @@
-module kex
+module github.com/mew-ton/kex
 
 go 1.25.5
 

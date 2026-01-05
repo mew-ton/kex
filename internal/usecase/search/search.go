@@ -1,7 +1,7 @@
 package search
 
 import (
-	"kex/internal/domain"
+	"github.com/mew-ton/kex/internal/domain"
 	"path/filepath"
 )
 

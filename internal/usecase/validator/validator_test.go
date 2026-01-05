@@ -2,7 +2,7 @@ package validator
 
 import (
 	"errors"
-	"kex/internal/domain"
+	"github.com/mew-ton/kex/internal/domain"
 	"testing"
 )
 

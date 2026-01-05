@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"kex/assets"
-	"kex/internal/usecase/generator"
+	"github.com/mew-ton/kex/assets"
+	"github.com/mew-ton/kex/internal/usecase/generator"
 	"os"
 
 	"github.com/pterm/pterm"

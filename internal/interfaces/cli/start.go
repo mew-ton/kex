@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"kex/internal/infrastructure/config"
-	"kex/internal/infrastructure/fs"
-	"kex/internal/interfaces/mcp"
-	"kex/internal/usecase/validator"
+	"github.com/mew-ton/kex/internal/infrastructure/config"
+	"github.com/mew-ton/kex/internal/infrastructure/fs"
+	"github.com/mew-ton/kex/internal/interfaces/mcp"
+	"github.com/mew-ton/kex/internal/usecase/validator"
 
 	"github.com/urfave/cli/v2"
 )

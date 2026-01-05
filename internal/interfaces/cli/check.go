@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"kex/internal/infrastructure/config"
-	"kex/internal/infrastructure/fs"
-	"kex/internal/usecase/validator"
+	"github.com/mew-ton/kex/internal/infrastructure/config"
+	"github.com/mew-ton/kex/internal/infrastructure/fs"
+	"github.com/mew-ton/kex/internal/usecase/validator"
 
 	"github.com/pterm/pterm"
 	"github.com/urfave/cli/v2"

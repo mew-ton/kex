@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	kexcli "kex/internal/interfaces/cli"
+	kexcli "github.com/mew-ton/kex/internal/interfaces/cli"
 
 	"github.com/urfave/cli/v2"
 )
