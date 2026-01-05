@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"kex/internal/domain"
-	"kex/internal/usecase/search"
+	"github.com/mew-ton/kex/internal/domain"
+	"github.com/mew-ton/kex/internal/usecase/search"
 	"os"
 )
 

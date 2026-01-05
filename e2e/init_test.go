@@ -29,9 +29,9 @@ func TestKexInit(t *testing.T) {
 			t.Error("contents directory was not created")
 		}
 
-		// Verify universal/intro.md exists (actual template)
-		if _, err := os.Stat(filepath.Join(tempDir, "contents", "universal", "intro.md")); os.IsNotExist(err) {
-			t.Error("contents/universal/intro.md was not extracted")
+		// Verify contents/documentation/kex/write-concise-content.md exists (actual template)
+		if _, err := os.Stat(filepath.Join(tempDir, "contents", "documentation", "kex", "write-concise-content.md")); os.IsNotExist(err) {
+			t.Error("contents/documentation/kex/write-concise-content.md was not extracted")
 		}
 	})
 }

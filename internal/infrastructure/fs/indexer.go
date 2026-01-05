@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kex/internal/domain"
+	"github.com/mew-ton/kex/internal/domain"
 )
 
 // Indexer manages the document collection and search index

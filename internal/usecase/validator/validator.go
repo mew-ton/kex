@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kex/internal/domain"
+	"github.com/mew-ton/kex/internal/domain"
 )
 
 // Data Structures for Reporting

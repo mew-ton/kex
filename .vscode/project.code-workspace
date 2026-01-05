@@ -16,7 +16,8 @@
 		},
 		"gopls": {
 			"ui.semanticTokens": true
-		}
+		},
+		"makefile.configureOnOpen": false
 	},
 	"extensions": {
 		"recommendations": [
