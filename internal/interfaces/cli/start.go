@@ -13,8 +13,15 @@ import (
 )
 
 var StartCommand = &cli.Command{
-	Name:   "start",
-	Usage:  "Start MCP server",
+	Name:  "start",
+	Usage: "Start MCP server",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "root",
+			Usage:   "Path to guidelines directory",
+			Aliases: []string{"r"},
+		},
+	},
 	Action: runStart,
 }
 
@@ -27,6 +34,9 @@ func runStart(c *cli.Context) error {
 		fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
 	}
 	root := cfg.Root
+	if c.String("root") != "" {
+		root = c.String("root")
+	}
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)

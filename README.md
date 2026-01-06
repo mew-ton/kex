@@ -89,6 +89,10 @@ Start the MCP server to allow AI connections:
 kex start
 ```
 
+**Options:**
+
+- `--root <path>`: Specify the guidelines directory path (overrides `.kex.yaml` configuration).
+
 *Note: This starts an interactive JSON-RPC session using stdio for communication. It is meant to be run by an MCP Client (like Claude Desktop).*
 
 ## MCP Tools Provided

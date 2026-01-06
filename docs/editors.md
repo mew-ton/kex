@@ -9,8 +9,9 @@ To use Kex with [Claude Desktop](https://claude.ai/download), add the following 
   "mcpServers": {
     "kex": {
       "command": "kex",
-      "args": ["start"]
+      "args": ["start", "--root", "/absolute/path/to/your/guidelines"]
     }
+
   }
 }
 ```
