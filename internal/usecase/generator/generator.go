@@ -8,6 +8,13 @@ import (
 	"path/filepath"
 )
 
+type AgentType string
+
+const (
+	AgentTypeGeneral AgentType = "general"
+	AgentTypeClaude  AgentType = "claude"
+)
+
 type Generator struct {
 	Templates embed.FS
 }
@@ -16,7 +23,29 @@ func New(templates embed.FS) *Generator {
 	return &Generator{Templates: templates}
 }
 
-func (g *Generator) Generate(cwd string) error {
+// Strategy for file mapping
+type FileMapper func(relPath string) (string, bool)
+
+func GeneralMapper(relPath string) (string, bool) {
+	return relPath, true
+}
+
+func ClaudeMapper(relPath string) (string, bool) {
+	if filepath.Base(relPath) == "AGENTS.md" {
+		return filepath.Join(filepath.Dir(relPath), "CLAUDE.md"), true
+	}
+	return relPath, true
+}
+
+func (g *Generator) Generate(cwd string, agentType AgentType) error {
+	var mapper FileMapper
+	switch agentType {
+	case AgentTypeClaude:
+		mapper = ClaudeMapper
+	default:
+		mapper = GeneralMapper
+	}
+
 	// Extract templates mirroring the structure in assets/templates
 	err := fs.WalkDir(g.Templates, "templates", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -32,7 +61,13 @@ func (g *Generator) Generate(cwd string) error {
 			return nil
 		}
 
-		targetPath := filepath.Join(cwd, relPath)
+		// Apply strategy
+		mappedPath, ok := mapper(relPath)
+		if !ok {
+			return nil
+		}
+
+		targetPath := filepath.Join(cwd, mappedPath)
 
 		if d.IsDir() {
 			return os.MkdirAll(targetPath, 0755)
@@ -43,8 +78,8 @@ func (g *Generator) Generate(cwd string) error {
 			return err
 		}
 
-		// Special handling for AGENT.md to append guidelines if file exists
-		if filepath.Base(relPath) == "AGENT.md" {
+		// Special handling for AGENTS.md (or mapped CLAUDE.md) based on original filename
+		if filepath.Base(relPath) == "AGENTS.md" {
 			return g.handleAgentMD(targetPath, data)
 		}
 
@@ -88,29 +123,29 @@ func (g *Generator) handleAgentMD(targetPath string, templateData []byte) error 
 	// Let's check for "Design Phase Guidelines" or similar unique headers from the template.
 	// The template has "## 1. Design Phase Guidelines".
 	// If that exists, we assume it's there.
-	
+
 	/*
 		Proposed logic:
 		If "Ref: Kex" or "Kex" guidelines seem missing, append.
 		Let's look for "Kex" and "Design Phase Guidelines".
 	*/
-	
+
 	// Actually, just checking if the specific "Project Guidelines (Ref: Kex)" header exists might be enough.
 	// But users might change the header.
 	// Let's just append if we don't find "Design Phase Guidelines" AND "Implementation Phase Guidelines".
-	
+
 	// Simplified merge: Just append with a note if it seems completely different.
 	// But let's stick to the plan: "Append content if not present".
-	
+
 	// Let's just write a simple check for now.
 	// If the file contains "Search for design documents", we assume it has the rules.
-	
+
 	/*
 	   Actually, let's just append it with a newline if it's not the exact same content.
 	   But that risks duplication.
 	   Let's append ONLY IF "Search for design documents" is NOT present.
 	*/
-	
+
 	searchStr := "Search for design documents"
 	// simplified check
 	for i := 0; i < len(content)-len(searchStr); i++ {
