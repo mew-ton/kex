@@ -14,3 +14,12 @@ To use Kex with [Claude Desktop](https://claude.ai/download), add the following 
   }
 }
 ```
+
+## Claude Code
+
+To use Kex with [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview), run the following command to register it directly:
+
+```bash
+claude mcp add kex -- kex start
+```
+
