@@ -38,7 +38,12 @@
 kex init
 ```
 
-これにより、`contents/` ディレクトリと `.kex.yaml` 設定ファイルが作成されます。
+これにより、`contents/` ディレクトリと `.kex.yaml` 設定ファイルが作成されます。また、AI エージェント向けのガイドラインを含む `AGENTS.md` も生成されます。
+
+**オプション:**
+
+- `--agent-type=claude`: `AGENTS.md` の代わりに `CLAUDE.md` を生成します (Claude Code 向けに最適化)。
+
 
 ### 2. ドキュメントの作成
 

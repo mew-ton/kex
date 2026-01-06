@@ -39,7 +39,12 @@ Go to your project root and run:
 kex init
 ```
 
-This will create a `contents/` directory and a `.kex.yaml` configuration file.
+This will create a `contents/` directory and a `.kex.yaml` configuration file. It will also generate `AGENTS.md`, which contains guidelines for AI agents.
+
+**Options:**
+
+- `--agent-type=claude`: Generate `CLAUDE.md` instead of `AGENTS.md` (optimized for Claude Code).
+
 
 ### 2. Write Documentation
 
