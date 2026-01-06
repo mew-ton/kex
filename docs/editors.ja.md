@@ -14,3 +14,12 @@ Kex を [Claude Desktop](https://claude.ai/download) で使用するには、ク
   }
 }
 ```
+
+## Claude Code
+
+Kex を [Claude Code](https://docs.anthropic.com/ja/docs/agents-and-tools/claude-code/overview) で使用するには、以下のコマンドを実行して直接登録してください:
+
+```bash
+claude mcp add kex -- kex start
+```
+
