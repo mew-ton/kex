@@ -2,9 +2,6 @@ name: "🧪 Test & Build"
 
 on:
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
 
 permissions:
   contents: read
@@ -45,12 +42,30 @@ jobs:
       - name: 🏗️ Build Binary
         run: go build -o kex ./cmd/kex
 
-      - name: � Upload Artifact
+      - name:  Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: kex-binary
           path: kex
           retention-days: 1
+
+  check:
+    name: "🔍 Check Documents"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kex-binary
+
+      - name: 🔍 Run Check
+        run: |
+          chmod +x kex
+          ./kex check
 
   e2e:
     name: "🔄 E2E Test"
