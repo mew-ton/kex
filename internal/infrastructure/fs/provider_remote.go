@@ -6,15 +6,18 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 )
 
 type RemoteProvider struct {
 	BaseURL string // URL to directory (or wherever kex.json is relative to)
 	KexURL  string // Full URL to kex.json
 	Token   string // Optional Bearer Token
+	Logger  logger.Logger
 }
 
-func NewRemoteProvider(rootURL, token string) *RemoteProvider {
+func NewRemoteProvider(rootURL, token string, logger logger.Logger) *RemoteProvider {
 	baseURL := rootURL
 	if !strings.HasSuffix(baseURL, "/") {
 		baseURL += "/"
@@ -25,6 +28,7 @@ func NewRemoteProvider(rootURL, token string) *RemoteProvider {
 		BaseURL: baseURL,
 		KexURL:  kexURL,
 		Token:   token,
+		Logger:  logger,
 	}
 }
 
@@ -36,6 +40,10 @@ func (r *RemoteProvider) Load() (*IndexSchema, []error) {
 
 	if r.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+r.Token)
+	}
+
+	if r.Logger != nil {
+		r.Logger.Info("[Network] Fetch Index: %s", r.KexURL)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -74,6 +82,10 @@ func (r *RemoteProvider) FetchContent(path string) (string, error) {
 
 	if r.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+r.Token)
+	}
+
+	if r.Logger != nil {
+		r.Logger.Info("[Network] Fetch Content: %s", url)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

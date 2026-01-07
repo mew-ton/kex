@@ -4,18 +4,21 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/mew-ton/kex/internal/domain"
-	"github.com/mew-ton/kex/internal/usecase/search"
 	"os"
+
+	"github.com/mew-ton/kex/internal/domain"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
+	"github.com/mew-ton/kex/internal/usecase/search"
 )
 
 // Server handles MCP JSON-RPC requests
 type Server struct {
-	Repo domain.DocumentRepository
+	Repo   domain.DocumentRepository
+	Logger logger.Logger
 }
 
-func New(repo domain.DocumentRepository) *Server {
-	return &Server{Repo: repo}
+func New(repo domain.DocumentRepository, logger logger.Logger) *Server {
+	return &Server{Repo: repo, Logger: logger}
 }
 
 // JSON-RPC types
@@ -71,6 +74,10 @@ func (s *Server) handleMessage(msg []byte) {
 	var err *rpcError
 	var result interface{}
 
+	if s.Logger != nil {
+		s.Logger.Info("[MCP] Request: %s", req.Method)
+	}
+
 	switch req.Method {
 	case "initialize":
 		result = map[string]interface{}{
@@ -116,6 +123,21 @@ func (s *Server) sendResponse(res response) {
 		return
 	}
 	fmt.Printf("%s\n", bytes)
+
+	if s.Logger != nil {
+		status := "Success"
+		if res.Error != nil {
+			status = fmt.Sprintf("Error (%d: %s)", res.Error.Code, res.Error.Message)
+		}
+		s.Logger.Info("[MCP] Response Sent: ID=%s, Status=%s", stringifyID(res.ID), status)
+	}
+}
+
+func stringifyID(id *json.RawMessage) string {
+	if id == nil {
+		return "null"
+	}
+	return string(*id)
 }
 
 // -- Handlers --

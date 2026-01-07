@@ -5,11 +5,13 @@ import (
 	"strings"
 
 	"github.com/mew-ton/kex/internal/domain"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 )
 
 // Indexer manages the document collection and search index
 type Indexer struct {
 	Provider DocumentProvider
+	Logger   logger.Logger
 	BaseURL  string // Should this be removed? Provider has it.
 	// We might need it if we're doing path resolution here, but Provider handles Paths in Schema.
 	// Actually GetByID delegates to Provider.FetchContent.
@@ -22,9 +24,10 @@ type Indexer struct {
 }
 
 // New creates a new Indexer
-func New(provider DocumentProvider) *Indexer {
+func New(provider DocumentProvider, logger logger.Logger) *Indexer {
 	return &Indexer{
 		Provider:  provider,
+		Logger:    logger,
 		Documents: make(map[string]*domain.Document),
 		Index:     make(map[string][]*domain.Document),
 		Errors:    []error{},

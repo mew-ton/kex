@@ -38,6 +38,9 @@ kex start [options] [path|url]
 
 - **ローカルモード**: `kex start ./my-docs`
 - **リモートモード**: `kex start https://example.com/docs/` (`kex.json` が必要です)
+- **フラグ**:
+    - `--log-file=<path>`: 標準エラー出力の代わりにファイルにログを書き込みます。
+    - `--root=<path>`: ガイドラインのコンテンツルートを指定します (ローカルモード)。
 
 
 

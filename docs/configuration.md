@@ -71,6 +71,20 @@ agent:
     - `coding`: Design and Implementation phase guidelines.
     - `documentation`: Documentation phase rules.
 
+### `logging` (Optional)
+
+Configures server logging.
+
+```yaml
+logging:
+  file: ".kex/kex.log"
+  level: "info"
+```
+
+- **file**: Path to the log file. If omitted, logs are written to Stderr.
+- **level**: Log level (default: `info`).
+
+
 ## Environment Variables
 
 Kex supports the following environment variables:

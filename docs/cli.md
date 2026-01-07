@@ -38,6 +38,9 @@ kex start [options] [path|url]
 
 - **Local Mode**: `kex start ./my-docs`
 - **Remote Mode**: `kex start https://example.com/docs/` (Must contain `kex.json`)
+- **Flags**:
+    - `--log-file=<path>`: Write logs to a file instead of Stderr.
+    - `--root=<path>`: Specify the guidelines content root (Local mode).
 
 
 

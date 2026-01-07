@@ -8,11 +8,17 @@ import (
 )
 
 type Config struct {
-	Root        string `yaml:"root"`
-	BaseURL     string `yaml:"baseURL"`
-	RemoteToken string `yaml:"remoteToken"`
-	Update      Update `yaml:"update"`
-	Agent       Agent  `yaml:"agent"`
+	Root        string  `yaml:"root"`
+	BaseURL     string  `yaml:"baseURL"`
+	RemoteToken string  `yaml:"remoteToken"`
+	Update      Update  `yaml:"update"`
+	Agent       Agent   `yaml:"agent"`
+	Logging     Logging `yaml:"logging"`
+}
+
+type Logging struct {
+	Level string `yaml:"level"`
+	File  string `yaml:"file"`
 }
 
 type Update struct {

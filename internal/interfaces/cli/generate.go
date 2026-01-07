@@ -9,6 +9,7 @@ import (
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 	"github.com/pterm/pterm"
 	"github.com/urfave/cli/v2"
 )
@@ -38,8 +39,9 @@ func runGenerate(c *cli.Context) error {
 
 	// 2. Load Indexer (Local Scan)
 	spinner, _ := pterm.DefaultSpinner.Start("Scanning documents...")
-	provider := fs.NewLocalProvider(root)
-	repo := fs.New(provider)
+	l := logger.NewStderrLogger()
+	provider := fs.NewLocalProvider(root, l)
+	repo := fs.New(provider, l)
 	if err := repo.Load(); err != nil {
 		spinner.Fail(fmt.Sprintf("Failed to load: %v", err))
 		return cli.Exit("", 1)
