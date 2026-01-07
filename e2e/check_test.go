@@ -127,3 +127,37 @@ Content`
 		}
 	})
 }
+
+func TestKexCheck_PositionalArg(t *testing.T) {
+	t.Run("it should pass when project root is passed as positional argument", func(t *testing.T) {
+		baseDir := t.TempDir()
+		projectRoot := filepath.Join(baseDir, "my-project")
+		contentsDir := filepath.Join(projectRoot, "custom_check_contents")
+		os.MkdirAll(contentsDir, 0755)
+
+		// Create a valid document
+		doc := `---
+id: pos-check-doc
+title: Positional Check Doc
+status: adopted
+---
+Content`
+		os.WriteFile(filepath.Join(contentsDir, "pos-check-doc.md"), []byte(doc), 0644)
+
+		// Config at projectRoot
+		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("root: custom_check_contents\n"), 0644)
+
+		// Run kex check <projectRoot> from baseDir
+		cmd := exec.Command(kexBinary, "check", projectRoot)
+		cmd.Dir = baseDir
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			t.Fatalf("Check failed expected success: %v\nOutput: %s", err, string(output))
+		}
+
+		if !strings.Contains(string(output), "All checks passed") {
+			t.Errorf("Expected 'All checks passed', got: %s", string(output))
+		}
+	})
+}

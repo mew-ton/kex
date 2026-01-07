@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -10,12 +11,13 @@ type Config struct {
 	Root string `yaml:"root"`
 }
 
-func Load() (Config, error) {
+func Load(projectRoot string) (Config, error) {
 	config := Config{
 		Root: "contents", // Default
 	}
 
-	data, err := os.ReadFile(".kex.yaml")
+	configPath := filepath.Join(projectRoot, ".kex.yaml")
+	data, err := os.ReadFile(configPath)
 	if os.IsNotExist(err) {
 		return config, nil
 	}

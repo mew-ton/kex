@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
@@ -33,14 +34,23 @@ func runCheck(c *cli.Context) error {
 		pterm.DefaultSection.Println("Checking documents...")
 	}
 
-	cfg, err := resolveConfig()
+	// 1. Resolve Project Root
+	projectRoot := c.Args().First()
+	if projectRoot == "" {
+		projectRoot = "."
+	}
+
+	cfg, err := resolveConfig(projectRoot)
 	if err != nil {
 		if !isJSON {
 			pterm.Warning.Printf("Failed to load config, using defaults: %v\n", err)
 		}
 	}
 
-	repo, err := loadRepository(cfg.Root, !isJSON)
+	// 2. Resolve Content Directory
+	root := filepath.Join(projectRoot, cfg.Root)
+
+	repo, err := loadRepository(root, !isJSON)
 	if err != nil {
 		if isJSON {
 			printJSONError(err.Error())
@@ -64,8 +74,8 @@ func runCheck(c *cli.Context) error {
 	return nil
 }
 
-func resolveConfig() (config.Config, error) {
-	return config.Load()
+func resolveConfig(projectRoot string) (config.Config, error) {
+	return config.Load(projectRoot)
 }
 
 func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
