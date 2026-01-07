@@ -114,3 +114,29 @@ agent:
 		t.Errorf("Documentation guidelines should have been removed based on config")
 	}
 }
+
+func TestKexUpdate_CustomRoot(t *testing.T) {
+	t.Run("it should respect configured root directory during update", func(t *testing.T) {
+		tempDir := t.TempDir()
+
+		// 1. Create .kex.yaml with custom root
+		configContent := "root: custom_docs\nagent:\n  type: general\n  scopes: []\n"
+		if err := os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(configContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		// 2. Run kex update
+		cmd := exec.Command(kexBinary, "update")
+		cmd.Dir = tempDir
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("kex update failed: %v\nOutput: %s", err, output)
+		}
+
+		// 3. Verify content is in custom_docs/documentation/kex
+		expectedPath := filepath.Join(tempDir, "custom_docs", "documentation", "kex", "write-concise-content.md")
+		if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
+			t.Fatalf("Content expected at %s, but not found. (Bug Reproducible)", expectedPath)
+		}
+	})
+}

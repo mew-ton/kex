@@ -182,7 +182,7 @@ func (g *Generator) updateWithMarkers(targetPath string, currentContent, templat
 }
 
 // Update updates the kex repository files based on configuration
-func (g *Generator) Update(cwd string, agentType AgentType, config map[string]string, agentConfig *config.Agent) error {
+func (g *Generator) Update(cwd, rootDir string, agentType AgentType, config map[string]string, agentConfig *config.Agent) error {
 	var mapper FileMapper
 	switch agentType {
 	case AgentTypeClaude:
@@ -213,6 +213,11 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 		mappedPath, ok := mapper(relPath)
 		if !ok {
 			return nil
+		}
+
+		// Use custom root for contents
+		if rootDir != "" && strings.HasPrefix(mappedPath, "contents") {
+			mappedPath = filepath.Join(rootDir, strings.TrimPrefix(mappedPath, "contents"))
 		}
 
 		targetPath := filepath.Join(cwd, mappedPath)
