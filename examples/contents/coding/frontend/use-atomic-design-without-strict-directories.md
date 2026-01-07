@@ -7,7 +7,7 @@ keywords:
   - frontend
   - architecture
   - atomic-design
-  - components
+  - component
 status: draft
 ---
 

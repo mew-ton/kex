@@ -21,6 +21,11 @@ Users (and AIs) search with different intents:
 - **Concept intent**: "I want to improve *readability*."
 Covering all three ensures the guideline is found in any context.
 
+## Search Strategy (Exact Match)
+Kex uses **Exact Match** for keywords.
+- **Singular**: Use `test` instead of `tests`.
+- **Synonyms**: Explicitly add `tests` if often searched.
+
 ## Guidance
 For every guideline, add keywords for:
 
