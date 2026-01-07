@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type AgentType string
@@ -110,63 +111,148 @@ func (g *Generator) handleAgentMD(targetPath string, templateData []byte) error 
 		return err
 	}
 
-	// Check if Kex guidelines are already present (simple check)
-	if string(content) == string(templateData) {
+	return g.updateWithMarkers(targetPath, content, templateData)
+}
+
+func (g *Generator) updateWithMarkers(targetPath string, currentContent, templateData []byte) error {
+	const startMarker = "<!-- kex: auto-update start -->"
+	const endMarker = "<!-- kex: auto-update end -->"
+
+	contentStr := string(currentContent)
+	tmplStr := string(templateData)
+
+	// Helper to find range
+	findRange := func(s, startM, endM string) (int, int) {
+		start := strings.Index(s, startM)
+		end := strings.Index(s, endM)
+		if start != -1 && end != -1 && start < end {
+			return start, end + len(endM)
+		}
+		return -1, -1
+	}
+
+	// Find markers in Current Content
+	cStart, cEnd := findRange(contentStr, startMarker, endMarker)
+
+	// Find markers in Template Content
+	tStart, tEnd := findRange(tmplStr, startMarker, endMarker)
+
+	// If template doesn't have markers, fallback to full replacement logic or error?
+	// We assume template HAS markers (we just added them).
+	if tStart == -1 || tEnd == -1 {
+		// Template is missing markers. Fallback to append logic?
+		// For now, if template has no markers, we assume it's not a marker-updatable file?
+		// But handleAgentMD calls this specifically for AGENTS.md which we updated.
 		return nil
 	}
 
-	// Check for a characteristic string to avoid partial duplication
-	// This is a heuristic; user might have modified it.
-	// But simply appending if "Kex" isn't mentioned might be safer?
-	// For now, let's append nicely with a separator if not exact match.
-	// Wait, if I append blindly, I might duplicate.
-	// Let's check for "Design Phase Guidelines" or similar unique headers from the template.
-	// The template has "## 1. Design Phase Guidelines".
-	// If that exists, we assume it's there.
+	newSegment := tmplStr[tStart:tEnd]
+	var finalContent string
 
-	/*
-		Proposed logic:
-		If "Ref: Kex" or "Kex" guidelines seem missing, append.
-		Let's look for "Kex" and "Design Phase Guidelines".
-	*/
-
-	// Actually, just checking if the specific "Project Guidelines (Ref: Kex)" header exists might be enough.
-	// But users might change the header.
-	// Let's just append if we don't find "Design Phase Guidelines" AND "Implementation Phase Guidelines".
-
-	// Simplified merge: Just append with a note if it seems completely different.
-	// But let's stick to the plan: "Append content if not present".
-
-	// Let's just write a simple check for now.
-	// If the file contains "Search for design documents", we assume it has the rules.
-
-	/*
-	   Actually, let's just append it with a newline if it's not the exact same content.
-	   But that risks duplication.
-	   Let's append ONLY IF "Search for design documents" is NOT present.
-	*/
-
-	searchStr := "Search for design documents"
-	// simplified check
-	for i := 0; i < len(content)-len(searchStr); i++ {
-		if string(content[i:i+len(searchStr)]) == searchStr {
-			return nil // Already present
+	if cStart != -1 && cEnd != -1 {
+		// Replace existsing block
+		before := contentStr[:cStart]
+		after := contentStr[cEnd:]
+		finalContent = before + newSegment + after
+	} else {
+		// Append to end
+		if len(contentStr) > 0 && !strings.HasSuffix(contentStr, "\n") {
+			finalContent = contentStr + "\n\n" + newSegment
+		} else {
+			finalContent = contentStr + "\n" + newSegment
 		}
 	}
 
-	// Append
-	f, err := os.OpenFile(targetPath, os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
+	return os.WriteFile(targetPath, []byte(finalContent), 0644)
+}
 
-	if _, err := f.WriteString("\n\n"); err != nil {
-		return err
-	}
-	if _, err := f.Write(templateData); err != nil {
-		return err
+// Update updates the kex repository files based on configuration
+func (g *Generator) Update(cwd string, agentType AgentType, config map[string]string) error {
+	var mapper FileMapper
+	switch agentType {
+	case AgentTypeClaude:
+		mapper = ClaudeMapper
+	default:
+		mapper = GeneralMapper
 	}
 
-	return nil
+	return fs.WalkDir(g.Templates, "templates", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel("templates", path)
+		if err != nil {
+			return err
+		}
+
+		if relPath == "." {
+			return nil
+		}
+
+		mappedPath, ok := mapper(relPath)
+		if !ok {
+			return nil
+		}
+
+		targetPath := filepath.Join(cwd, mappedPath)
+
+		// Determine Strategy
+		strategy := "skip"
+
+		// Default Strategies
+		// 1. Kex Documentation -> Overwrite
+		if filepath.Dir(mappedPath) == "contents/documentation/kex" ||
+			filepath.Dir(filepath.Dir(mappedPath)) == "contents/documentation/kex" {
+			strategy = "overwrite"
+		}
+
+		// 2. Agents -> Append/Marker
+		if filepath.Base(mappedPath) == "AGENTS.md" || filepath.Base(mappedPath) == "CLAUDE.md" {
+			strategy = "marker-update"
+		}
+
+		// Config Override
+		for pattern, action := range config {
+			matched, _ := filepath.Match(pattern, mappedPath)
+			if matched {
+				strategy = action
+			}
+		}
+
+		// Execute Strategy
+		if d.IsDir() {
+			return nil // Dirs are created implicitly by WriteFile or MkdirAll
+		}
+
+		data, err := fs.ReadFile(g.Templates, path)
+		if err != nil {
+			return err
+		}
+
+		switch strategy {
+		case "overwrite":
+			// Check if dir exists
+			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+				return err
+			}
+			return os.WriteFile(targetPath, data, 0644)
+		case "marker-update":
+			// Only for AGENTS.md (or similar text files)
+			return g.handleAgentMD(targetPath, data)
+		case "append":
+			// Naive append
+			f, err := os.OpenFile(targetPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			if _, err := f.Write(data); err != nil {
+				return err
+			}
+			return nil
+		default: // "skip"
+			return nil
+		}
+	})
 }

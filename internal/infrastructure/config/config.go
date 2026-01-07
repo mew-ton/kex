@@ -11,6 +11,11 @@ type Config struct {
 	Root        string `yaml:"root"`
 	BaseURL     string `yaml:"baseURL"`
 	RemoteToken string `yaml:"remoteToken"`
+	Update      Update `yaml:"update"`
+}
+
+type Update struct {
+	Strategies map[string]string `yaml:"strategies"`
 }
 
 func Load(projectRoot string) (Config, error) {

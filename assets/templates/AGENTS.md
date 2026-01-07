@@ -2,6 +2,7 @@
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or documentation, please follow these guidelines.
 
+<!-- kex: auto-update start -->
 ## 1. Design Phase Guidelines
 
 Before proposing changes or writing code, understand the existing design. **Always use MCP tools for content search.**
@@ -47,3 +48,4 @@ To add new knowledge to this project:
 5. Follow the directory structure and format patterns from existing documents.
 6. Ensure the file has valid frontmatter (id, title, description, keywords).
 7. Run `kex check` to validate your new documents.
+<!-- kex: auto-update end -->

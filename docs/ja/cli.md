@@ -51,3 +51,15 @@ kex generate [output-dir]
 - `dist/` ディレクトリを作成します。
 - `kex.json` (インデックス) を生成します。
 - マークダウンファイルを `dist/` にコピーします。
+
+## `kex update`
+
+既存のリポジトリ内の Kex システムドキュメントとエージェント設定を更新します。
+
+```bash
+kex update [options]
+```
+
+- **システムドキュメント (`contents/documentation/kex/*`)**: 現在のバイナリバージョンに合わせて更新します (上書き)。
+- **`AGENTS.md`**: `<!-- kex: auto-update start -->` マーカー間のガイドラインを安全に更新します。
+- 動作をカスタマイズするには `.kex.yaml` 設定を参照してください。
