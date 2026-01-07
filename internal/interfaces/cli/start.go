@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
@@ -28,13 +29,29 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	// 1. Resolve configuration
-	cfg, err := config.Load()
+	// 1. Resolve Project Root
+	projectRoot := c.Args().First()
+	if projectRoot == "" {
+		projectRoot = "."
+	}
+
+	// 2. Resolve configuration
+	cfg, err := config.Load(projectRoot)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
 	}
-	root := cfg.Root
+
+	// 3. Resolve Content Directory
+	// Default: projectRoot/cfg.Root
+	// Override: --root flag
+	root := filepath.Join(projectRoot, cfg.Root)
 	if c.String("root") != "" {
+		// If --root is absolute, use it directly.
+		// If relative, treat it as relative to CWD (standard CLI behavior)
+		// Or should it be relative to projectRoot?
+		// Issue says "--root option should specify CWD", which is confusing.
+		// But "standard" way is: --root overrides everything.
+		// Let's assume --root is explicit path.
 		root = c.String("root")
 	}
 
@@ -42,13 +59,13 @@ func runStart(c *cli.Context) error {
 		return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
 	}
 
-	// 2. Load Indexer (Infrastructure)
+	// 4. Load Indexer (Infrastructure)
 	repo := fs.New(root)
 	if err := repo.Load(); err != nil {
 		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}
 
-	// 3. Strict validation on start (Use Case)
+	// 5. Strict validation on start (Use Case)
 	// We use the Validator use case to determine validity
 	report := validator.Validate(repo)
 
