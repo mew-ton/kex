@@ -71,6 +71,20 @@ agent:
     - `coding`: 設計および実装フェーズのガイドライン。
     - `documentation`: ドキュメントフェーズのルール。
 
+### `logging` (Optional)
+
+サーバーのロギングを設定します。
+
+```yaml
+logging:
+  file: ".kex/kex.log"
+  level: "info"
+```
+
+- **file**: ログファイルのパス。省略した場合、ログは標準エラー出力 (Stderr) に書き込まれます。
+- **level**: ログレベル (デフォルト: `info`)。
+
+
 ## 環境変数 (Environment Variables)
 
 Kex は以下の環境変数をサポートしています:

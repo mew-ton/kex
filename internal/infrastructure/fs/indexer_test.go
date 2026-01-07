@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 )
 
 func TestIndexer_Search(t *testing.T) {
@@ -34,8 +36,9 @@ Content 2`
 	}
 
 	t.Run("should load valid documents", func(t *testing.T) {
-		provider := NewLocalProvider(tmpDir)
-		idx := New(provider)
+		l := &logger.NoOpLogger{}
+		provider := NewLocalProvider(tmpDir, l)
+		idx := New(provider, l)
 		err := idx.Load()
 		if err != nil {
 			t.Fatalf("Load failed: %v", err)
@@ -43,8 +46,9 @@ Content 2`
 	})
 
 	// Initialize Indexer for search tests
-	provider := NewLocalProvider(tmpDir)
-	idx := New(provider)
+	l := &logger.NoOpLogger{}
+	provider := NewLocalProvider(tmpDir, l)
+	idx := New(provider, l)
 	if err := idx.Load(); err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}

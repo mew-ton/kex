@@ -8,6 +8,7 @@ import (
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 	"github.com/mew-ton/kex/internal/interfaces/mcp"
 	"github.com/mew-ton/kex/internal/usecase/validator"
 
@@ -23,6 +24,10 @@ var StartCommand = &cli.Command{
 			Usage:   "Path to guidelines directory",
 			Aliases: []string{"r"},
 		},
+		&cli.StringFlag{
+			Name:  "log-file",
+			Usage: "Path to log file",
+		},
 	},
 	Action: runStart,
 }
@@ -35,15 +40,49 @@ func runStart(c *cli.Context) error {
 	isRemote := strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://")
 
 	var repo *fs.Indexer
+	var cfg config.Config
+	var err error
+
+	// Resolve Config & Logger
+	// We try to load config early to get logging preferences
+	projectRoot := "."
+	if !isRemote && arg != "" {
+		projectRoot = arg
+	}
+	cfg, err = config.Load(projectRoot)
+	// Ignore error for now, will handle specific errors later
+
+	// Init Logger
+	var appLogger logger.Logger
+	logFile := c.String("log-file")
+	if logFile == "" {
+		logFile = cfg.Logging.File
+	}
+
+	if logFile != "" {
+		// Resolve absolute path if needed?
+		// Ensure directory exists?
+		// For now simple open.
+		fl, err := logger.NewFileLogger(logFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to open log file '%s': %v. Using stderr.\n", logFile, err)
+			appLogger = logger.NewStderrLogger()
+		} else {
+			appLogger = fl
+		}
+	} else {
+		appLogger = logger.NewStderrLogger()
+	}
 
 	if isRemote {
 		// Resolve Token: KEX_REMOTE_TOKEN > .kex.yaml (remoteToken)
 		pathOrUrl := arg
 		token := os.Getenv("KEX_REMOTE_TOKEN")
+
+		// Check config only if token missing? Or always overrides?
+		// Existing logic:
 		if token == "" {
-			// Try to load config from current directory even for remote
-			// This might be useful if .kex.yaml contains just the remoteToken but is used for context
-			if cfg, err := config.Load("."); err == nil {
+			if cfg.RemoteToken != "" {
 				token = cfg.RemoteToken
 			}
 		}
@@ -55,21 +94,16 @@ func runStart(c *cli.Context) error {
 			fmt.Fprintf(os.Stderr, "Auth: None\n")
 		}
 
-		provider := fs.NewRemoteProvider(pathOrUrl, token)
-		repo = fs.New(provider)
+		provider := fs.NewRemoteProvider(pathOrUrl, token, appLogger)
+		repo = fs.New(provider, appLogger)
 		if err := repo.Load(); err != nil {
 			return cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
 		}
 	} else {
 		// Local Mode
-		projectRoot := arg
-		if projectRoot == "" {
-			projectRoot = "."
-		}
-
-		// Resolve configuration
-		cfg, err := config.Load(projectRoot)
-		if err != nil {
+		// projectRoot is already set above
+		// cfg is already loaded above
+		if err != nil { // Err from config.Load
 			fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
 		}
 
@@ -83,8 +117,8 @@ func runStart(c *cli.Context) error {
 			return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
 		}
 
-		provider := fs.NewLocalProvider(root)
-		repo = fs.New(provider)
+		provider := fs.NewLocalProvider(root, appLogger)
+		repo = fs.New(provider, appLogger)
 		if err := repo.Load(); err != nil {
 			return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 		}
@@ -122,7 +156,7 @@ func runStart(c *cli.Context) error {
 	}
 
 	// 4. Start Server (Interface)
-	srv := mcp.New(repo)
+	srv := mcp.New(repo, appLogger)
 	fmt.Fprintf(os.Stderr, "Server listening on stdio...\n")
 	if err := srv.Serve(); err != nil {
 		return cli.Exit(fmt.Sprintf("Server error: %v", err), 1)

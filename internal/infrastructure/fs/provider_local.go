@@ -7,18 +7,20 @@ import (
 	"strings"
 
 	"github.com/mew-ton/kex/internal/domain"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 )
 
 type LocalProvider struct {
 	Root    string
+	Logger  logger.Logger
 	BaseURL string // Optional, for generating absolute URLs if needed (though mostly for generate)
 	// Actually LocalProvider for 'start' just needs Root.
 	// schema generation logic uses BaseURL but that might be separate?
 	// Let's keep it simple.
 }
 
-func NewLocalProvider(root string) *LocalProvider {
-	return &LocalProvider{Root: root}
+func NewLocalProvider(root string, logger logger.Logger) *LocalProvider {
+	return &LocalProvider{Root: root, Logger: logger}
 }
 
 func (l *LocalProvider) Load() (*IndexSchema, []error) {
@@ -73,6 +75,11 @@ func (l *LocalProvider) Load() (*IndexSchema, []error) {
 
 func (l *LocalProvider) FetchContent(path string) (string, error) {
 	fullPath := filepath.Join(l.Root, path)
+
+	if l.Logger != nil {
+		l.Logger.Info("[Filesystem] Read: %s", fullPath)
+	}
+
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return "", err

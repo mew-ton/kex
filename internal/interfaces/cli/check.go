@@ -9,6 +9,7 @@ import (
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 	"github.com/mew-ton/kex/internal/usecase/validator"
 
 	"github.com/pterm/pterm"
@@ -84,8 +85,10 @@ func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
 		spinner, _ = pterm.DefaultSpinner.Start("Loading documents...")
 	}
 
-	provider := fs.NewLocalProvider(root)
-	repo := fs.New(provider)
+	// Use NoOpLogger for Check command to avoid clutter
+	l := &logger.NoOpLogger{}
+	provider := fs.NewLocalProvider(root, l)
+	repo := fs.New(provider, l)
 	repo.IncludeDrafts = true
 	if err := repo.Load(); err != nil {
 		if spinner != nil {
