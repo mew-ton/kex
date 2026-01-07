@@ -1,0 +1,31 @@
+# Configuration
+
+## `.kex.yaml`
+
+The configuration file `kex.yaml` (or `.kex.yaml`) lives at the root of your project.
+
+```yaml
+root: contents
+baseURL: https://example.com/docs/
+```
+
+### `root` (Optional)
+
+Specifies the directory containing your markdown documentation files.
+
+- **Type**: `string`
+- **Default**: `contents`
+- **Description**: Kex will recursively index all `.md` files within this directory. This path is relative to the directory where `kex start` or `kex check` is run (usually the project root).
+
+### `baseURL` (Optional)
+
+Defines the base URL for the remote hosting location of your documentation.
+
+- **Type**: `string`
+- **Example**: `https://my-org.github.io/my-repo/`
+- **Description**:
+    - Used by `kex generate` to create absolute URLs in the `kex.json` index.
+    - If omitted, `kex generate` will produce relative paths (which generally works fine for most static site setups).
+    - Necessary if you plan to consume the `kex.json` from a different domain or context where relative paths might break.
+
+
