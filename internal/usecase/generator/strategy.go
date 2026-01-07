@@ -74,7 +74,7 @@ func ResolveStrategy(path string, strategies map[string]string) UpdateStrategy {
 	strategyName := "skip"
 
 	// Default Strategies
-	if strings.Contains(path, "contents/documentation/kex") {
+	if strings.Contains(path, "documentation/kex") {
 		strategyName = "overwrite"
 	}
 	if filepath.Base(path) == "AGENTS.md" || filepath.Base(path) == "CLAUDE.md" {
