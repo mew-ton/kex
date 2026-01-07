@@ -100,9 +100,7 @@ func parseDocumentContent(path string, content []byte) (*Document, error) {
 	frontmatter := parts[0][4:] // remove leading ---\n
 	body := parts[1]
 
-	doc := &Document{
-		Status: StatusAdopted, // Default status
-	}
+	doc := &Document{}
 
 	if err := yaml.Unmarshal([]byte(frontmatter), doc); err != nil {
 		return nil, fmt.Errorf("failed to parse frontmatter: %w", err)

@@ -1,6 +1,8 @@
 # Installation
 
-## 1. Binary Download
+You can install Kex using one of the following methods.
+
+## Binary Download
 
 You can download the latest pre-compiled binaries from the [GitHub Releases](https://github.com/mew-ton/kex/releases) page.
 
@@ -14,7 +16,7 @@ tar -xzf kex_linux_amd64.tar.gz
 sudo mv kex /usr/local/bin/
 ```
 
-## 2. Go Install
+## Go Install
 
 If you have Go installed (1.25+), you can install the latest version directly:
 

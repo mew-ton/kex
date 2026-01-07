@@ -8,12 +8,14 @@ import (
 )
 
 type Config struct {
-	Root string `yaml:"root"`
+	Root    string `yaml:"root"`
+	BaseURL string `yaml:"baseURL"`
 }
 
 func Load(projectRoot string) (Config, error) {
 	config := Config{
-		Root: "contents", // Default
+		Root:    "contents", // Default
+		BaseURL: "",
 	}
 
 	configPath := filepath.Join(projectRoot, ".kex.yaml")

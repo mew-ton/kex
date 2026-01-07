@@ -13,6 +13,7 @@ func TestIndexer_Search(t *testing.T) {
 	doc1 := `---
 id: doc1
 title: Doc 1
+status: adopted
 keywords: [apple, banana]
 ---
 Content 1`
@@ -20,6 +21,7 @@ Content 1`
 	doc2 := `---
 id: doc2
 title: Doc 2
+status: adopted
 keywords: [banana, cherry]
 ---
 Content 2`
@@ -31,8 +33,18 @@ Content 2`
 		t.Fatal(err)
 	}
 
-	// Initialize Indexer
-	idx := New(tmpDir)
+	t.Run("should load valid documents", func(t *testing.T) {
+		provider := NewLocalProvider(tmpDir)
+		idx := New(provider)
+		err := idx.Load()
+		if err != nil {
+			t.Fatalf("Load failed: %v", err)
+		}
+	})
+
+	// Initialize Indexer for search tests
+	provider := NewLocalProvider(tmpDir)
+	idx := New(provider)
 	if err := idx.Load(); err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}

@@ -2,128 +2,50 @@
 
 **English** | [日本語](./README.ja.md)
 
-
-**Kex** is a lightweight Document Librarian and MCP (Model Context Protocol) Server designed to manage and serve coding guidelines and project documentation. It helps AI agents (and humans) access the right documentation at the right time.
+**Kex** is a **keyword-indexed knowledge exchange** implemented as a **document librarian**. Designed to aid "Vibe Coding", it operates as a local **MCP Server** that helps AI agents (and humans) access the right documentation at the right time from your repository.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.25+-blue)
 
-## Features
+## Quick Start
 
--   **MCP Server**: Exposes documents via the Model Context Protocol (JSON-RPC), allowing AI agents to "read" and "search" your documentation.
--   **Structure Enforcement**: Enforces a strict schema for documentation using Frontmatter (ID, Title, Status, Keywords).
--   **Lifecycle Management**: Distinguishes between `draft` and `adopted` documents.
-    -   **Draft**: Work-in-progress. Errors are warnings.
-    -   **Adopted**: Source of truth. Errors avoid startup.
--   **CLI Tooling**:
-    -   `init`: Scaffolds a new Knowledge Base.
-    -   `check`: Validates all documents and reports integrity issues.
-    -   `start`: Starts the MCP server (communicates via stdio).
+See **[Installation](docs/installation.md)** for binary downloads and `go install` instructions.
 
-## Use Cases
-
--   **Efficient Context Management**: Retrieve only the necessary guidelines during coding or design phases to prevent context bloating in LLMs.
--   **Structured Knowledge Base**: Enforce a strict schema and lifecycle (draft vs adopted) to keep documentation clean, trustworthy, and AI-ready.
-
-## Installation
-
-See [docs/installation.md](docs/installation.md).
-
-## Getting Started
-
-### 1. Initialize a Repository
-
-Go to your project root and run:
-
+### 1. Initialize
 ```bash
 kex init
 ```
 
-This will create a `contents/` directory and a `.kex.yaml` configuration file. It will also generate `AGENTS.md`, which contains guidelines for AI agents.
-
-**Options:**
-
-- `--agent-type=claude`: Generate `CLAUDE.md` instead of `AGENTS.md` (optimized for Claude Code).
-
-
-### 2. Write Documentation
-
-Create markdown files in the `contents/` directory. Each file **must** have valid YAML frontmatter:
-
-```markdown
----
-id: my-guideline
-title: Coding Standards
-description: Guidelines for Go development
-status: adopted
-keywords: [go, style, lint]
----
-
-# Coding Standards
-
-Write your content here...
-```
-
-**Status Types:**
--   `draft`: Ignored by the server by default. Useful for work-in-progress.
--   `adopted`: Active and indexed. Must pass all checks. Errors prevent startup.
-
-### 3. Validate Documents
-
-Run the check command to verify your documents:
-
+### 2. Start (Local)
 ```bash
-kex check
+kex start .
 ```
 
-This will report:
--   Missing frontmatter
--   Filename vs ID mismatches
--   Parsing errors
-
-### 4. Start the Server
-
-Start the MCP server to allow AI connections:
-
+### 3. Start (Remote / GitHub Pages)
 ```bash
-kex start
+kex start https://my-org.github.io/guidelines/
 ```
 
-Or specify the project directory:
+## Documentation
 
-```bash
-kex start ./my-project
-```
+Full documentation is available in the `docs/` directory:
 
-**Options:**
+- **[Features](docs/feature.md)**: Keywords and Scopes explanations.
+- **[Core Concepts](docs/concept.md)**: Philosophy, Architecture, and Draft/Adopted status.
+- **[CLI Reference](docs/cli.md)**: Usage of `init`, `check`, `start`, and `generate`.
+- **[Configuration](docs/configuration.md)**: `.kex.yaml` reference.
+- **[MCP Tools](docs/mcp.md)**: Tools exposed to AI agents and client configuration.
+- **[Writing Documentation](docs/documentation.md)**: Frontmatter schema and content guidelines.
+- **[Best Practices](docs/best-practice.md)**: How to structure your knowledge base.
 
-- `--root <path>`: Override the guidelines content directory path (defaults to value in `.kex.yaml` inside the project root).
+## Use Cases
 
-*Note: This starts an interactive JSON-RPC session using stdio for communication. It is meant to be run by an MCP Client (like Claude Desktop).*
-
-## MCP Tools Provided
-
-Kex exposes the following tools to connected AI agents:
-
--   `search_documents(keywords: string[])`: Find documents matching specific keywords.
--   `read_document(id: string)`: Retrieve the full content of a document by its ID.
-
-## Client Configuration
-
-Please refer to [docs/editors.md](docs/editors.md) for configuring your specific MCP client (e.g., Claude Desktop, Windsurf, etc).
-
-## Configuration
-
-`.kex.yaml`:
-
-```yaml
-root: contents # Directory containing markdown files
-```
+- **[Monorepo / Local](docs/usecase-monorepo.md)**: For documentation that lives with the code.
+- **[Central Repository](docs/usecase-central-repo.md)**: For organization-wide guidelines shared via GitHub Pages.
 
 ## Contributing
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on the release workflow and development process.
-
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

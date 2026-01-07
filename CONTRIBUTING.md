@@ -12,3 +12,27 @@ This project uses **Tagpr** for automated releases.
 ## Design Documents
 
 Please refer to [docs/design.md](docs/design.md) for the architectural design.
+
+## Testing Guidelines
+
+The reliability of the `kex` CLI is critical.
+
+### Philosophy
+1.  **Test First**: Tests **must** pass and the project **must** build at all times.
+2.  **Maintenance Priority**: Maintaining existing tests is as important as writing new code.
+
+### Running Tests
+
+Use the `Makefile` target to run E2E tests:
+
+```bash
+make e2e
+```
+
+### Pre-commit Checks (Lefthook)
+
+We use [Lefthook](https://github.com/evilmartians/lefthook) to enforce quality before every commit.
+
+```bash
+make init
+```
