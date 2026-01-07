@@ -35,6 +35,23 @@ Authentication token for private repositories (e.g. GitHub Private Pages).
 - **Type**: `string`
 - **Description**: If set, this token will be sent as a Bearer token in the `Authorization` header when fetching remote documents.
 
+### `update` (Optional)
+
+Configures the behavior of `kex update`.
+
+```yaml
+update:
+  strategies:
+    "contents/documentation/kex/*": "overwrite"
+    "AGENTS.md": "marker-update"
+```
+
+- **strategies**: A map of glob patterns to update strategies.
+  - `overwrite`: Replaces the file with the template.
+  - `marker-update`: Updates content between markers (Designed for `AGENTS.md`).
+  - `append`: Appends new content to the end if missing.
+  - `skip`: Does nothing.
+
 ## Environment Variables
 
 Kex supports the following environment variables:

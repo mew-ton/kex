@@ -18,6 +18,7 @@ func main() {
 			kexcli.CheckCommand,
 			kexcli.StartCommand,
 			kexcli.GenerateCommand,
+			kexcli.UpdateCommand,
 		},
 	}
 

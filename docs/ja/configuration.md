@@ -35,6 +35,23 @@ baseURL: https://example.com/docs/
 - **型**: `string`
 - **説明**: 設定されている場合、リモートドキュメントの取得時に `Authorization` ヘッダーの Bearer トークンとして送信されます。
 
+### `update` (Optional)
+
+`kex update` の動作を設定します。
+
+```yaml
+update:
+  strategies:
+    "contents/documentation/kex/*": "overwrite"
+    "AGENTS.md": "marker-update"
+```
+
+- **strategies**: Glob パターンと更新戦略のマップです。
+  - `overwrite`: ファイルをテンプレートで置換します。
+  - `marker-update`: マーカー間のコンテンツを更新します (`AGENTS.md` 用)。
+  - `append`: コンテンツが欠落している場合、末尾に追加します。
+  - `skip`: 何もしません。
+
 ## 環境変数 (Environment Variables)
 
 Kex は以下の環境変数をサポートしています:

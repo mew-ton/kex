@@ -51,3 +51,15 @@ kex generate [output-dir]
 - Creates a `dist/` directory.
 - Generates `kex.json` (Index).
 - Copies markdown files to `dist/`.
+
+## `kex update`
+
+Updates the Kex system documentation and agent configuration in an existing repository.
+
+```bash
+kex update [options]
+```
+
+- **System Docs (`contents/documentation/kex/*`)**: Updates to match the current binary version (Overwrite).
+- **`AGENTS.md`**: Safely updates guidelines between `<!-- kex: auto-update start -->` markers.
+- See `.kex.yaml` configuration to customize behavior.
