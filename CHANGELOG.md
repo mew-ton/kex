@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.0.0](https://github.com/mew-ton/kex/compare/v0.0.4...v1.0.0) - 2026-01-07
+- feat: add positional arg support for project root (#18) by @mew-ton in https://github.com/mew-ton/kex/pull/22
+- feat: #19 support github pages, update documents. by @mew-ton in https://github.com/mew-ton/kex/pull/25
+- feat: support private remote repositories via token auth (#24) by @mew-ton in https://github.com/mew-ton/kex/pull/26
+- doc: update guidelines for search keywords exact match (#20) by @mew-ton in https://github.com/mew-ton/kex/pull/27
+- feat: implement kex update command (#28) by @mew-ton in https://github.com/mew-ton/kex/pull/30
+- feat: modularize AGENTS.md prompts (#31) by @mew-ton in https://github.com/mew-ton/kex/pull/33
+- feat: implement configurable file logging (Issue #32) by @mew-ton in https://github.com/mew-ton/kex/pull/36
+- Refactor/issue 35 by @mew-ton in https://github.com/mew-ton/kex/pull/37
+
 ## [v0.0.4](https://github.com/mew-ton/kex/compare/v0.0.3...v0.0.4) - 2026-01-06
 - ci: fix check command missing and trigger on doc changes by @mew-ton in https://github.com/mew-ton/kex/pull/11
 - docs: add instructions for Claude Code (#6) by @mew-ton in https://github.com/mew-ton/kex/pull/13
