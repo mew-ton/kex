@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
@@ -29,44 +30,57 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	// 1. Resolve Project Root
-	projectRoot := c.Args().First()
-	if projectRoot == "" {
-		projectRoot = "."
-	}
+	// 1. Resolve Project Root or Remote URL
+	arg := c.Args().First()
+	isRemote := strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://")
 
-	// 2. Resolve configuration
-	cfg, err := config.Load(projectRoot)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
-	}
+	var repo *fs.Indexer
 
-	// 3. Resolve Content Directory
-	// Default: projectRoot/cfg.Root
-	// Override: --root flag
-	root := filepath.Join(projectRoot, cfg.Root)
-	if c.String("root") != "" {
-		// If --root is absolute, use it directly.
-		// If relative, treat it as relative to CWD (standard CLI behavior)
-		// Or should it be relative to projectRoot?
-		// Issue says "--root option should specify CWD", which is confusing.
-		// But "standard" way is: --root overrides everything.
-		// Let's assume --root is explicit path.
-		root = c.String("root")
-	}
+	if isRemote {
+		// Remote Mode
+		// logic moved to RemoteProvider. Just pass arg.
+		// NewRemoteProvider handles /kex.json suffix logic if we want, or we keep it here.
+		// Refactored NewRemoteProvider handles it.
+		fmt.Fprintf(os.Stderr, "Fetching index from remote...\n")
+		provider := fs.NewRemoteProvider(arg)
+		repo = fs.New(provider)
+		if err := repo.Load(); err != nil {
+			return cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
+		}
+	} else {
+		// Local Mode
+		projectRoot := arg
+		if projectRoot == "" {
+			projectRoot = "."
+		}
 
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
-	}
+		// Resolve configuration
+		cfg, err := config.Load(projectRoot)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
+		}
 
-	// 4. Load Indexer (Infrastructure)
-	repo := fs.New(root)
-	if err := repo.Load(); err != nil {
-		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
+		// Resolve Content Directory
+		root := filepath.Join(projectRoot, cfg.Root)
+		if c.String("root") != "" {
+			root = c.String("root")
+		}
+
+		if _, err := os.Stat(root); os.IsNotExist(err) {
+			return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
+		}
+
+		provider := fs.NewLocalProvider(root)
+		repo = fs.New(provider)
+		if err := repo.Load(); err != nil {
+			return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
+		}
 	}
 
 	// 5. Strict validation on start (Use Case)
 	// We use the Validator use case to determine validity
+	// Note: Remote documents are assumed valid (or validated at build time).
+	// But validator checks for structure/missing fields.
 	report := validator.Validate(repo)
 
 	// Check for Parse Errors (Critical for start)
@@ -82,6 +96,15 @@ func runStart(c *cli.Context) error {
 	// But validator.Validate returns Valid=false if AdoptedErrors > 0.
 	// As per previous design: "Failed to start due to document errors".
 	if !report.Valid {
+		// Print errors to stderr for debugging/user info
+		for _, err := range report.GlobalErrors {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		}
+		for _, doc := range report.Documents {
+			for _, err := range doc.Errors {
+				fmt.Fprintf(os.Stderr, "Error [%s]: %v\n", doc.ID, err)
+			}
+		}
 		return cli.Exit("Validation failed (documents contain errors). Run 'kex check' for details.", 1)
 	}
 

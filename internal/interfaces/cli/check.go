@@ -84,9 +84,10 @@ func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
 		spinner, _ = pterm.DefaultSpinner.Start("Loading documents...")
 	}
 
-	idx := fs.New(root)
-	idx.IncludeDrafts = true
-	if err := idx.Load(); err != nil {
+	provider := fs.NewLocalProvider(root)
+	repo := fs.New(provider)
+	repo.IncludeDrafts = true
+	if err := repo.Load(); err != nil {
 		if spinner != nil {
 			spinner.Fail("Failed to load documents")
 		}
@@ -95,7 +96,7 @@ func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
 	if spinner != nil {
 		spinner.Success("Documents loaded")
 	}
-	return idx, nil
+	return repo, nil
 }
 
 // Presentation Logic
