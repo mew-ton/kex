@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "kex": {
+      "command": "${workspaceFolder}/kex",
+      "args": [
+        "start",
+        "${workspaceFolder}"
+      ]
+    }
+  }
+}

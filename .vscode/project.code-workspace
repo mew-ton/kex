@@ -23,17 +23,5 @@
 		"recommendations": [
 			"golang.go"
 		]
-	},
-	"mcp": {
-		"servers": {
-			"kex": {
-				"command": "./kex",
-				"args": [
-					"start"
-				],
-				"env": {},
-				"cwd": "${workspaceFolder}"
-			}
-		}
 	}
 }

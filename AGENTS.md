@@ -1,63 +1,49 @@
-# Antigravity Project Guidelines
+<!-- kex: auto-update start -->
+## 1. Design Phase Guidelines
 
-You have access to the `kex` MCP server in this workspace.
-This tool is designed to help you strictly adhere to project guidelines throughout the entire development lifecycle, from **Design** to **Implementation**.
+Before proposing changes or writing code, understand the existing design. **Always use MCP tools for content search.**
 
-**Core Rule:** Before taking action in any phase, you MUST consult the project's documentation using `kex`.
+1. **Search for design documents** using the `kex` MCP tool `search_documents`.
+   * **Keywords:** "architecture", "design", "requirements", "flow", "specification".
+2. **Read the relevant design docs** using `read_document`.
+3. **Validate your plan** against these design principles.
 
-## 1. AI Configuration Guidelines
+**Note:** Use `Glob`/`Read` only for file existence checks or duplication verification, not for content search.
 
-To ensure consistent behavior, AI agents must be configured with explicit roles and system instructions. this distinction prevents "hallucinations" of rules and ensures that the AI acts as a consumer of documentation rather than an inventor of it.
+## 2. Implementation Phase Guidelines
 
-### Role Separation
+Ensure you follow the established coding standards. **Always use MCP tools for content search.**
 
-#### A. Consumer AI (Coding Agent)
-- **Goal**: Write or modify code to meet user requirements.
-- **Permission**: READ-ONLY access to documents.
-- **Behavior**:
-    1.  **Search first**: Queries MCP before writing code.
-    2.  **Compliance**: Follows found documents as project constraints.
-    3.  **No Invention**: If no document is found, acts based on general knowledge but DOES NOT invent project rules.
+1. **Search for coding guidelines** using the `kex` MCP tool `search_documents`.
+   * **Keywords:** "logging", "error", "structure", "naming", "testing", "component", "frontend", "backend".
+2. **Read the relevant coding docs** using `read_document`.
+3. **Adhere strictly** to the guidelines found.
 
-#### B. Maintainer AI (Librarian Agent)
-- **Goal**: Assist humans in writing or updating guideline documents.
-- **Permission**: WRITE access to `contents/` directory.
-- **Behavior**:
-    1.  **Content Focus**: Focuses on writing clear, concise, and helpful guidelines.
-    2.  **Taxonomy**: Places new files in the correct `universal/` or `domain/` structure.
-    3.  **Delegation**: Relies on `kex check` for strict schema validation.
+**Note:** Use `Glob`/`Read` only for file existence checks or duplication verification, not for content search.
 
-## 2. Design Phase Guidelines
-Before proposing changes or writing code, you MUST understand the existing design and architecture.
+## 3. Documentation Phase Guidelines
 
-1.  **Search for design documents** using the `kex` MCP tool `search_documents`.
-    *   **Keywords:** "architecture", "design", "requirements", "flow", "specification".
-2.  **Read the relevant design docs** using `read_document`.
-3.  **Validate your plan** against these design principles.
+Maintain clarity and consistency in documentation. **Always use MCP tools for content search.**
 
-## 3. Implementation Phase Guidelines
-Before modifying or creating code, ensure you follow the established coding standards.
+1. **Search for documentation guidelines** using the `kex` MCP tool `search_documents`.
+   * **Keywords:** "documentation", "style", "markdown", "language", "grammar", "frontmatter", "format".
+2. **Read the relevant style guides** using `read_document`.
+3. **Adhere strictly** to the formatting rules found.
 
-1.  **Search for coding guidelines** using the `kex` MCP tool `search_documents`.
-    *   **Keywords:** "logging", "error", "structure", "naming", "testing", "function", "frontend", "typescript", "vue".
-2.  **Read the relevant coding docs** using `read_document`.
-3.  **Adhere strictly** to the guidelines found.
+**Note:** Use `Glob`/`Read` only for file existence checks or duplication verification, not for content search.
 
+## 4. Adding New Knowledge
 
-## 4. Documentation Phase Guidelines
-When writing or updating documentation (README, guides, comments), maintain clarity and consistency.
+To add new knowledge to this project:
 
-1.  **Search for documentation guidelines** using the `kex` MCP tool `search_documents`.
-    *   **Keywords:** "documentation", "style", "markdown", "language", "grammar".
-2.  **Read the relevant style guides** using `read_document`.
-3.  **Adhere strictly** to the writing style and formatting rules.
-
-## 5. General Usage Note
-**Note:** This workspace uses a local binary `./kex` for the MCP server to ensure stability.
-If the `./kex` binary is missing or if the MCP server fails to start, you MUST run:
-```bash
-make build
-```
-before attempting to use MCP tools again.
+1. **Search for existing guidelines** using the `kex` MCP tool `search_documents` to understand format and structure.
+   * **Keywords:** Related to the topic you're documenting, plus "format", "structure", "template".
+2. **Read relevant examples** using `read_document` to understand the expected format.
+3. **Check for file conflicts** using `Glob` to ensure no duplicate filenames exist.
+4. Create a Markdown file in the appropriate `contents/` subdirectory.
+5. Follow the directory structure and format patterns from existing documents.
+6. Ensure the file has valid frontmatter (id, title, description, keywords).
+7. Run `kex check` to validate your new documents.
+<!-- kex: auto-update end -->
 
 Always ensure you are following the project's own documentation ("Dogfooding").
