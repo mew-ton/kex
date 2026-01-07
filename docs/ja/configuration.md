@@ -28,4 +28,25 @@ baseURL: https://example.com/docs/
     - 省略した場合、`kex generate` は相対パスを出力します (これはほとんどの静的サイト構成で問題なく機能します)。
     - 相対パスが機能しない異なるドメインやコンテキストから `kex.json` を利用する場合に必要となります。
 
+### `remoteToken` (Optional)
+
+プライベートリポジトリ (例: GitHub Private Pages) 用の認証トークンです。
+
+- **型**: `string`
+- **説明**: 設定されている場合、リモートドキュメントの取得時に `Authorization` ヘッダーの Bearer トークンとして送信されます。
+
+## 環境変数 (Environment Variables)
+
+Kex は以下の環境変数をサポートしています:
+
+### `KEX_REMOTE_TOKEN`
+
+- **目的**: プライベートなリモートドキュメントエンドポイントに対する認証。
+- **優先順位**: `.kex.yaml` の `remoteToken` よりも優先されます。
+- **使用方法**:
+  ```bash
+  export KEX_REMOTE_TOKEN="your-secret-token"
+  kex start https://private.example.com/docs/
+  ```
+
 

@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Root    string `yaml:"root"`
-	BaseURL string `yaml:"baseURL"`
+	Root        string `yaml:"root"`
+	BaseURL     string `yaml:"baseURL"`
+	RemoteToken string `yaml:"remoteToken"`
 }
 
 func Load(projectRoot string) (Config, error) {

@@ -11,9 +11,10 @@ import (
 type RemoteProvider struct {
 	BaseURL string // URL to directory (or wherever kex.json is relative to)
 	KexURL  string // Full URL to kex.json
+	Token   string // Optional Bearer Token
 }
 
-func NewRemoteProvider(rootURL string) *RemoteProvider {
+func NewRemoteProvider(rootURL, token string) *RemoteProvider {
 	baseURL := rootURL
 	if !strings.HasSuffix(baseURL, "/") {
 		baseURL += "/"
@@ -23,11 +24,21 @@ func NewRemoteProvider(rootURL string) *RemoteProvider {
 	return &RemoteProvider{
 		BaseURL: baseURL,
 		KexURL:  kexURL,
+		Token:   token,
 	}
 }
 
 func (r *RemoteProvider) Load() (*IndexSchema, []error) {
-	resp, err := http.Get(r.KexURL)
+	req, err := http.NewRequest("GET", r.KexURL, nil)
+	if err != nil {
+		return nil, []error{err}
+	}
+
+	if r.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+r.Token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -56,7 +67,16 @@ func (r *RemoteProvider) FetchContent(path string) (string, error) {
 		url = r.BaseURL + strings.TrimLeft(path, "/")
 	}
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if r.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+r.Token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}

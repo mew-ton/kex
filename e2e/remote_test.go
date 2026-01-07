@@ -112,3 +112,87 @@ func TestKexStart_Remote(t *testing.T) {
 	// Hard to check stdio without an MCP client simulation.
 	// But if validation failed (fetch error), it would exit non-zero.
 }
+
+func TestKexStart_RemoteAuthenticated(t *testing.T) {
+	mux := http.NewServeMux()
+	token := "secure-token"
+
+	// Auth Middleware
+	auth := func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader != "Bearer "+token {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			next(w, r)
+		}
+	}
+
+	mux.HandleFunc("/kex.json", auth(func(w http.ResponseWriter, r *http.Request) {
+		schema := fs.IndexSchema{
+			GeneratedAt: time.Now(),
+			Documents:   []*fs.DocumentSchema{},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(schema)
+	}))
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	t.Run("should fail without token", func(t *testing.T) {
+		cmd := exec.Command(kexBinary, "start", server.URL)
+		cmd.Env = os.Environ() // Inherit, but no KEX_REMOTE_TOKEN explicitly set (assuming clean env)
+
+		// Ensure variable is unset
+		// But os.Environ() might mimic host. Let's filter or unset.
+		var env []string
+		for _, e := range os.Environ() {
+			if !strings.HasPrefix(e, "KEX_REMOTE_TOKEN=") {
+				env = append(env, e)
+			}
+		}
+		cmd.Env = env
+
+		// Capture output
+		// It should fail with validation error because Load() gets 401
+		err := cmd.Run() // Run waits.
+		if err == nil {
+			t.Error("Expected error for unauthorized request")
+		}
+	})
+
+	t.Run("should succeed with KEX_REMOTE_TOKEN", func(t *testing.T) {
+		cmd := exec.Command(kexBinary, "start", server.URL)
+		env := os.Environ()
+		env = append(env, "KEX_REMOTE_TOKEN="+token)
+		cmd.Env = env
+
+		outfile, _ := os.Create(filepath.Join(t.TempDir(), "auth_success.log"))
+		cmd.Stdout = outfile
+		cmd.Stderr = outfile
+
+		// Start and Wait logic
+		if err := cmd.Start(); err != nil {
+			t.Fatalf("Failed to start: %v", err)
+		}
+		defer cmd.Process.Kill()
+
+		done := make(chan error, 1)
+		go func() {
+			done <- cmd.Wait()
+		}()
+
+		time.Sleep(500 * time.Millisecond) // Wait for Load()
+		if err := cmd.Process.Kill(); err != nil {
+			t.Logf("Kill error: %v", err)
+		}
+
+		err := <-done
+		if err != nil && !strings.Contains(err.Error(), "killed") {
+			out, _ := os.ReadFile(outfile.Name())
+			t.Errorf("Expected success, got error: %v\nOutput: %s", err, out)
+		}
+	})
+}

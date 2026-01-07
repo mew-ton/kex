@@ -37,12 +37,25 @@ func runStart(c *cli.Context) error {
 	var repo *fs.Indexer
 
 	if isRemote {
-		// Remote Mode
-		// logic moved to RemoteProvider. Just pass arg.
-		// NewRemoteProvider handles /kex.json suffix logic if we want, or we keep it here.
-		// Refactored NewRemoteProvider handles it.
-		fmt.Fprintf(os.Stderr, "Fetching index from remote...\n")
-		provider := fs.NewRemoteProvider(arg)
+		// Resolve Token: KEX_REMOTE_TOKEN > .kex.yaml (remoteToken)
+		pathOrUrl := arg
+		token := os.Getenv("KEX_REMOTE_TOKEN")
+		if token == "" {
+			// Try to load config from current directory even for remote
+			// This might be useful if .kex.yaml contains just the remoteToken but is used for context
+			if cfg, err := config.Load("."); err == nil {
+				token = cfg.RemoteToken
+			}
+		}
+
+		fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrUrl)
+		if token != "" {
+			fmt.Fprintf(os.Stderr, "Auth: Token provided\n")
+		} else {
+			fmt.Fprintf(os.Stderr, "Auth: None\n")
+		}
+
+		provider := fs.NewRemoteProvider(pathOrUrl, token)
 		repo = fs.New(provider)
 		if err := repo.Load(); err != nil {
 			return cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
