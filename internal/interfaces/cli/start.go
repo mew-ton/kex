@@ -128,7 +128,13 @@ func runStart(c *cli.Context) error {
 	// We use the Validator use case to determine validity
 	// Note: Remote documents are assumed valid (or validated at build time).
 	// But validator checks for structure/missing fields.
-	report := validator.Validate(repo)
+	// Initialize Validator with default rules for startup check
+	v := validator.New([]validator.ValidationRule{
+		&validator.IDRequiredRule{},
+		&validator.TitleRequiredRule{},
+		&validator.FilenameMatchRule{},
+	})
+	report := v.Validate(repo)
 
 	// Check for Parse Errors (Critical for start)
 	if len(report.GlobalErrors) > 0 {

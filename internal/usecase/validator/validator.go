@@ -1,10 +1,6 @@
 package validator
 
 import (
-	"fmt"
-	"path/filepath"
-	"strings"
-
 	"github.com/mew-ton/kex/internal/domain"
 )
 
@@ -33,8 +29,16 @@ type DocumentReport struct {
 	Errors []string `json:"errors,omitempty"`
 }
 
+type Validator struct {
+	Rules []ValidationRule
+}
+
+func New(rules []ValidationRule) *Validator {
+	return &Validator{Rules: rules}
+}
+
 // Validate performs the validation logic using the repository
-func Validate(repo domain.DocumentRepository) ValidationReport {
+func (v *Validator) Validate(repo domain.DocumentRepository) ValidationReport {
 	docs := repo.GetAll()
 	loadErrors := repo.GetErrors()
 
@@ -65,9 +69,16 @@ func Validate(repo domain.DocumentRepository) ValidationReport {
 			report.Stats.Adopted++
 		}
 
-		if err := validateDocument(doc); err != nil {
-			docReport.Errors = append(docReport.Errors, err.Error())
+		// Run all validation rules
+		var docErrors []string
+		for _, rule := range v.Rules {
+			if err := rule.Validate(doc); err != nil {
+				docErrors = append(docErrors, err.Error())
+			}
+		}
 
+		if len(docErrors) > 0 {
+			docReport.Errors = docErrors
 			if doc.Status == domain.StatusDraft {
 				report.Stats.DraftWarnings++
 			} else {
@@ -83,22 +94,4 @@ func Validate(repo domain.DocumentRepository) ValidationReport {
 	}
 
 	return report
-}
-
-func validateDocument(doc *domain.Document) error {
-	filename := filepath.Base(doc.Path)
-	ext := filepath.Ext(filename)
-	basename := strings.TrimSuffix(filename, ext)
-
-	if doc.ID == "" {
-		return fmt.Errorf("id is required")
-	}
-	if doc.Title == "" {
-		return fmt.Errorf("title is required")
-	}
-
-	if basename != doc.ID {
-		return fmt.Errorf("filename must match id (filename: %s, id: %s)", filename, doc.ID)
-	}
-	return nil
 }
