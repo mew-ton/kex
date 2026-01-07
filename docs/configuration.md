@@ -28,4 +28,25 @@ Defines the base URL for the remote hosting location of your documentation.
     - If omitted, `kex generate` will produce relative paths (which generally works fine for most static site setups).
     - Necessary if you plan to consume the `kex.json` from a different domain or context where relative paths might break.
 
+### `remoteToken` (Optional)
+
+Authentication token for private repositories (e.g. GitHub Private Pages).
+
+- **Type**: `string`
+- **Description**: If set, this token will be sent as a Bearer token in the `Authorization` header when fetching remote documents.
+
+## Environment Variables
+
+Kex supports the following environment variables:
+
+### `KEX_REMOTE_TOKEN`
+
+- **Purpose**: Authenticate against private remote documentation endpoints.
+- **Priority**: Takes precedence over `.kex.yaml`'s `remoteToken`.
+- **Usage**:
+  ```bash
+  export KEX_REMOTE_TOKEN="your-secret-token"
+  kex start https://private.example.com/docs/
+  ```
+
 
