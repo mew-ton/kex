@@ -35,7 +35,7 @@ title: Keep functions short
 description: >
   Functions should be concise and focused on a single responsibility.
 keywords:
-  - functions
+  - function
   - readability
   - maintainability
 ---
