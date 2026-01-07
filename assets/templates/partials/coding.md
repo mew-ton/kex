@@ -7,4 +7,3 @@
 2.  **Read relevant docs** using `read_document`.
 3.  **Validate your plan** against principles found.
 
-**Note**: Use `Glob`/`Read` only for existence checks, not for content search.

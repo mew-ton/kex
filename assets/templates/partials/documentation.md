@@ -1,6 +1,6 @@
 ## Documentation Phase
 
-**Core Rule**: Maintain clarity and consistency in documentation.
+**Core Rule**: When editing documents under `./contents` (or configured Kex root), maintain clarity and consistency.
 
 1.  **Search for style guides** using `search_documents`.
     *   **Keywords**: "documentation", "style", "markdown", "format".
