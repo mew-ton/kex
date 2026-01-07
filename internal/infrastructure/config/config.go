@@ -12,10 +12,16 @@ type Config struct {
 	BaseURL     string `yaml:"baseURL"`
 	RemoteToken string `yaml:"remoteToken"`
 	Update      Update `yaml:"update"`
+	Agent       Agent  `yaml:"agent"`
 }
 
 type Update struct {
 	Strategies map[string]string `yaml:"strategies"`
+}
+
+type Agent struct {
+	Type   string   `yaml:"type"`
+	Scopes []string `yaml:"scopes"`
 }
 
 func Load(projectRoot string) (Config, error) {

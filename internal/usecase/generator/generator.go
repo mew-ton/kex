@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mew-ton/kex/internal/infrastructure/config"
 )
 
 type AgentType string
@@ -38,7 +40,7 @@ func ClaudeMapper(relPath string) (string, bool) {
 	return relPath, true
 }
 
-func (g *Generator) Generate(cwd string, agentType AgentType) error {
+func (g *Generator) Generate(cwd string, agentType AgentType, agentConfig *config.Agent) error {
 	var mapper FileMapper
 	switch agentType {
 	case AgentTypeClaude:
@@ -62,6 +64,11 @@ func (g *Generator) Generate(cwd string, agentType AgentType) error {
 			return nil
 		}
 
+		// Skip partials
+		if strings.Contains(relPath, "partials") {
+			return nil
+		}
+
 		// Apply strategy
 		mappedPath, ok := mapper(relPath)
 		if !ok {
@@ -81,6 +88,14 @@ func (g *Generator) Generate(cwd string, agentType AgentType) error {
 
 		// Special handling for AGENTS.md (or mapped CLAUDE.md) based on original filename
 		if filepath.Base(relPath) == "AGENTS.md" {
+			// Generate dynamic content if Agent Config is provided
+			if agentConfig != nil {
+				dynamicData, err := g.generateAgentContent(agentConfig)
+				if err != nil {
+					return err
+				}
+				return g.handleAgentMD(targetPath, dynamicData)
+			}
 			return g.handleAgentMD(targetPath, data)
 		}
 
@@ -167,7 +182,7 @@ func (g *Generator) updateWithMarkers(targetPath string, currentContent, templat
 }
 
 // Update updates the kex repository files based on configuration
-func (g *Generator) Update(cwd string, agentType AgentType, config map[string]string) error {
+func (g *Generator) Update(cwd string, agentType AgentType, config map[string]string, agentConfig *config.Agent) error {
 	var mapper FileMapper
 	switch agentType {
 	case AgentTypeClaude:
@@ -187,6 +202,11 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 		}
 
 		if relPath == "." {
+			return nil
+		}
+
+		// Skip partials
+		if strings.Contains(relPath, "partials") {
 			return nil
 		}
 
@@ -238,7 +258,16 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 			}
 			return os.WriteFile(targetPath, data, 0644)
 		case "marker-update":
-			// Only for AGENTS.md (or similar text files)
+			// Generate dynamic content if Agent Config is provided
+			if agentConfig != nil {
+				dynamicData, err := g.generateAgentContent(agentConfig)
+				if err != nil {
+					return err
+				}
+				// Use dynamic content as template data
+				return g.handleAgentMD(targetPath, dynamicData)
+			}
+			// Fallback to static template
 			return g.handleAgentMD(targetPath, data)
 		case "append":
 			// Naive append
@@ -255,4 +284,52 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 			return nil
 		}
 	})
+}
+
+// generateAgentContent assembles AGENTS.md content from partials
+func (g *Generator) generateAgentContent(cfg *config.Agent) ([]byte, error) {
+	var sb strings.Builder
+
+	// Header
+	header, err := fs.ReadFile(g.Templates, "templates/partials/header.md")
+	if err != nil {
+		return nil, err
+	}
+	sb.Write(header)
+	sb.WriteString("\n\n")
+
+	// Markers Start
+	sb.WriteString("<!-- kex: auto-update start -->\n")
+
+	// Scopes
+	for _, scope := range cfg.Scopes {
+		var partialFile string
+		switch scope {
+		case "coding":
+			partialFile = "templates/partials/coding.md"
+		case "documentation":
+			partialFile = "templates/partials/documentation.md"
+		}
+
+		if partialFile != "" {
+			content, err := fs.ReadFile(g.Templates, partialFile)
+			if err != nil {
+				return nil, err
+			}
+			sb.Write(content)
+			sb.WriteString("\n\n")
+		}
+	}
+
+	// Markers End
+	sb.WriteString("<!-- kex: auto-update end -->\n")
+
+	// Footer
+	footer, err := fs.ReadFile(g.Templates, "templates/partials/footer.md")
+	if err != nil {
+		return nil, err
+	}
+	sb.Write(footer)
+
+	return []byte(sb.String()), nil
 }

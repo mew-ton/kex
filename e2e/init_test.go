@@ -11,7 +11,7 @@ func TestKexInit(t *testing.T) {
 	t.Run("it should create default config and content structure", func(t *testing.T) {
 		tempDir := t.TempDir()
 
-		cmd := exec.Command(kexBinary, "init")
+		cmd := exec.Command(kexBinary, "init", "--agent-type=general")
 		cmd.Dir = tempDir
 		output, err := cmd.CombinedOutput()
 

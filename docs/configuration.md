@@ -52,6 +52,25 @@ update:
   - `append`: Appends new content to the end if missing.
   - `skip`: Does nothing.
 
+### `agent` (Optional)
+
+Configures the AI Agent guidelines generation.
+
+```yaml
+agent:
+  type: general # or "claude"
+  scopes:
+    - coding
+    - documentation
+```
+
+- **type**: The type of agent guidelines to generate.
+    - `general`: Standard `AGENTS.md`.
+    - `claude`: `CLAUDE.md` tailored for Anthropic Claude.
+- **scopes**: A list of guideline sections to include.
+    - `coding`: Design and Implementation phase guidelines.
+    - `documentation`: Documentation phase rules.
+
 ## Environment Variables
 
 Kex supports the following environment variables:

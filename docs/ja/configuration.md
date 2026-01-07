@@ -52,6 +52,25 @@ update:
   - `append`: コンテンツが欠落している場合、末尾に追加します。
   - `skip`: 何もしません。
 
+### `agent` (Optional)
+
+AI エージェントのガイドライン生成を設定します。
+
+```yaml
+agent:
+  type: general # or "claude"
+  scopes:
+    - coding
+    - documentation
+```
+
+- **type**: 生成するエージェントガイドラインのタイプ。
+    - `general`: 標準的な `AGENTS.md`。
+    - `claude`: Anthropic Claude 向けの `CLAUDE.md`。
+- **scopes**: 含めるガイドラインのセクションリスト。
+    - `coding`: 設計および実装フェーズのガイドライン。
+    - `documentation`: ドキュメントフェーズのルール。
+
 ## 環境変数 (Environment Variables)
 
 Kex は以下の環境変数をサポートしています:
