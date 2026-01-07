@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.0.1](https://github.com/mew-ton/kex/compare/v1.0.0...v1.0.1) - 2026-01-07
+- fix: kex update respects configured root (Issue #38) by @mew-ton in https://github.com/mew-ton/kex/pull/40
+
 ## [v1.0.0](https://github.com/mew-ton/kex/compare/v0.0.4...v1.0.0) - 2026-01-07
 - feat: add positional arg support for project root (#18) by @mew-ton in https://github.com/mew-ton/kex/pull/22
 - feat: #19 support github pages, update documents. by @mew-ton in https://github.com/mew-ton/kex/pull/25
