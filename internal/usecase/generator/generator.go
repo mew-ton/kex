@@ -290,6 +290,9 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 func (g *Generator) generateAgentContent(cfg *config.Agent) ([]byte, error) {
 	var sb strings.Builder
 
+	// Markers Start
+	sb.WriteString("<!-- kex: auto-update start -->\n")
+
 	// Header
 	header, err := fs.ReadFile(g.Templates, "templates/partials/header.md")
 	if err != nil {
@@ -297,9 +300,6 @@ func (g *Generator) generateAgentContent(cfg *config.Agent) ([]byte, error) {
 	}
 	sb.Write(header)
 	sb.WriteString("\n\n")
-
-	// Markers Start
-	sb.WriteString("<!-- kex: auto-update start -->\n")
 
 	// Scopes
 	for _, scope := range cfg.Scopes {
@@ -321,15 +321,16 @@ func (g *Generator) generateAgentContent(cfg *config.Agent) ([]byte, error) {
 		}
 	}
 
-	// Markers End
-	sb.WriteString("<!-- kex: auto-update end -->\n")
-
 	// Footer
 	footer, err := fs.ReadFile(g.Templates, "templates/partials/footer.md")
 	if err != nil {
 		return nil, err
 	}
 	sb.Write(footer)
+	sb.WriteString("\n")
+
+	// Markers End
+	sb.WriteString("<!-- kex: auto-update end -->\n")
 
 	return []byte(sb.String()), nil
 }

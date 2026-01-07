@@ -85,7 +85,9 @@ Old Rules
 	if !strings.Contains(agentsStr, "Documentation Phase") {
 		t.Errorf("Documentation guidelines were not injected into AGENTS.md")
 	}
-	// Header is outside markers, so it should NOT be injected if not present
+	if !strings.Contains(agentsStr, "Project Guidelines") {
+		t.Errorf("Header was not injected")
+	}
 
 	// 7. Verify Configural Update (Change Scopes)
 	// Modify .kex.yaml to only have "coding" scope
