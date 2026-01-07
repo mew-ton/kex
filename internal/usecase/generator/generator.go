@@ -217,29 +217,6 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 
 		targetPath := filepath.Join(cwd, mappedPath)
 
-		// Determine Strategy
-		strategy := "skip"
-
-		// Default Strategies
-		// 1. Kex Documentation -> Overwrite
-		if filepath.Dir(mappedPath) == "contents/documentation/kex" ||
-			filepath.Dir(filepath.Dir(mappedPath)) == "contents/documentation/kex" {
-			strategy = "overwrite"
-		}
-
-		// 2. Agents -> Append/Marker
-		if filepath.Base(mappedPath) == "AGENTS.md" || filepath.Base(mappedPath) == "CLAUDE.md" {
-			strategy = "marker-update"
-		}
-
-		// Config Override
-		for pattern, action := range config {
-			matched, _ := filepath.Match(pattern, mappedPath)
-			if matched {
-				strategy = action
-			}
-		}
-
 		// Execute Strategy
 		if d.IsDir() {
 			return nil // Dirs are created implicitly by WriteFile or MkdirAll
@@ -250,39 +227,15 @@ func (g *Generator) Update(cwd string, agentType AgentType, config map[string]st
 			return err
 		}
 
-		switch strategy {
-		case "overwrite":
-			// Check if dir exists
-			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-				return err
-			}
-			return os.WriteFile(targetPath, data, 0644)
-		case "marker-update":
-			// Generate dynamic content if Agent Config is provided
-			if agentConfig != nil {
-				dynamicData, err := g.generateAgentContent(agentConfig)
-				if err != nil {
-					return err
-				}
-				// Use dynamic content as template data
-				return g.handleAgentMD(targetPath, dynamicData)
-			}
-			// Fallback to static template
-			return g.handleAgentMD(targetPath, data)
-		case "append":
-			// Naive append
-			f, err := os.OpenFile(targetPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			if _, err := f.Write(data); err != nil {
-				return err
-			}
-			return nil
-		default: // "skip"
-			return nil
+		strategy := ResolveStrategy(mappedPath, config)
+		ctx := UpdateContext{
+			TargetPath:   targetPath,
+			TemplateData: data,
+			AgentConfig:  agentConfig,
+			Generator:    g,
 		}
+
+		return strategy.Apply(ctx)
 	})
 }
 

@@ -60,7 +60,14 @@ func runCheck(c *cli.Context) error {
 		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}
 
-	report := validator.Validate(repo)
+	// Initialize Validator with default rules
+	rules := []validator.ValidationRule{
+		&validator.IDRequiredRule{},
+		&validator.TitleRequiredRule{},
+		&validator.FilenameMatchRule{},
+	}
+	v := validator.New(rules)
+	report := v.Validate(repo)
 
 	if isJSON {
 		printJSONReport(report)

@@ -2,8 +2,9 @@ package validator
 
 import (
 	"errors"
-	"github.com/mew-ton/kex/internal/domain"
 	"testing"
+
+	"github.com/mew-ton/kex/internal/domain"
 )
 
 // MockRepository for testing
@@ -60,7 +61,7 @@ func TestValidate(t *testing.T) {
 				{ID: "", Title: "No ID", Status: domain.StatusAdopted, Path: "no-id.md"},
 			},
 			wantValid:    false,
-			wantErrCount: 1, // Validation logic checks ID and Title
+			wantErrCount: 2, // ID required + Filename mismatch
 		},
 		{
 			name: "it should invalid if title is missing",
@@ -73,9 +74,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "it should ignore draft documents errors",
 			documents: []*domain.Document{
-				{ID: "", Title: "Draft", Status: domain.StatusDraft},
+				{ID: "", Title: "Draft", Status: domain.StatusDraft, Path: "draft.md"},
 			},
-			wantValid: true, // Drafts are skipped in error count impacting validity (usually)
+			wantErrCount: 2,    // ID required + Filename mismatch
+			wantValid:    true, // Drafts are skipped in error count impacting validity (usually)
 			// Wait, validator.go implementation detail:
 			// "for _, doc := range docs { ... validations ... }"
 			// If it's draft, does it append to Errors?
@@ -96,7 +98,13 @@ func TestValidate(t *testing.T) {
 				},
 			}
 
-			report := Validate(mockRepo)
+			rules := []ValidationRule{
+				&IDRequiredRule{},
+				&TitleRequiredRule{},
+				&FilenameMatchRule{},
+			}
+			v := New(rules)
+			report := v.Validate(mockRepo)
 
 			if report.Valid != tt.wantValid {
 				t.Errorf("Validate() valid = %v, want %v", report.Valid, tt.wantValid)
@@ -109,6 +117,10 @@ func TestValidate(t *testing.T) {
 			totalDocErrors := 0
 			for _, d := range report.Documents {
 				totalDocErrors += len(d.Errors)
+			}
+
+			if totalDocErrors != tt.wantErrCount {
+				t.Errorf("Validate() total errors = %d, want %d", totalDocErrors, tt.wantErrCount)
 			}
 
 			// Note: Draft logic might differ. If Drafts validation generates errors, we need to adjust expected.

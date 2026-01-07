@@ -35,24 +35,36 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	// 1. Resolve Project Root or Remote URL
 	arg := c.Args().First()
 	isRemote := strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://")
 
-	var repo *fs.Indexer
-	var cfg config.Config
-	var err error
+	cfg, appLogger, projectRoot, err := resolveConfigAndLogger(c, arg, isRemote)
+	if err != nil {
+		// Log warning but proceed if config failed? (Existing logic ignored config load error for defaults)
+		// But logger init handled it.
+		// "Ignore error for now" in original code was for config.Load.
+	}
 
-	// Resolve Config & Logger
-	// We try to load config early to get logging preferences
+	repo, err := createRepository(c, cfg, appLogger, arg, isRemote, projectRoot)
+	if err != nil {
+		return err
+	}
+
+	if err := validateRepository(repo); err != nil {
+		return err
+	}
+
+	return startServer(repo, appLogger)
+}
+
+func resolveConfigAndLogger(c *cli.Context, arg string, isRemote bool) (config.Config, logger.Logger, string, error) {
 	projectRoot := "."
 	if !isRemote && arg != "" {
 		projectRoot = arg
 	}
-	cfg, err = config.Load(projectRoot)
-	// Ignore error for now, will handle specific errors later
+	cfg, err := config.Load(projectRoot)
+	// Original logic ignored err here for config defaults
 
-	// Init Logger
 	var appLogger logger.Logger
 	logFile := c.String("log-file")
 	if logFile == "" {
@@ -60,9 +72,6 @@ func runStart(c *cli.Context) error {
 	}
 
 	if logFile != "" {
-		// Resolve absolute path if needed?
-		// Ensure directory exists?
-		// For now simple open.
 		fl, err := logger.NewFileLogger(logFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to open log file '%s': %v. Using stderr.\n", logFile, err)
@@ -74,13 +83,13 @@ func runStart(c *cli.Context) error {
 		appLogger = logger.NewStderrLogger()
 	}
 
+	return cfg, appLogger, projectRoot, err
+}
+
+func createRepository(c *cli.Context, cfg config.Config, l logger.Logger, arg string, isRemote bool, projectRoot string) (*fs.Indexer, error) {
 	if isRemote {
-		// Resolve Token: KEX_REMOTE_TOKEN > .kex.yaml (remoteToken)
 		pathOrUrl := arg
 		token := os.Getenv("KEX_REMOTE_TOKEN")
-
-		// Check config only if token missing? Or always overrides?
-		// Existing logic:
 		if token == "" {
 			if cfg.RemoteToken != "" {
 				token = cfg.RemoteToken
@@ -94,43 +103,40 @@ func runStart(c *cli.Context) error {
 			fmt.Fprintf(os.Stderr, "Auth: None\n")
 		}
 
-		provider := fs.NewRemoteProvider(pathOrUrl, token, appLogger)
-		repo = fs.New(provider, appLogger)
+		provider := fs.NewRemoteProvider(pathOrUrl, token, l)
+		repo := fs.New(provider, l)
 		if err := repo.Load(); err != nil {
-			return cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
+			return nil, cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
 		}
-	} else {
-		// Local Mode
-		// projectRoot is already set above
-		// cfg is already loaded above
-		if err != nil { // Err from config.Load
-			fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
-		}
-
-		// Resolve Content Directory
-		root := filepath.Join(projectRoot, cfg.Root)
-		if c.String("root") != "" {
-			root = c.String("root")
-		}
-
-		if _, err := os.Stat(root); os.IsNotExist(err) {
-			return cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
-		}
-
-		provider := fs.NewLocalProvider(root, appLogger)
-		repo = fs.New(provider, appLogger)
-		if err := repo.Load(); err != nil {
-			return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
-		}
+		return repo, nil
 	}
 
-	// 5. Strict validation on start (Use Case)
-	// We use the Validator use case to determine validity
-	// Note: Remote documents are assumed valid (or validated at build time).
-	// But validator checks for structure/missing fields.
-	report := validator.Validate(repo)
+	// Local Mode
+	root := filepath.Join(projectRoot, cfg.Root)
+	if c.String("root") != "" {
+		root = c.String("root")
+	}
 
-	// Check for Parse Errors (Critical for start)
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		return nil, cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
+	}
+
+	provider := fs.NewLocalProvider(root, l)
+	repo := fs.New(provider, l)
+	if err := repo.Load(); err != nil {
+		return nil, cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
+	}
+	return repo, nil
+}
+
+func validateRepository(repo *fs.Indexer) error {
+	v := validator.New([]validator.ValidationRule{
+		&validator.IDRequiredRule{},
+		&validator.TitleRequiredRule{},
+		&validator.FilenameMatchRule{},
+	})
+	report := v.Validate(repo)
+
 	if len(report.GlobalErrors) > 0 {
 		for _, e := range report.GlobalErrors {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", e)
@@ -138,12 +144,7 @@ func runStart(c *cli.Context) error {
 		return cli.Exit("Failed to start due to document errors. Run 'kex check' for details.", 1)
 	}
 
-	// Note: We might allow "AdoptedErrors" but block on "ParseErrors".
-	// For strictness, let's block if Valid is false (excluding Drafts which are warnings)
-	// But validator.Validate returns Valid=false if AdoptedErrors > 0.
-	// As per previous design: "Failed to start due to document errors".
 	if !report.Valid {
-		// Print errors to stderr for debugging/user info
 		for _, err := range report.GlobalErrors {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		}
@@ -154,13 +155,14 @@ func runStart(c *cli.Context) error {
 		}
 		return cli.Exit("Validation failed (documents contain errors). Run 'kex check' for details.", 1)
 	}
+	return nil
+}
 
-	// 4. Start Server (Interface)
-	srv := mcp.New(repo, appLogger)
+func startServer(repo *fs.Indexer, l logger.Logger) error {
+	srv := mcp.New(repo, l)
 	fmt.Fprintf(os.Stderr, "Server listening on stdio...\n")
 	if err := srv.Serve(); err != nil {
 		return cli.Exit(fmt.Sprintf("Server error: %v", err), 1)
 	}
-
 	return nil
 }

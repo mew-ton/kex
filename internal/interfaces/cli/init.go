@@ -27,56 +27,63 @@ var InitCommand = &cli.Command{
 }
 
 func runInit(c *cli.Context) error {
-	// Welcome Message
-	pterm.DefaultBigText.WithLetters(
-		pterm.NewLettersFromString("KEX"),
-	).Render()
-
-	pterm.DefaultHeader.Println("Initializing Kex Repository")
+	printWelcome()
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 
-	var agentType generator.AgentType
-	var scopes []string
-
-	if c.IsSet("agent-type") {
-		// Non-interactive Mode (Flag provided)
-		pterm.Info.Println("Agent Type provided via flag. Skipping interactive mode.")
-		switch c.String("agent-type") {
-		case string(generator.AgentTypeGeneral):
-			agentType = generator.AgentTypeGeneral
-		case string(generator.AgentTypeClaude):
-			agentType = generator.AgentTypeClaude
-		default:
-			return fmt.Errorf("invalid agent type: %s. Must be 'general' or 'claude'", c.String("agent-type"))
-		}
-		// Default scopes for non-interactive
-		scopes = []string{"coding", "documentation"}
-	} else {
-		// Interactive Mode
-		selectedType, _ := pterm.DefaultInteractiveSelect.
-			WithOptions([]string{string(generator.AgentTypeGeneral), string(generator.AgentTypeClaude)}).
-			WithDefaultText("Select Agent Type").
-			Show()
-		agentType = generator.AgentType(selectedType)
-
-		selectedScopes, _ := pterm.DefaultInteractiveMultiselect.
-			WithOptions([]string{"coding", "documentation"}).
-			WithDefaultText("Select Scopes").
-			WithFilter(false).
-			WithDefaultOptions([]string{"coding", "documentation"}).
-			Show()
-		scopes = selectedScopes
+	agentType, scopes, err := determineAgentConfig(c)
+	if err != nil {
+		return err
 	}
 
 	pterm.Info.Printf("Initializing in: %s (Agent: %s, Scopes: %v)\n", cwd, agentType, scopes)
 
-	// Save Config
-	// Manual string construction to avoid complexity of a full Save method for now
-	// Ensure scopes are formatted as YAML list [ "a", "b" ]
+	saveConfig(agentType, scopes)
+
+	return generateProject(cwd, agentType, scopes)
+}
+
+func printWelcome() {
+	pterm.DefaultBigText.WithLetters(
+		pterm.NewLettersFromString("KEX"),
+	).Render()
+	pterm.DefaultHeader.Println("Initializing Kex Repository")
+}
+
+func determineAgentConfig(c *cli.Context) (generator.AgentType, []string, error) {
+	if c.IsSet("agent-type") {
+		// Non-interactive Mode
+		pterm.Info.Println("Agent Type provided via flag. Skipping interactive mode.")
+		switch c.String("agent-type") {
+		case string(generator.AgentTypeGeneral):
+			return generator.AgentTypeGeneral, []string{"coding", "documentation"}, nil
+		case string(generator.AgentTypeClaude):
+			return generator.AgentTypeClaude, []string{"coding", "documentation"}, nil
+		default:
+			return "", nil, fmt.Errorf("invalid agent type: %s. Must be 'general' or 'claude'", c.String("agent-type"))
+		}
+	}
+
+	// Interactive Mode
+	selectedType, _ := pterm.DefaultInteractiveSelect.
+		WithOptions([]string{string(generator.AgentTypeGeneral), string(generator.AgentTypeClaude)}).
+		WithDefaultText("Select Agent Type").
+		Show()
+
+	selectedScopes, _ := pterm.DefaultInteractiveMultiselect.
+		WithOptions([]string{"coding", "documentation"}).
+		WithDefaultText("Select Scopes").
+		WithFilter(false).
+		WithDefaultOptions([]string{"coding", "documentation"}).
+		Show()
+
+	return generator.AgentType(selectedType), selectedScopes, nil
+}
+
+func saveConfig(agentType generator.AgentType, scopes []string) {
 	scopesYaml := "["
 	for i, s := range scopes {
 		if i > 0 {
@@ -90,22 +97,14 @@ func runInit(c *cli.Context) error {
 	if err := os.WriteFile(".kex.yaml", []byte(configData), 0644); err != nil {
 		pterm.Warning.Printf("Failed to save .kex.yaml: %v\n", err)
 	}
+}
 
+func generateProject(cwd string, agentType generator.AgentType, scopes []string) error {
 	gen := generator.New(assets.Templates)
-
 	spinner, _ := pterm.DefaultSpinner.Start("Generating project structure...")
 
-	// We need to pass agent config to Generate as well?
-	// The current Generate signature only takes AgentType.
-	// But AGENTS.md generation now depends on scopes.
-	// We should update Generator.Generate to take *config.Agent
 	agentConfig := &config.Agent{Type: string(agentType), Scopes: scopes}
 
-	// Update Generator.Generate signature in separate step or assume it uses defaults?
-	// Wait, we updated Generator.Update but not Generator.Generate.
-	// We need to update Generator.Generate too.
-
-	// For this step, let's assume we will update Generate signature next.
 	if err := gen.Generate(cwd, agentType, agentConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
