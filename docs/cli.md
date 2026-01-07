@@ -8,9 +8,11 @@ Initializes a new Kex repository.
 kex init [options]
 ```
 
-- Creates `.kex.yaml`
-- Creates `contents/` directory
-- Generates `AGENTS.md` (or `CLAUDE.md` with `--agent-type=claude`)
+- **Interactive Mode**: Prompts for Agent Type and Scopes (Coding, Documentation) if no flags provided.
+- **Flags**: `--agent-type=<type>` (e.g., `general`, `claude`) to bypass prompts.
+- Creates `.kex.yaml` with selected configuration.
+- Creates `contents/` directory.
+- Generates `AGENTS.md` (or `CLAUDE.md`) with dynamic content based on selected scopes.
 
 ## `kex check`
 

@@ -23,7 +23,7 @@ func TestKexUpdate(t *testing.T) {
 	}
 
 	// 1. Init
-	runKex("init")
+	runKex("init", "--agent-type=general")
 
 	// 2. Modify a system document (should be overwritten)
 	targetDoc := filepath.Join(dir, "contents/documentation/kex/choose-effective-keywords.md")
@@ -78,8 +78,39 @@ Old Rules
 		t.Errorf("Content between markers was NOT updated")
 	}
 
-	// Check for new content
-	if !strings.Contains(agentsStr, "Design Phase Guidelines") {
-		t.Errorf("New guidelines were not injected into AGENTS.md")
+	// Check for new content (Default Scopes: Coding + Documentation)
+	if !strings.Contains(agentsStr, "Design & Implementation Phase") {
+		t.Errorf("Coding guidelines were not injected into AGENTS.md")
+	}
+	if !strings.Contains(agentsStr, "Documentation Phase") {
+		t.Errorf("Documentation guidelines were not injected into AGENTS.md")
+	}
+	if !strings.Contains(agentsStr, "Project Guidelines") {
+		t.Errorf("Header was not injected")
+	}
+
+	// 7. Verify Configural Update (Change Scopes)
+	// Modify .kex.yaml to only have "coding" scope
+	configData := `root: contents
+agent:
+  type: general
+  scopes: ["coding"]
+`
+	if err := os.WriteFile(filepath.Join(dir, ".kex.yaml"), []byte(configData), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Run Update again
+	runKex("update")
+
+	// Verify AGENTS.md again
+	agentsContent, _ = os.ReadFile(agentsPath)
+	agentsStr = string(agentsContent)
+
+	if !strings.Contains(agentsStr, "Design & Implementation Phase") {
+		t.Errorf("Coding guidelines should still be present")
+	}
+	if strings.Contains(agentsStr, "Documentation Phase") {
+		t.Errorf("Documentation guidelines should have been removed based on config")
 	}
 }

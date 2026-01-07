@@ -39,17 +39,30 @@ func runUpdate(c *cli.Context) error {
 		pterm.Warning.Printf("Failed to load .kex.yaml: %v. Using default update strategies.\n", err)
 	}
 
+	var agentConfig *config.Agent
+
+	// Determine Agent Type
+	// Priority: Flag > Config > Default
 	var agentType generator.AgentType
-	switch c.String("agent-type") {
-	case string(generator.AgentTypeGeneral):
+
+	if cfg.Agent.Type != "" {
+		agentType = generator.AgentType(cfg.Agent.Type)
+		agentConfig = &cfg.Agent
+	} else {
 		agentType = generator.AgentTypeGeneral
-	case string(generator.AgentTypeClaude):
-		agentType = generator.AgentTypeClaude
-	default:
-		return fmt.Errorf("invalid agent type: %s. Must be 'general' or 'claude'", c.String("agent-type"))
 	}
 
-	pterm.Info.Printf("Updating Kex resources in: %s\n", cwd)
+	if c.IsSet("agent-type") {
+		// Override if flag is explicitly provided
+		val := c.String("agent-type")
+		if val == string(generator.AgentTypeGeneral) || val == string(generator.AgentTypeClaude) {
+			agentType = generator.AgentType(val)
+		} else {
+			return fmt.Errorf("invalid agent type: %s", val)
+		}
+	}
+
+	pterm.Info.Printf("Updating Kex resources in: %s (Agent: %s)\n", cwd, agentType)
 
 	gen := generator.New(assets.Templates)
 
@@ -61,7 +74,7 @@ func runUpdate(c *cli.Context) error {
 		strategies = make(map[string]string)
 	}
 
-	if err := gen.Update(cwd, agentType, strategies); err != nil {
+	if err := gen.Update(cwd, agentType, strategies, agentConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
 	}

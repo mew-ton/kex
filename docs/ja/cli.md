@@ -8,9 +8,11 @@
 kex init [options]
 ```
 
-- `.kex.yaml` を作成します
-- `contents/` ディレクトリを作成します
-- `AGENTS.md` (または `--agent-type=claude` で `CLAUDE.md`) を生成します
+- **対話モード**: フラグが指定されていない場合、エージェントタイプとスコープ (Coding, Documentation) を尋ねます。
+- **フラグ**: `--agent-type=<type>` (例: `general`, `claude`) でプロンプトをスキップできます。
+- 選択された設定で `.kex.yaml` を作成します。
+- `contents/` ディレクトリを作成します。
+- 選択されたスコープに基づいて動的な内容で `AGENTS.md` (または `CLAUDE.md`) を生成します。
 
 ## `kex check`
 
