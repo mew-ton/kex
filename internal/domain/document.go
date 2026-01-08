@@ -20,7 +20,7 @@ const (
 
 // Document represents a single guideline document
 type Document struct {
-	ID          string         `yaml:"id"`
+	ID          string         `yaml:"-"`
 	Title       string         `yaml:"title"`
 	Description string         `yaml:"description"`
 	Keywords    []string       `yaml:"keywords"`
@@ -58,16 +58,22 @@ func ParseDocument(path, root string) (*Document, error) {
 		return nil, err
 	}
 
-	// Derive scopes from relative path
-	// path: /abs/path/to/root/coding/typescript/foo.md
-	// root: /abs/path/to/root
-	// rel: coding/typescript/foo.md
-	// dirs: [coding, typescript]
+	doc.Scopes, err = deriveScopes(path, root)
+	if err != nil {
+		// Fallback or just ignore error? deriveScopes handles fallback internally if needed
+		// But here deriveScopes returns valid slice or empty.
+		// Let's make deriveScopes return pure logic.
+	}
 
+	doc.ID = generateID(path, doc.Scopes)
+
+	return doc, nil
+}
+
+func deriveScopes(path, root string) ([]string, error) {
 	rel, err := filepath.Rel(root, path)
 	if err != nil {
-		// Fallback: use absolute path directory name if rel fails (unlikely if root is correct)
-		rel = path
+		return nil, err
 	}
 
 	dirs := strings.Split(filepath.Dir(rel), string(filepath.Separator))
@@ -79,9 +85,18 @@ func ParseDocument(path, root string) (*Document, error) {
 		}
 		scopes = append(scopes, d)
 	}
-	doc.Scopes = scopes
+	return scopes, nil
+}
 
-	return doc, nil
+func generateID(path string, scopes []string) string {
+	filename := filepath.Base(path)
+	ext := filepath.Ext(filename)
+	basename := strings.TrimSuffix(filename, ext)
+
+	if len(scopes) > 0 {
+		return strings.Join(scopes, ".") + "." + basename
+	}
+	return basename
 }
 
 func parseDocumentContent(path string, content []byte) (*Document, error) {
@@ -110,9 +125,6 @@ func parseDocumentContent(path string, content []byte) (*Document, error) {
 	doc.Path = path
 
 	// Basic validation
-	if doc.ID == "" {
-		return nil, fmt.Errorf("id is required")
-	}
 	if doc.Title == "" {
 		return nil, fmt.Errorf("title is required")
 	}

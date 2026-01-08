@@ -131,9 +131,7 @@ func createRepository(c *cli.Context, cfg config.Config, l logger.Logger, arg st
 
 func validateRepository(repo *fs.Indexer) error {
 	v := validator.New([]validator.ValidationRule{
-		&validator.IDRequiredRule{},
 		&validator.TitleRequiredRule{},
-		&validator.FilenameMatchRule{},
 	})
 	report := v.Validate(repo)
 

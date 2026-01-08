@@ -62,9 +62,7 @@ func runCheck(c *cli.Context) error {
 
 	// Initialize Validator with default rules
 	rules := []validator.ValidationRule{
-		&validator.IDRequiredRule{},
 		&validator.TitleRequiredRule{},
-		&validator.FilenameMatchRule{},
 	}
 	v := validator.New(rules)
 	report := v.Validate(repo)

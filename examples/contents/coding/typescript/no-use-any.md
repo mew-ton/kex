@@ -1,5 +1,5 @@
 ---
-id: no-use-any
+
 title: Avoid using the any type
 description: >
   Enforce strict type safety by avoiding 'any'.

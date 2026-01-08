@@ -1,5 +1,5 @@
 ---
-id: use-atomic-design-without-strict-directories
+
 title: Component Design (Atomic Principles)
 description: >
   Apply Atomic Design principles to component granularity without enforcing strict directory names.

@@ -1,5 +1,5 @@
 ---
-id: include-valid-frontmatter
+
 title: Include valid frontmatter
 description: >
   All guideline documents must have valid YAML frontmatter with required fields.

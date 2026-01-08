@@ -1,5 +1,5 @@
 ---
-id: follow-directory-hierarchy
+
 title: Folder Structure
 description: >
   Organize documents by Domain > Platform (Optional) > Technology.

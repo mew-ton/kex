@@ -66,7 +66,6 @@ func TestKexCheck_JSONOutput(t *testing.T) {
 		tempDir := t.TempDir()
 		// Create a dummy document
 		doc := `---
-id: test-json
 title: JSON Test
 keywords: [json]
 ---
@@ -102,7 +101,6 @@ func TestKexCheck_Success(t *testing.T) {
 
 		// Valid Document
 		doc := `---
-id: valid-doc
 title: Valid Document
 status: adopted
 keywords: [valid]
@@ -137,7 +135,6 @@ func TestKexCheck_PositionalArg(t *testing.T) {
 
 		// Create a valid document
 		doc := `---
-id: pos-check-doc
 title: Positional Check Doc
 status: adopted
 ---

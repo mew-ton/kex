@@ -1,5 +1,5 @@
 ---
-id: choose-effective-keywords
+
 title: Choose effective keywords (3 Dimensions)
 description: >
   Select keywords covering Object, Symptom, and Concept to maximize discoverability.

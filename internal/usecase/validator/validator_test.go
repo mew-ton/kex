@@ -56,14 +56,6 @@ func TestValidate(t *testing.T) {
 			wantGlobCount: 1,
 		},
 		{
-			name: "it should report adopted documents missing ID as errors",
-			documents: []*domain.Document{
-				{ID: "", Title: "No ID", Status: domain.StatusAdopted, Path: "no-id.md"},
-			},
-			wantValid:    false,
-			wantErrCount: 2, // ID required + Filename mismatch
-		},
-		{
 			name: "it should invalid if title is missing",
 			documents: []*domain.Document{
 				{ID: "doc-1", Title: "", Status: domain.StatusAdopted, Path: "doc-1.md"},
@@ -74,16 +66,11 @@ func TestValidate(t *testing.T) {
 		{
 			name: "it should ignore draft documents errors",
 			documents: []*domain.Document{
-				{ID: "", Title: "Draft", Status: domain.StatusDraft, Path: "draft.md"},
+				// Now only Title is validated. If title is missing, it's an error.
+				{ID: "draft", Title: "", Status: domain.StatusDraft, Path: "draft.md"},
 			},
-			wantErrCount: 2,    // ID required + Filename mismatch
+			wantErrCount: 1,    // Title required
 			wantValid:    true, // Drafts are skipped in error count impacting validity (usually)
-			// Wait, validator.go implementation detail:
-			// "for _, doc := range docs { ... validations ... }"
-			// If it's draft, does it append to Errors?
-			// Let's check validator.go content, but assuming standard logic: Drafts might be warnings or ignored.
-			// Re-reading validator.go logic via tool would be safer, but let's guess check drafts logic:
-			// If missing ID, it's an error.
 		},
 	}
 
@@ -99,9 +86,7 @@ func TestValidate(t *testing.T) {
 			}
 
 			rules := []ValidationRule{
-				&IDRequiredRule{},
 				&TitleRequiredRule{},
-				&FilenameMatchRule{},
 			}
 			v := New(rules)
 			report := v.Validate(mockRepo)

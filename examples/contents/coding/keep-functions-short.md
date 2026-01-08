@@ -1,5 +1,5 @@
 ---
-id: keep-functions-short
+
 title: Keep functions short by top-down decomposition
 description: >
   Write functions by detailing steps as comments first, then converting them to function calls.

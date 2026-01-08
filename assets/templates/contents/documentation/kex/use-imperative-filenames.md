@@ -1,5 +1,5 @@
 ---
-id: use-imperative-filenames
+
 title: Use imperative filenames
 description: >
   Filenames for guidelines must be imperative instructions to serve as actionable prompts.

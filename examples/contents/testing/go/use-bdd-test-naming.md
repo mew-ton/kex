@@ -1,5 +1,5 @@
 ---
-id: use-bdd-test-naming
+
 title: Use BDD-style test naming
 description: >
   Test descriptions must describe the expected behavior using "it should" or "it must".

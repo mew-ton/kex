@@ -1,5 +1,5 @@
 ---
-id: use-strategy-pattern
+
 title: Use Strategy Pattern
 status: adopted
 keywords: [design-pattern, strategy, interface, decoupling]

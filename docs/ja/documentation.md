@@ -11,7 +11,6 @@
 
 ```yaml
 ---
-id: avoid-magic-numbers  # 必須: ファイル名と一致させる必要があります (avoid-magic-numbers.md)
 title: Avoid Magic Numbers # 必須
 description: Do not use magic numbers. # 必須: AI がドキュメントを選択するために使用します
 keywords: [readability, code-quality] # 必須: 検索用のキーワード
@@ -21,11 +20,6 @@ sources: # 任意: 外部参照へのリンク
     url: https://eslint.org/docs/rules/no-magic-numbers
 ---
 ```
-
-### `id` (必須)
-
-- **型**: `string`
-- **説明**: ドキュメントの一意な識別子です。通常はファイル名のスラッグと一致させます (例: `avoid-magic-numbers.md` の場合は `avoid-magic-numbers`)。
 
 ### `title` (必須)
 

@@ -1,5 +1,5 @@
 ---
-id: use-consistent-naming
+
 title: Naming Conventions
 description: >
   General naming conventions for identifiers.

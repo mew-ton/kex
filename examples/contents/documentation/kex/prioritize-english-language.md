@@ -1,5 +1,5 @@
 ---
-id: prioritize-english-language
+
 title: Prioritize English language
 description: >
   Write documentation in English to optimize for AI processing, unless specific needs dictate otherwise.

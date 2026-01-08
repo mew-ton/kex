@@ -1,5 +1,5 @@
 ---
-id: write-concise-content
+
 title: Write concise content
 description: >
   Keep guideline text brief and direct. Code examples can be long if necessary for context.
