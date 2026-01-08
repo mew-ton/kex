@@ -9,7 +9,7 @@ root: contents
 baseURL: https://example.com/docs/
 ```
 
-### `root` (Optional)
+### `root` (任意)
 
 マークダウン形式のドキュメントファイルが含まれるディレクトリを指定します。
 
@@ -17,7 +17,7 @@ baseURL: https://example.com/docs/
 - **デフォルト**: `contents`
 - **説明**: Kex はこのディレクトリ内のすべての `.md` ファイルを再帰的にインデックスします。このパスは、`kex start` や `kex check` を実行するディレクトリ (通常はプロジェクトルート) からの相対パスです。
 
-### `baseURL` (Optional)
+### `baseURL` (任意)
 
 ドキュメントのリモートホスティング先のベース URL を定義します。
 
@@ -26,16 +26,16 @@ baseURL: https://example.com/docs/
 - **説明**:
     - `kex generate` が `kex.json` インデックス内の絶対 URL を生成するために使用します。
     - 省略した場合、`kex generate` は相対パスを出力します (これはほとんどの静的サイト構成で問題なく機能します)。
-    - 相対パスが機能しない異なるドメインやコンテキストから `kex.json` を利用する場合に必要となります。
+    - ドキュメントを異なるドメインから利用する場合など、相対パスが機能しないコンテキストで `kex.json` を使用する場合に必要となります。
 
-### `remoteToken` (Optional)
+### `remoteToken` (任意)
 
 プライベートリポジトリ (例: GitHub Private Pages) 用の認証トークンです。
 
 - **型**: `string`
 - **説明**: 設定されている場合、リモートドキュメントの取得時に `Authorization` ヘッダーの Bearer トークンとして送信されます。
 
-### `update` (Optional)
+### `update` (任意)
 
 `kex update` の動作を設定します。
 
@@ -47,18 +47,18 @@ update:
 ```
 
 - **strategies**: Glob パターンと更新戦略のマップです。
-  - `overwrite`: ファイルをテンプレートで置換します。
-  - `marker-update`: マーカー間のコンテンツを更新します (`AGENTS.md` 用)。
-  - `append`: コンテンツが欠落している場合、末尾に追加します。
+  - `overwrite`: ファイルをテンプレートで完全に置換します。
+  - `marker-update`: マーカー間のコンテンツのみを更新します (`AGENTS.md` のようなファイル向け)。
+  - `append`: コンテンツが欠落している場合、末尾に追加します 既存の内容は変更しません。
   - `skip`: 何もしません。
 
-### `agent` (Optional)
+### `agent` (任意)
 
-AI エージェントのガイドライン生成を設定します。
+AI エージェント用のガイドライン生成を設定します。
 
 ```yaml
 agent:
-  type: general # or "claude"
+  type: general # または "claude"
   scopes:
     - coding
     - documentation
@@ -67,13 +67,13 @@ agent:
 - **type**: 生成するエージェントガイドラインのタイプ。
     - `general`: 標準的な `AGENTS.md`。
     - `claude`: Anthropic Claude 向けの `CLAUDE.md`。
-- **scopes**: 含めるガイドラインのセクションリスト。
+- **scopes**: ガイドラインに含めるセクション (スコープ) のリスト。
     - `coding`: 設計および実装フェーズのガイドライン。
-    - `documentation`: ドキュメントフェーズのルール。
+    - `documentation`: ドキュメント作成フェーズのルール。
 
-### `logging` (Optional)
+### `logging` (任意)
 
-サーバーのロギングを設定します。
+サーバーのロギング設定です。
 
 ```yaml
 logging:

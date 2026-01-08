@@ -8,11 +8,11 @@
 kex init [options]
 ```
 
-- **対話モード**: フラグが指定されていない場合、エージェントタイプとスコープ (Coding, Documentation) を尋ねます。
-- **フラグ**: `--agent-type=<type>` (例: `general`, `claude`) でプロンプトをスキップできます。
-- 選択された設定で `.kex.yaml` を作成します。
+- **対話モード**: フラグを指定せずに実行すると、エージェントタイプとスコープ (Coding, Documentation) を対話形式で尋ねられます。
+- **フラグ**: `--agent-type=<type>` (例: `general`, `claude`) を指定すると、プロンプトをスキップして自動的に初期化します。
+- 指定された設定で `.kex.yaml` を作成します。
 - `contents/` ディレクトリを作成します。
-- 選択されたスコープに基づいて動的な内容で `AGENTS.md` (または `CLAUDE.md`) を生成します。
+- 選択されたスコープに基づいて、動的な内容を含む `AGENTS.md` (または `CLAUDE.md`) を生成します。
 
 ## `kex check`
 
@@ -23,10 +23,10 @@ kex check
 ```
 
 以下の項目をチェックします:
-- 無効な YAML Frontmatter
-- ID とファイル名の不一致
-- 必須フィールドの欠落
-- ID の重複
+- YAML Frontmatter の形式が正しいか
+- ID とファイル名が一致しているか
+- 必須フィールドが含まれているか
+- ID に重複がないか
 
 ## `kex start`
 
@@ -37,24 +37,24 @@ kex start [options] [path|url]
 ```
 
 - **ローカルモード**: `kex start ./my-docs`
-- **リモートモード**: `kex start https://example.com/docs/` (`kex.json` が必要です)
+- **リモートモード**: `kex start https://example.com/docs/` (`kex.json` が配置されている必要があります)
 - **フラグ**:
-    - `--log-file=<path>`: 標準エラー出力の代わりにファイルにログを書き込みます。
-    - `--root=<path>`: ガイドラインのコンテンツルートを指定します (ローカルモード)。
+    - `--log-file=<path>`: ログを標準エラー出力ではなく、指定したファイルに書き込みます。
+    - `--root=<path>`: ガイドラインのコンテンツルートを指定します (ローカルモードのみ有効)。
 
 
 
 ## `kex generate`
 
-リモートホスティング (GitHub Pages) 用に静的サイト構造を生成します。
+リモートホスティング (GitHub Pages など) 用に静的サイト構造を生成します。
 
 ```bash
 kex generate [output-dir]
 ```
 
-- すべての "Adopted" ドキュメントを検証します。
+- すべての "adopted" (採用済み) ドキュメントを検証します。
 - `dist/` ディレクトリを作成します。
-- `kex.json` (インデックス) を生成します。
+- `kex.json` (インデックスファイル) を生成します。
 - マークダウンファイルを `dist/` にコピーします。
 
 ## `kex update`
@@ -65,6 +65,6 @@ kex generate [output-dir]
 kex update [options]
 ```
 
-- **システムドキュメント (`contents/documentation/kex/*`)**: 現在のバイナリバージョンに合わせて更新します (上書き)。
-- **`AGENTS.md`**: `<!-- kex: auto-update start -->` マーカー間のガイドラインを安全に更新します。
-- 動作をカスタマイズするには `.kex.yaml` 設定を参照してください。
+- **システムドキュメント (`contents/documentation/kex/*`)**: Kex バイナリのバージョンに合わせて内容を更新します (上書きされます)。
+- **`AGENTS.md`**: `<!-- kex: auto-update start -->` マーカーで囲まれた範囲のガイドラインを安全に更新します。
+- 動作のカスタマイズについては `.kex.yaml` の設定を参照してください。
