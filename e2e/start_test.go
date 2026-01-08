@@ -14,7 +14,7 @@ func TestKexStart_Failure_MissingRoot(t *testing.T) {
 		// No contents dir created
 
 		// Create config pointing to contents
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: contents\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "start")
 		cmd.Dir = tempDir
@@ -44,7 +44,7 @@ Content`
 
 		os.Mkdir(filepath.Join(tempDir, "contents"), 0755)
 		os.WriteFile(filepath.Join(tempDir, "contents", "broken.md"), []byte(doc), 0644)
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: contents\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "start")
 		cmd.Dir = tempDir
@@ -81,7 +81,7 @@ Content`
 		// repo_loader: "If c.Args().Present() { ... contentRoots = append(...) }"
 		// Then Factory uses contentRoots.
 		// So yes, it ignores cfg.Source. Correct.
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: non_existent\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: non_existent\n"), 0644)
 
 		// Run start with positional arg
 		cmd := exec.Command(kexBinary, "start", customRoot)
@@ -133,7 +133,7 @@ Content`
 		os.WriteFile(filepath.Join(contentsDir, "doc.md"), []byte(doc), 0644)
 
 		// Create config in projectRoot pointing to contentsDir (relative to projectRoot)
-		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("root: custom_contents\n"), 0644)
+		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("source: custom_contents\n"), 0644)
 
 		// Run kex start <projectRoot> from baseDir
 		cmd := exec.Command(kexBinary, "start", projectRoot)
