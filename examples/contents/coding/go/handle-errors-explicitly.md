@@ -1,5 +1,5 @@
 ---
-id: handle-errors-explicitly
+
 title: Explicit Error Handling
 description: >
   Never ignore errors. Handle them or return them.

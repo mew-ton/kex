@@ -1,5 +1,5 @@
 ---
-id: follow-conventional-commits
+
 title: Commit Messages (Conventional Commits)
 description: >
   Follow Conventional Commits for git history.

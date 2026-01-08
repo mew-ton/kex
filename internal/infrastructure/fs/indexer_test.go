@@ -14,7 +14,6 @@ func TestIndexer_Search(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	doc1 := `---
-id: doc1
 title: Doc 1
 status: adopted
 keywords: [apple, banana]
@@ -22,7 +21,6 @@ keywords: [apple, banana]
 Content 1`
 
 	doc2 := `---
-id: doc2
 title: Doc 2
 status: adopted
 keywords: [banana, cherry]
@@ -105,7 +103,6 @@ func TestIndexer_Load_DefaultStatus(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	doc := `---
-id: doc_no_status
 title: Doc No Status
 keywords: [test]
 ---
@@ -138,7 +135,7 @@ Content`
 	}
 
 	// It should be present and have StatusAdopted
-	d, ok := idx.GetByID("doc_no_status")
+	d, ok := idx.GetByID("doc")
 	if !ok {
 		// If it was Draft and IncludeDrafts=false (default), it might still be in Documents map?
 		// Checking Indexer.Load implementation:

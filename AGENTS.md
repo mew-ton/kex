@@ -42,7 +42,7 @@ To add new knowledge to this project:
 3. **Check for file conflicts** using `Glob` to ensure no duplicate filenames exist.
 4. Create a Markdown file in the appropriate `contents/` subdirectory.
 5. Follow the directory structure and format patterns from existing documents.
-6. Ensure the file has valid frontmatter (id, title, description, keywords).
+6. Ensure the file has valid frontmatter (title, description, keywords).
 7. Run `kex check` to validate your new documents.
 <!-- kex: auto-update end -->
 

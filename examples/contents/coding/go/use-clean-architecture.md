@@ -1,5 +1,5 @@
 ---
-id: use-clean-architecture
+
 title: Use Clean Architecture
 description: >
   Organize Go projects using Clean Architecture layers to separate concerns and ensure testability.

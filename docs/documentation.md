@@ -11,7 +11,6 @@ Every document **MUST** start with YAML frontmatter.
 
 ```yaml
 ---
-id: avoid-magic-numbers  # Required: Unique identifier (slug)
 title: Avoid Magic Numbers # Required: Human readable title
 description: Do not use magic numbers. # Required: Used by AI for selection
 keywords: [readability, code-quality] # Required: Key terms for search
@@ -21,11 +20,6 @@ sources: # Optional: External references
     url: https://eslint.org/docs/rules/no-magic-numbers
 ---
 ```
-
-### `id` (Required)
-
-- **Type**: `string`
-- **Description**: A unique identifier for the document, typically matched with the filename slug (e.g., `avoid-magic-numbers` for `avoid-magic-numbers.md`).
 
 ### `title` (Required)
 

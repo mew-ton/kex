@@ -68,8 +68,9 @@ Draft Content`
 		if len(schema.Documents) != 1 {
 			t.Errorf("Expected 1 document, got %d", len(schema.Documents))
 		}
-		if schema.Documents[0].ID != "doc-1" {
-			t.Errorf("Expected doc-1, got %s", schema.Documents[0].ID)
+		// Dynamic ID: coding/doc1.md -> coding.doc1
+		if schema.Documents[0].ID != "coding.doc1" {
+			t.Errorf("Expected coding.doc1, got %s", schema.Documents[0].ID)
 		}
 		// Check Path relative to root or dist?
 		// Our logic keeps it relative to root (e.g. "contents/coding/doc1.md") or relative to contents?
@@ -105,7 +106,6 @@ func TestKexGenerate_WithBaseURL(t *testing.T) {
 		os.MkdirAll(contentsDir, 0755)
 
 		doc := `---
-id: doc-base
 title: Doc Base
 status: adopted
 ---
