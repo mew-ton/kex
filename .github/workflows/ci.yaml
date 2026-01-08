@@ -91,4 +91,5 @@ jobs:
         run: |
           chmod +x kex
           export PATH=$PWD:$PATH
+          go clean -testcache
           go test -v ./e2e/...
