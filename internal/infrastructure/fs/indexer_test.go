@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mew-ton/kex/internal/domain"
 	"github.com/mew-ton/kex/internal/infrastructure/logger"
 )
 
@@ -96,5 +97,61 @@ Content 2`
 				}
 			}
 		})
+	}
+}
+
+func TestIndexer_Load_DefaultStatus(t *testing.T) {
+	// Setup temp dir with sample doc missing status
+	tmpDir := t.TempDir()
+
+	doc := `---
+id: doc_no_status
+title: Doc No Status
+keywords: [test]
+---
+Content`
+
+	if err := os.WriteFile(filepath.Join(tmpDir, "doc.md"), []byte(doc), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	l := &logger.NoOpLogger{}
+	provider := NewLocalProvider(tmpDir, l)
+
+	// We want to verify that the provider loads it with StatusAdopted
+	// The Indexer.Load will use the provider's schema.
+	// But we can check the provider output directly or through Indexer.
+	// Let's check through Indexer to be sure end-to-end.
+
+	idx := New(provider, l)
+	// Default IncludeDrafts is false.
+	// If it defaults to Draft, it won't be in Indexer.Documents if we rely on parseDocuments logic?
+	// Wait, Indexer.Load calls Provider.Load which returns Schema.
+	// detailed logic:
+	// 1. Provider.Load calls collectMarkdownFiles -> ParseDocument
+	// 2. Provider sets default status if missing.
+	// 3. Provider returns schema.
+	// 4. Indexer.Load converts Schema to Documents.
+
+	if err := idx.Load(); err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// It should be present and have StatusAdopted
+	d, ok := idx.GetByID("doc_no_status")
+	if !ok {
+		// If it was Draft and IncludeDrafts=false (default), it might still be in Documents map?
+		// Checking Indexer.Load implementation:
+		// It iterates schema.Documents and adds them.
+		// It does NOT filter by Draft status in the loop from schema!
+		// Wait, let's check Indexer.Load again.
+		// lines 56-75: iterates schema.Documents, creates domain.Document, calls i.addDocument.
+		// DOES NOT CHECK IncludeDrafts there.
+		// So it should be there regardless of status.
+		t.Fatalf("Document not found in index")
+	}
+
+	if d.Status != domain.StatusAdopted {
+		t.Errorf("expected status %q, got %q", domain.StatusAdopted, d.Status)
 	}
 }
