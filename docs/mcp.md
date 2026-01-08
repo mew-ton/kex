@@ -45,6 +45,10 @@ To use Kex with [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tool
 
 ```bash
 # Add kex to Claude Code
+claude mcp add kex -- kex start /absolute/path/to/your/repo
+```
+
+**Note**: Use absolute paths or `~/` for the repository argument.
 
 ## Usage Guidelines
 

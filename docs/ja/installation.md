@@ -18,7 +18,7 @@ sudo mv kex /usr/local/bin/
 
 ## Go Install
 
-Go (1.25以上) がインストールされている場合、以下のコマンドで直接インストールできます:
+Go (1.25以上) がインストールされている環境であれば、以下のコマンドで直接インストールできます:
 
 ```bash
 go install github.com/mew-ton/kex/cmd/kex@latest
