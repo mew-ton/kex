@@ -52,9 +52,9 @@ func (l *LocalProvider) Load() (*IndexSchema, []error) {
 			continue
 		}
 
-		// Default to Draft if status is missing in local files
+		// Default to Adopted if status is missing in local files
 		if doc.Status == "" {
-			doc.Status = domain.StatusDraft
+			doc.Status = domain.StatusAdopted
 		}
 
 		relPath, _ := filepath.Rel(l.Root, path)
