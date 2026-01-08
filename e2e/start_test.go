@@ -24,8 +24,8 @@ func TestKexStart_Failure_MissingRoot(t *testing.T) {
 			t.Fatalf("Expected start to fail due to missing root, but it succeeded.")
 		}
 
-		if !strings.Contains(string(output), "not found") {
-			t.Errorf("Expected 'not found' error, got: %s", output)
+		if !strings.Contains(string(output), "no such file or directory") {
+			t.Errorf("Expected 'no such file or directory' error, got: %s", output)
 		}
 	})
 }

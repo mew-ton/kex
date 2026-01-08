@@ -74,7 +74,7 @@ func runUpdate(c *cli.Context) error {
 		strategies = make(map[string]string)
 	}
 
-	if err := gen.Update(cwd, cfg.Root, agentType, strategies, agentConfig); err != nil {
+	if err := gen.Update(cwd, cfg.Source, agentType, strategies, agentConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
 	}

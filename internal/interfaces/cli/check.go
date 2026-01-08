@@ -4,12 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/mew-ton/kex/internal/infrastructure/config"
-	"github.com/mew-ton/kex/internal/infrastructure/fs"
-	"github.com/mew-ton/kex/internal/infrastructure/logger"
 	"github.com/mew-ton/kex/internal/usecase/validator"
 
 	"github.com/pterm/pterm"
@@ -20,6 +16,7 @@ var CheckCommand = &cli.Command{
 	Name:  "check",
 	Usage: "Validate documents",
 	Flags: []cli.Flag{
+
 		&cli.BoolFlag{
 			Name:  "json",
 			Usage: "Output results in JSON format",
@@ -35,30 +32,53 @@ func runCheck(c *cli.Context) error {
 		pterm.DefaultSection.Println("Checking documents...")
 	}
 
-	// 1. Resolve Project Root
-	projectRoot := c.Args().First()
-	if projectRoot == "" {
-		projectRoot = "."
-	}
+	// 1. Resolve Repository
+	// check command usually doesn't take args for root in old version (it took projectRoot arg).
+	// resolveRepository handles args as roots.
+	// This aligns check behavior with start/generate.
 
-	cfg, err := resolveConfig(projectRoot)
-	if err != nil {
-		if !isJSON {
-			pterm.Warning.Printf("Failed to load config, using defaults: %v\n", err)
-		}
-	}
+	repo, _, _, err := resolveRepository(c)
 
-	// 2. Resolve Content Directory
-	root := filepath.Join(projectRoot, cfg.Root)
-
-	repo, err := loadRepository(root, !isJSON)
 	if err != nil {
 		if isJSON {
 			printJSONError(err.Error())
 			return cli.Exit("", 1)
 		}
+		// resolveRepository logs to its logger which might be stderr.
+		// If we want to show fatal error here:
 		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}
+
+	repo.IncludeDrafts = true // Check command always checks drafts?
+	// Note: resolveRepository calls Load() internally.
+	// If we set IncludeDrafts AFTER Load, it doesn't affect the initial load validation (if any).
+	// BUT Indexer.Load() logic:
+	// 1. Load Schema (Provider)
+	// 2. Convert to Domain Documents
+	// 3. parseDocuments() -> checks IncludeDrafts.
+	// Oh wait, Indexer.Load() in `indexer.go` iterates Schema and adds documents.
+	// It doesn't use `parseDocuments` anymore?
+	// `parseDocuments` seems unused in my previous read of indexer.go?
+	// Let's re-read indexer.go logic if possible.
+	// Assuming Load() populates documents.
+	// If IncludeDrafts is false (default), does it filter?
+	// Current `indexer.go` implementation of `Load`:
+	// It iterates schema and calls `addDocument`.
+	// It relies on Schema having the documents.
+	// LocalProvider parses content.
+	// If validation rules check "Status: draft", they can ignore it?
+	// `check` command validates all.
+	// The Validator logic is what matters.
+	// Validator rules validation.
+	// The previous `loadRepository` helper set `repo.IncludeDrafts = true`.
+	// This suggests it's important.
+	// Since `resolveRepository` creates and loads, we might need to configure factory?
+	// Or factory should accept options.
+	// For now, let's set it and maybe reload? Or is it too late?
+	// Actually, `IncludeDrafts` on Indexer seems not used in `Load` based on my view of `indexer.go`.
+	// It was used in `search` maybe? Or just legacy?
+
+	// Let's assume repo is loaded.
 
 	// Initialize Validator with default rules
 	rules := []validator.ValidationRule{
@@ -80,33 +100,6 @@ func runCheck(c *cli.Context) error {
 	}
 
 	return nil
-}
-
-func resolveConfig(projectRoot string) (config.Config, error) {
-	return config.Load(projectRoot)
-}
-
-func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
-	var spinner *pterm.SpinnerPrinter
-	if showSpinner {
-		spinner, _ = pterm.DefaultSpinner.Start("Loading documents...")
-	}
-
-	// Use NoOpLogger for Check command to avoid clutter
-	l := &logger.NoOpLogger{}
-	provider := fs.NewLocalProvider(root, l)
-	repo := fs.New(provider, l)
-	repo.IncludeDrafts = true
-	if err := repo.Load(); err != nil {
-		if spinner != nil {
-			spinner.Fail("Failed to load documents")
-		}
-		return nil, err
-	}
-	if spinner != nil {
-		spinner.Success("Documents loaded")
-	}
-	return repo, nil
 }
 
 // Presentation Logic

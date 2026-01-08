@@ -9,13 +9,18 @@ root: contents
 baseURL: https://example.com/docs/
 ```
 
-### `root` (任意)
+### `source` (任意)
 
 マークダウン形式のドキュメントファイルが含まれるディレクトリを指定します。
 
 - **型**: `string`
 - **デフォルト**: `contents`
 - **説明**: Kex はこのディレクトリ内のすべての `.md` ファイルを再帰的にインデックスします。このパスは、`kex start` や `kex check` を実行するディレクトリ (通常はプロジェクトルート) からの相対パスです。
+
+**設定例**:
+```yaml
+source: contents
+```
 
 ### `baseURL` (任意)
 

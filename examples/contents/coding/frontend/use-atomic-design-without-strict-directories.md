@@ -8,7 +8,6 @@ keywords:
   - architecture
   - atomic-design
   - component
-status: draft
 ---
 
 ## Summary

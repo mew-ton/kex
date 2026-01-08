@@ -19,43 +19,61 @@ kex init [options]
 Validates the integrity of your documentation repository.
 
 ```bash
-kex check
+kex check [options] [path...]
 ```
 
-Checks for:
+You can specify multiple documentation sources (directories or URLs) to validate them as a unified set.
+
+**Examples**:
+```bash
+kex check                           # Use .kex.yaml sources
+kex check contents/coding           # Check specific dir
+kex check contents/coding docs      # Check multiple dirs
+```
+
+checks for:
 - Invalid YAML Frontmatter
 - ID vs Filename mismatches
 - Missing required fields
-- Duplicate IDs
+- Duplicate IDs (across all sources)
 
 ## `kex start`
 
 Starts the MCP Server.
 
 ```bash
-kex start [options] [path|url]
+kex start [options] [path...]
 ```
 
-- **Local Mode**: `kex start ./my-docs`
-- **Remote Mode**: `kex start https://example.com/docs/` (Must contain `kex.json`)
-- **Flags**:
-    - `--log-file=<path>`: Write logs to a file instead of Stderr.
-    - `--root=<path>`: Specify the guidelines content root (Local mode).
+**Argument Logic**:
+Kex inspects each provided path to determine if it is a **Project Root** (contains `.kex.yaml` or `kex.json`) or a **Content Source**.
 
+For detailed resolution rules and how to work with multiple sources, see [Composition](composition.md#resolution-logic).
 
+**Examples**:
+- **From Config**: `kex start .` (Loads `.kex.yaml` from current dir)
+- **Ad-hoc**: `kex start ./contents` (Starts server with just ./contents)
+- **Mixed**: `kex start . ./extra-docs`
+
+**Flags**:
+- `--log-file=<path>`: Write logs to a file instead of Stderr.
 
 ## `kex generate`
 
 Generates a static site structure for remote hosting (GitHub Pages).
 
 ```bash
-kex generate [output-dir]
+kex generate [options] [path...]
 ```
 
-- Validates all "Adopted" documents.
-- Creates a `dist/` directory.
-- Generates `kex.json` (Index).
-- Copies markdown files to `dist/`.
+- Combines all specified sources into a single static site.
+- Creates a `dist/` directory in the current working directory.
+- Copies all "Adopted" documents and generates `kex.json`.
+
+**Example**:
+```bash
+kex generate contents/coding contents/docs
+```
 
 ## `kex update`
 

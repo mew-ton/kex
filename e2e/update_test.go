@@ -91,7 +91,7 @@ Old Rules
 
 	// 7. Verify Configural Update (Change Scopes)
 	// Modify .kex.yaml to only have "coding" scope
-	configData := `root: contents
+	configData := `source: contents
 agent:
   type: general
   scopes: ["coding"]
@@ -120,7 +120,7 @@ func TestKexUpdate_CustomRoot(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// 1. Create .kex.yaml with custom root
-		configContent := "root: custom_docs\nagent:\n  type: general\n  scopes: []\n"
+		configContent := "source: custom_docs\nagent:\n  type: general\n  scopes: []\n"
 		if err := os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(configContent), 0644); err != nil {
 			t.Fatal(err)
 		}

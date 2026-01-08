@@ -38,7 +38,7 @@ Draft Content`
 		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: contents\n"), 0644)
 
 		// Run Generate
-		cmd := exec.Command(kexBinary, "generate", tempDir)
+		cmd := exec.Command(kexBinary, "generate")
 		cmd.Dir = tempDir
 		output, err := cmd.CombinedOutput()
 
@@ -115,7 +115,7 @@ Content`
 		config := "root: contents\nbaseURL: https://example.com/docs/"
 		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(config), 0644)
 
-		cmd := exec.Command(kexBinary, "generate", tempDir)
+		cmd := exec.Command(kexBinary, "generate")
 		cmd.Dir = tempDir
 		output, err := cmd.CombinedOutput()
 		if err != nil {

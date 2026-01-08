@@ -9,13 +9,18 @@ root: contents
 baseURL: https://example.com/docs/
 ```
 
-### `root` (Optional)
+### `source` (Optional)
 
 Specifies the directory containing your markdown documentation files.
 
 - **Type**: `string`
 - **Default**: `contents`
-- **Description**: Kex will recursively index all `.md` files within this directory. This path is relative to the directory where `kex start` or `kex check` is run (usually the project root).
+- **Description**: Kex will recursively index all `.md` files within the specified directory. This path is relative to the directory where `kex start` or `kex check` is run (usually the project root).
+
+**Example**:
+```yaml
+source: contents
+```
 
 ### `baseURL` (Optional)
 

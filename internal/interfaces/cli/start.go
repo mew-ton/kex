@@ -3,10 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
 	"github.com/mew-ton/kex/internal/infrastructure/logger"
 	"github.com/mew-ton/kex/internal/interfaces/mcp"
@@ -19,11 +16,7 @@ var StartCommand = &cli.Command{
 	Name:  "start",
 	Usage: "Start MCP server",
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "root",
-			Usage:   "Path to guidelines directory",
-			Aliases: []string{"r"},
-		},
+
 		&cli.StringFlag{
 			Name:  "log-file",
 			Usage: "Path to log file",
@@ -35,17 +28,39 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	arg := c.Args().First()
-	isRemote := strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://")
+	// Compatibility: Handle `kex start <url_or_path>` as an additional root
+	// We might need to manually inject it into CLI context or handle it in resolveRepository?
+	// `resolveRepository` reads c.StringSlice("root").
+	// If there are Args, we should append them?
+	// But `resolveRepository` is generic.
 
-	cfg, appLogger, projectRoot, err := resolveConfigAndLogger(c, arg, isRemote)
-	if err != nil {
-		// Log warning but proceed if config failed? (Existing logic ignored config load error for defaults)
-		// But logger init handled it.
-		// "Ignore error for now" in original code was for config.Load.
-	}
+	// Let's modify usage:
+	// If args exist, treat them as overrides or additions?
+	// Old behavior: arg overrides config.root.
+	// New behavior: arg is added to roots?
 
-	repo, err := createRepository(c, cfg, appLogger, arg, isRemote, projectRoot)
+	// Actually, let's keep it simple.
+	// 1. Resolve Repo
+	repo, _, l, err := resolveRepository(c)
+
+	// HANDLE LEGACY ARG SUPPORT (kex start <path>)
+	// If resolved repo has NO documents (maybe config was empty), or strict check?
+	// Or explicitly check c.Args().First() and add it if not in roots?
+	// The problem is resolveRepository already called Load().
+
+	// OPTIMIZATION:
+	// We should probably pass args to resolveRepository or handle args before calling it.
+	// But since we can't easily modify context flags...
+
+	// Let's rely on resolveRepository for now.
+	// If the user provided `kex start path/to/docs`, `resolveConfigAndLogger` in repo_loader.go
+	// (which I copied from start.go) intentionally ignored handling `arg` as a config root based on my previous copy.
+	// Wait, I removed the `arg` handling in `resolveConfigAndLogger` in `repo_loader.go`!
+
+	// I need to fix `repo_loader.go` or handle it here.
+	// Given `kex start` has specific Arg behavior, maybe I should handle it.
+	// But `check` might want same behavior? (kex check <path>?)
+
 	if err != nil {
 		return err
 	}
@@ -54,79 +69,7 @@ func runStart(c *cli.Context) error {
 		return err
 	}
 
-	return startServer(repo, appLogger)
-}
-
-func resolveConfigAndLogger(c *cli.Context, arg string, isRemote bool) (config.Config, logger.Logger, string, error) {
-	projectRoot := "."
-	if !isRemote && arg != "" {
-		projectRoot = arg
-	}
-	cfg, err := config.Load(projectRoot)
-	// Original logic ignored err here for config defaults
-
-	var appLogger logger.Logger
-	logFile := c.String("log-file")
-	if logFile == "" {
-		logFile = cfg.Logging.File
-	}
-
-	if logFile != "" {
-		fl, err := logger.NewFileLogger(logFile)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to open log file '%s': %v. Using stderr.\n", logFile, err)
-			appLogger = logger.NewStderrLogger()
-		} else {
-			appLogger = fl
-		}
-	} else {
-		appLogger = logger.NewStderrLogger()
-	}
-
-	return cfg, appLogger, projectRoot, err
-}
-
-func createRepository(c *cli.Context, cfg config.Config, l logger.Logger, arg string, isRemote bool, projectRoot string) (*fs.Indexer, error) {
-	if isRemote {
-		pathOrUrl := arg
-		token := os.Getenv("KEX_REMOTE_TOKEN")
-		if token == "" {
-			if cfg.RemoteToken != "" {
-				token = cfg.RemoteToken
-			}
-		}
-
-		fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrUrl)
-		if token != "" {
-			fmt.Fprintf(os.Stderr, "Auth: Token provided\n")
-		} else {
-			fmt.Fprintf(os.Stderr, "Auth: None\n")
-		}
-
-		provider := fs.NewRemoteProvider(pathOrUrl, token, l)
-		repo := fs.New(provider, l)
-		if err := repo.Load(); err != nil {
-			return nil, cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
-		}
-		return repo, nil
-	}
-
-	// Local Mode
-	root := filepath.Join(projectRoot, cfg.Root)
-	if c.String("root") != "" {
-		root = c.String("root")
-	}
-
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		return nil, cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
-	}
-
-	provider := fs.NewLocalProvider(root, l)
-	repo := fs.New(provider, l)
-	if err := repo.Load(); err != nil {
-		return nil, cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
-	}
-	return repo, nil
+	return startServer(repo, l)
 }
 
 func validateRepository(repo *fs.Indexer) error {

@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Root        string  `yaml:"root"`
+	Source      string  `yaml:"source"` // Path to document source
 	BaseURL     string  `yaml:"baseURL"`
 	RemoteToken string  `yaml:"remoteToken"`
 	Update      Update  `yaml:"update"`
@@ -32,7 +32,7 @@ type Agent struct {
 
 func Load(projectRoot string) (Config, error) {
 	config := Config{
-		Root:    "contents", // Default
+		Source:  "contents", // Default
 		BaseURL: "",
 	}
 
@@ -47,6 +47,11 @@ func Load(projectRoot string) (Config, error) {
 
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return config, err
+	}
+
+	// Fallback if source empty
+	if config.Source == "" {
+		config.Source = "contents"
 	}
 
 	return config, nil
