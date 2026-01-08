@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.0.2](https://github.com/mew-ton/kex/compare/v1.0.1...v1.0.2) - 2026-01-08
+- fix: default status to adopted if omitted (#44) by @mew-ton in https://github.com/mew-ton/kex/pull/45
+
 ## [v1.0.1](https://github.com/mew-ton/kex/compare/v1.0.0...v1.0.1) - 2026-01-07
 - fix: kex update respects configured root (Issue #38) by @mew-ton in https://github.com/mew-ton/kex/pull/40
 
