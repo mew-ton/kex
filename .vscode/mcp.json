@@ -1,7 +1,7 @@
 {
   "servers": {
     "kex": {
-      "command": "${workspaceFolder}/kex",
+      "command": "${workspaceFolder}/bin/kex",
       "args": [
         "start",
         "${workspaceFolder}"
