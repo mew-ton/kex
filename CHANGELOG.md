@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.0.3](https://github.com/mew-ton/kex/compare/v1.0.2...v1.0.3) - 2026-01-08
+- chore: refine Japanese documentation (Issue #39) by @mew-ton in https://github.com/mew-ton/kex/pull/48
+- chore: change build output path to bin/kex by @mew-ton in https://github.com/mew-ton/kex/pull/50
+- Fix/issue 47 by @mew-ton in https://github.com/mew-ton/kex/pull/51
+
 ## [v1.0.2](https://github.com/mew-ton/kex/compare/v1.0.1...v1.0.2) - 2026-01-08
 - fix: default status to adopted if omitted (#44) by @mew-ton in https://github.com/mew-ton/kex/pull/45
 
