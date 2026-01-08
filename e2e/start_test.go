@@ -61,7 +61,7 @@ Content`
 }
 
 func TestKexStart_WithRootFlag(t *testing.T) {
-	t.Run("it should start successfully with --root flag overriding config", func(t *testing.T) {
+	t.Run("it should start successfully with positional arg overriding config", func(t *testing.T) {
 		tempDir := t.TempDir()
 		customRoot := filepath.Join(tempDir, "custom_guidelines")
 		os.MkdirAll(customRoot, 0755)
@@ -75,11 +75,16 @@ description: Test
 Content`
 		os.WriteFile(filepath.Join(customRoot, "test-doc.md"), []byte(doc), 0644)
 
-		// Create invalid config to ensure override works
+		// Create invalid config to ensure override works (or rather composition works)
+		// If we pass positional arg, repo_loader uses it.
+		// If explicit positional arg provided, does it ignore default config source?
+		// repo_loader: "If c.Args().Present() { ... contentRoots = append(...) }"
+		// Then Factory uses contentRoots.
+		// So yes, it ignores cfg.Source. Correct.
 		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: non_existent\n"), 0644)
 
-		// Run start with --root
-		cmd := exec.Command(kexBinary, "start", "--root", customRoot)
+		// Run start with positional arg
+		cmd := exec.Command(kexBinary, "start", customRoot)
 		cmd.Dir = tempDir
 
 		// Start the process
