@@ -1,28 +1,31 @@
----
-id: prevent-dead-code-asset-mismatch
 title: Prevent Dead Code and Asset Mismatch
 description: Guidelines for maintaining synchronization between application logic and static assets.
-status: adopted
-keywords: [best-practice, maintenance, cleanup, assets, dead-code]
+keywords:
+  - best-practice
+  - maintenance
+  - cleanup
+  - assets
+  - dead-code
 ---
 
-# Prevent Dead Code and Asset Mismatch
+## Summary
+Do not leave dead code, unnecessary logic, or unused assets. Ensure perfect synchronization between application logic and the static assets (templates, images, etc.) it processes.
 
-## Context
-Codebases often contain logic coupled with static assets (templates, config files, images). A disconnect between the two leads to technical debt and bugs.
+## Rationale
+- Use of nonexistent assets leads to phantom logic that confuses developers.
+- Unused assets bloat the repository and reduce signal-to-noise ratio.
+- Coupled logic (like generators) requires both the code and the target asset to functional correctly.
 
-## The Principle
-**"Do not leave dead code, unnecessary logic, or unused assets."**
+## Guidance
+1.  **Logic without Assets is Dead Code**: If you write code to process a file (e.g., specific handling for `AGENTS.md`), ensure that file exists. If the asset is removed, remove the logic.
+2.  **Assets without Logic are Bloat**: Delete files that are never read, processed, or deployed.
+3.  **Search References**: When deleting assets, search for path strings to clean up handling logic.
+4.  **Fail Fast**: Prefer tests that fail when an expected asset is missing over logic that silently skips it.
 
-1.  **Logic without Assets is Dead Code**:
-    If you write code to process a file (e.g., specific handling for `AGENTS.md` in a generator), but that file does not exist, the code is unreachable/dead. It clutters the codebase and misleads developers.
-    *   *Action*: If the asset is needed, ensure it exists (even as a placeholder). If not, delete the logic.
+## Examples
 
-2.  **Assets without Logic are Bloat**:
-    Files sitting in your repository that are never read, processed, or deployed should be removed.
-    *   *Action*: Delete unused files to reduce noise.
+### Bad
+Writing a generator loop that checks for `AGENTS.md` when no such file exists in the templates folder. The code runs but does nothing, confusing future maintainers.
 
-## Implementation Guideline
-*   **When Deleting Assets**: Always search the codebase for references (filenames, paths). Remove the corresponding handling logic.
-*   **When Adding Logic**: Verify the target asset exists. If the logic depends on iteration (e.g., `fs.WalkDir`), ensure the asset is present in the walked directory to trigger the code.
-*   **Testing**: Add tests that fail if a required asset is missing, rather than failing silently (which hides the dead code).
+### Good
+If logic exists to process `AGENTS.md`, a placeholder `assets/templates/AGENTS.md` exists to verify that logic is active and tested.

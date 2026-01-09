@@ -1,26 +1,32 @@
----
-id: avoid-unrequested-scope-expansion
 title: Avoid Unrequested Scope Expansion
 description: Guidelines for staying focused on the immediate problem and avoiding implementing unrelated features.
-status: adopted
-keywords: [best-practice, scope-creep, requirement-analysis, YAGNI]
+keywords:
+  - best-practice
+  - scope-creep
+  - requirement-analysis
+  - YAGNI
 ---
 
-# Avoid Unrequested Scope Expansion
+## Summary
+Solve the problem in front of you, not the problem you imagine might exist. Avoid implementing features or improvements that were not explicitly requested or approved.
 
-## Context
-When assigned a specific task (e.g., "Fix a bug in feature X"), there is often a temptation to "improve" surrounding code or add related features (e.g., "Add a new filter capability") that were not requested.
+## Rationale
+- **Distraction**: Shifts focus away from the core issue, delaying the actual fix.
+- **Maintenance Cost**: New features increase surface area for bugs and ownership costs.
+- **Review Complexity**: Confuses the intent of the PR and wastes reviewer time on unrequested logic.
 
-## The Principle
-**"Solve the problem in front of you, not the problem you imagine might exist."**
+## Guidance
+1.  **Strict Adherence**: If the task is to fix Feature A, do not touch Feature B.
+2.  **Propose First**: If a specific feature seems necessary to solve the task, propose it explicitly and wait for approval.
+3.  **YAGNI**: Do not implement code "just in case" it's useful later.
+4.  **Revert**: If you find yourself adding logic not traceable to a requirement, revert it.
 
-1.  **Strict Adherence**: If the task is to fix Feature A, do not implement Feature B, even if it seems helpful or "easy to add while I'm here."
-2.  **Cost of Unrequested Features**:
-    *   **Distraction**: It shifts focus away from the core issue.
-    *   **Maintenance**: New code increases the surface area for bugs and tests without a verified user need.
-    *   **Review Overhead**: The reviewer has to review unrequested logic, confusing the PR intent.
+## Examples
 
-## Implementation Guideline
-*   **Verify Requirements**: If you believe a new feature is necessary to solve the assigned task, **propose it explicitly** and wait for approval before implementing.
-*   **YAGNI (You Aren't Gonna Need It)**: Do not implement features "just in case" they are useful later.
-*   **Revert Unjustified Changes**: If you have added logic not traceable to the original requirement, revert it.
+### Bad
+Task: "Fix keyword matching collision."
+Action: "While I'm here, I'll also add title search because it seems easy." -> **Rejected**.
+
+### Good
+Task: "Fix keyword matching collision."
+Action: "I noticed title search could be useful. I will open a separate issue or discussion to propose it, but for now I will strictly fix the collision bug." -> **Approved**.
