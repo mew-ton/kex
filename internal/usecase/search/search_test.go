@@ -1,20 +1,21 @@
 package search
 
 import (
-	"github.com/mew-ton/kex/internal/domain"
 	"reflect"
 	"testing"
+
+	"github.com/mew-ton/kex/internal/domain"
 )
 
 // MockRepository for testing
 type MockRepository struct {
-	SearchFunc  func(keywords []string, scopes []string) []*domain.Document
+	SearchFunc  func(keywords []string, scopes []string, exactScopeMatch bool) []*domain.Document
 	GetByIDFunc func(id string) (*domain.Document, bool)
 }
 
-func (m *MockRepository) Search(keywords []string, scopes []string) []*domain.Document {
+func (m *MockRepository) Search(keywords []string, scopes []string, exactScopeMatch bool) []*domain.Document {
 	if m.SearchFunc != nil {
-		return m.SearchFunc(keywords, scopes)
+		return m.SearchFunc(keywords, scopes, exactScopeMatch)
 	}
 	return nil
 }
@@ -66,7 +67,7 @@ func TestUseCase_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := &MockRepository{
-				SearchFunc: func(keywords []string, scopes []string) []*domain.Document {
+				SearchFunc: func(keywords []string, scopes []string, exactScopeMatch bool) []*domain.Document {
 					// Verify that the correct scopes are passed to the repository
 					if !reflect.DeepEqual(scopes, tt.expectedScopes) {
 						t.Errorf("Execute() passed scopes = %v, want %v", scopes, tt.expectedScopes)
@@ -76,7 +77,7 @@ func TestUseCase_Execute(t *testing.T) {
 			}
 
 			uc := New(mockRepo)
-			result := uc.Execute(tt.keywords, tt.filePath)
+			result := uc.Execute(tt.keywords, tt.filePath, false)
 
 			if len(result.Documents) != 1 {
 				t.Errorf("Execute() expected 1 document, got %d", len(result.Documents))

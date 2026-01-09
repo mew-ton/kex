@@ -1,0 +1,4 @@
+root: contents
+agent:
+  type: general
+  scopes: ["coding", "documentation"]

@@ -29,9 +29,9 @@ func (m *MockRepository) GetErrors() []error {
 }
 
 // Unused methods
-func (m *MockRepository) GetByID(id string) (*domain.Document, bool) { return nil, false }
-func (m *MockRepository) Search(k, s []string) []*domain.Document    { return nil }
-func (m *MockRepository) Load() error                                { return nil }
+func (m *MockRepository) GetByID(id string) (*domain.Document, bool)      { return nil, false }
+func (m *MockRepository) Search(k, s []string, e bool) []*domain.Document { return nil }
+func (m *MockRepository) Load() error                                     { return nil }
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
