@@ -4,6 +4,7 @@
 
 1.  **Search for style guides** using `search_documents`.
     *   **Keywords**: "documentation", "style", "markdown", "format".
+    *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
 2.  **Read relevant guides** using `read_document`.
 3.  **Adhere strictly** to formatting rules.
 
