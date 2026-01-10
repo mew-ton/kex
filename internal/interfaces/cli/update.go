@@ -68,12 +68,9 @@ func runUpdate(c *cli.Context) error {
 
 	spinner, _ := pterm.DefaultSpinner.Start("Updating files...")
 
-	// Pass strategies from config
+	// Pass strategies from config (map[string]string)
+	// Strategies are populated by config.Load defaults
 	strategies := cfg.Update.Strategies
-	if strategies == nil {
-		strategies = make(map[string]string)
-	}
-
 	if err := gen.Update(cwd, cfg.Root, agentType, strategies, agentConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err

@@ -39,18 +39,28 @@ Authentication token for private repositories (e.g. GitHub Private Pages).
 
 Configures the behavior of `kex update`.
 
+### `update` (Optional)
+
+Configures the behavior of `kex update`.
+
 ```yaml
 update:
   strategies:
-    "contents/documentation/kex/*": "overwrite"
-    "AGENTS.md": "marker-update"
+    ".agent/rules/kex-coding.md": "skip"
+    ".claude/rules/kex-coding.md": "skip"
+    "contents/documentation/kex/choose-effective-keywords.md": "overwrite"
 ```
 
-- **strategies**: A map of glob patterns to update strategies.
-  - `overwrite`: Replaces the file with the template.
-  - `marker-update`: Updates content between markers (Designed for `AGENTS.md`).
-  - `append`: Appends new content to the end if missing.
-  - `skip`: Does nothing.
+- **strategies**: A map of **Canonical Paths** to update strategies.
+    - **Rule Files**: Use the specific path for the agent type (e.g., `.agent/rules/kex-coding.md` for General, `.claude/rules/kex-coding.md` for Claude/Cursor).
+    - **System Documentation**: Always use the path starting with `contents/` (e.g., `contents/documentation/kex/choose-effective-keywords.md`), even if you have configured a custom `root`.
+    - **Strategies**:
+        - `overwrite`: Replaces the file with the template.
+        - `skip`: Creates the file if missing, but strictly preserves existing content if the file exists.
+    - **Defaults**:
+        - **Rule Files**: Default to `skip` to preserve user customizations.
+        - **System Documentation**: Defaults to `overwrite`.
+
 
 ### `agent` (Optional)
 

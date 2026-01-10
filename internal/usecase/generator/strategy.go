@@ -3,7 +3,6 @@ package generator
 import (
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 )
@@ -44,59 +43,38 @@ func (s *AppendStrategy) Apply(ctx UpdateContext) error {
 	return nil
 }
 
-// SkipStrategy does nothing
-type SkipStrategy struct{}
+// CreateStrategy creates the file if it doesn't exist, otherwise skips
+type CreateStrategy struct{}
 
-func (s *SkipStrategy) Apply(ctx UpdateContext) error {
+func (s *CreateStrategy) Apply(ctx UpdateContext) error {
+	if _, err := os.Stat(ctx.TargetPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(ctx.TargetPath), 0755); err != nil {
+			return err
+		}
+		return os.WriteFile(ctx.TargetPath, ctx.TemplateData, 0644)
+	}
 	return nil
 }
 
-// MarkerUpdateStrategy updates content between markers
-type MarkerUpdateStrategy struct{}
-
-func (s *MarkerUpdateStrategy) Apply(ctx UpdateContext) error {
-	data := ctx.TemplateData
-
-	// Generate dynamic content if Agent Config is provided
-	if ctx.AgentConfig != nil {
-		dynamicData, err := ctx.Generator.generateAgentContent(ctx.AgentConfig)
-		if err != nil {
-			return err
-		}
-		data = dynamicData
-	}
-
-	return ctx.Generator.handleAgentMD(ctx.TargetPath, data)
-}
-
 // StrategyResolver determines the strategy
-func ResolveStrategy(path string, strategies map[string]string) UpdateStrategy {
-	strategyName := "skip"
+func ResolveStrategy(path string, strategies config.Strategies) UpdateStrategy {
+	// Look up the strategy name using the config accessor
+	// Path MUST be the canonical path (e.g. .agent/rules/..., contents/...)
+	strategyName := strategies.StrategyFor(path)
 
-	// Default Strategies
-	if strings.Contains(path, "documentation/kex") {
+	// If result is empty, fallback to overwrite (standard behavior)
+	if strategyName == "" {
 		strategyName = "overwrite"
-	}
-	if filepath.Base(path) == "AGENTS.md" || filepath.Base(path) == "CLAUDE.md" {
-		strategyName = "marker-update"
-	}
-
-	// Config Override
-	for pattern, action := range strategies {
-		matched, _ := filepath.Match(pattern, path)
-		if matched {
-			strategyName = action
-		}
 	}
 
 	switch strategyName {
 	case "overwrite":
 		return &OverwriteStrategy{}
-	case "marker-update":
-		return &MarkerUpdateStrategy{}
-	case "append":
-		return &AppendStrategy{}
+	case "skip":
+		// "skip" maps to CreateStrategy (Write if missing, Skip if exists)
+		return &CreateStrategy{}
 	default:
-		return &SkipStrategy{}
+		// Unknown to Overwrite
+		return &OverwriteStrategy{}
 	}
 }
