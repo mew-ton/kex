@@ -162,6 +162,10 @@ func (s *Server) handleListTools() interface{} {
 							"type":        "string",
 							"description": "The path of the file you are working on. Used for scope filtering.",
 						},
+						"exactScopeMatch": map[string]interface{}{
+							"type":        "boolean",
+							"description": "If true, treats keywords as exact scope names to match.",
+						},
 					},
 					"required": []string{"keywords"},
 				},
@@ -205,8 +209,9 @@ func (s *Server) handleCallTool(paramsRaw json.RawMessage) (interface{}, *rpcErr
 
 func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *rpcError) {
 	var args struct {
-		Keywords []string `json:"keywords"`
-		FilePath string   `json:"filePath"`
+		Keywords        []string `json:"keywords"`
+		FilePath        string   `json:"filePath"`
+		ExactScopeMatch bool     `json:"exactScopeMatch"`
 	}
 	if err := json.Unmarshal(argsRaw, &args); err != nil {
 		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
@@ -214,7 +219,7 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 
 	// Use Search Use Case
 	uc := search.New(s.Repo)
-	result := uc.Execute(args.Keywords, args.FilePath)
+	result := uc.Execute(args.Keywords, args.FilePath, args.ExactScopeMatch)
 
 	var content []map[string]interface{}
 

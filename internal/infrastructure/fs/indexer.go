@@ -18,7 +18,8 @@ type Indexer struct {
 	// So we don't need BaseURL here.
 	IncludeDrafts bool                          // If true, draft documents are indexed
 	Documents     map[string]*domain.Document   // ID -> Document
-	Index         map[string][]*domain.Document // Keyword -> Documents
+	KeywordIndex  map[string][]*domain.Document // Keyword -> Documents
+	ScopeIndex    map[string][]*domain.Document // Scope -> Documents (Exact match)
 	Errors        []error                       // Validation errors found during load
 	Schema        *IndexSchema                  // Unified Schema
 }
@@ -26,11 +27,12 @@ type Indexer struct {
 // New creates a new Indexer
 func New(provider DocumentProvider, logger logger.Logger) *Indexer {
 	return &Indexer{
-		Provider:  provider,
-		Logger:    logger,
-		Documents: make(map[string]*domain.Document),
-		Index:     make(map[string][]*domain.Document),
-		Errors:    []error{},
+		Provider:     provider,
+		Logger:       logger,
+		Documents:    make(map[string]*domain.Document),
+		KeywordIndex: make(map[string][]*domain.Document),
+		ScopeIndex:   make(map[string][]*domain.Document),
+		Errors:       []error{},
 	}
 }
 
@@ -141,35 +143,76 @@ func (i *Indexer) addDocument(doc *domain.Document) {
 	// Add to ID map
 	i.Documents[doc.ID] = doc
 
-	// Add to Keyword index
+	// Helper to add to index
+	addToIndex := func(term string) {
+		k := strings.ToLower(strings.TrimSpace(term))
+		if k == "" {
+			return
+		}
+		i.KeywordIndex[k] = append(i.KeywordIndex[k], doc)
+	}
+
+	// 1. Index explicit keywords
 	for _, keyword := range doc.Keywords {
-		k := strings.ToLower(keyword)
-		i.Index[k] = append(i.Index[k], doc)
+		addToIndex(keyword)
+	}
+
+	// 2. Index Scopes (Directory names)
+	for _, scope := range doc.Scopes {
+		// Populate ScopeIndex for exact matching
+		scopeKey := strings.ToLower(strings.TrimSpace(scope))
+		if scopeKey != "" {
+			i.ScopeIndex[scopeKey] = append(i.ScopeIndex[scopeKey], doc)
+		}
+	}
+
+	// 3. Index Title words
+	titleWords := strings.Fields(doc.Title)
+	for _, word := range titleWords {
+		addToIndex(word)
+	}
+
+	// 4. Index Description words
+	descWords := strings.Fields(doc.Description)
+	for _, word := range descWords {
+		addToIndex(word)
 	}
 }
 
 // Search returns documents matching the keywords and scopes
-func (i *Indexer) Search(keywords []string, scopes []string) []*domain.Document {
-	// 1. Find matches by keywords (OR logic)
-	seen := make(map[string]struct{})
+func (i *Indexer) Search(keywords []string, scopes []string, exactScopeMatch bool) []*domain.Document {
+	// 1. Find candidates
 	var candidates []*domain.Document
+	seen := make(map[string]struct{})
 
-	for _, keyword := range keywords {
-		k := strings.ToLower(keyword)
-		docs, ok := i.Index[k]
-		if !ok {
-			continue
+	for _, term := range keywords {
+		k := strings.ToLower(term)
+
+		// 1. Check Scope Match
+		if docs, ok := i.ScopeIndex[k]; ok {
+			for _, doc := range docs {
+				if _, exists := seen[doc.ID]; !exists {
+					seen[doc.ID] = struct{}{}
+					candidates = append(candidates, doc)
+				}
+			}
 		}
-		for _, doc := range docs {
-			if _, exists := seen[doc.ID]; !exists {
-				seen[doc.ID] = struct{}{}
-				candidates = append(candidates, doc)
+
+		// 2. Check Keyword/Content Match (if allowed)
+		if !exactScopeMatch {
+			if docs, ok := i.KeywordIndex[k]; ok {
+				for _, doc := range docs {
+					if _, exists := seen[doc.ID]; !exists {
+						seen[doc.ID] = struct{}{}
+						candidates = append(candidates, doc)
+					}
+				}
 			}
 		}
 	}
 
 	// 2. Filter by scopes (Intersection logic)
-	// If requestsScopes is empty, return all candidates (no filter).
+	// If scopes is empty, return all candidates.
 	if len(scopes) == 0 {
 		return candidates
 	}

@@ -6,5 +6,5 @@ type DocumentRepository interface {
 	GetAll() []*Document
 	GetErrors() []error
 	GetByID(id string) (*Document, bool)
-	Search(keywords []string, scopes []string) []*Document
+	Search(keywords []string, scopes []string, exactScopeMatch bool) []*Document
 }

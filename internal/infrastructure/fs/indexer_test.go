@@ -12,6 +12,10 @@ import (
 func TestIndexer_Search(t *testing.T) {
 	// Setup temp dir with sample docs
 	tmpDir := t.TempDir()
+	// Create coding directory to test scopes
+	if err := os.Mkdir(filepath.Join(tmpDir, "coding"), 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	doc1 := `---
 title: Doc 1
@@ -19,6 +23,14 @@ status: adopted
 keywords: [apple, banana]
 ---
 Content 1`
+
+	// Doc 3 in coding directory
+	doc3 := `---
+title: Doc 3 Coding
+status: adopted
+keywords: [zebra]
+---
+Content 3`
 
 	doc2 := `---
 title: Doc 2
@@ -31,6 +43,10 @@ Content 2`
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(tmpDir, "doc2.md"), []byte(doc2), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(tmpDir, "coding", "doc3.md"), []byte(doc3), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -54,9 +70,10 @@ Content 2`
 
 	// Test Search
 	tests := []struct {
-		name     string
-		keywords []string
-		wantIDs  []string
+		name            string
+		keywords        []string
+		exactScopeMatch bool
+		wantIDs         []string
 	}{
 		{
 			name:     "it should return relevant documents for apple",
@@ -73,11 +90,23 @@ Content 2`
 			keywords: []string{"durian"},
 			wantIDs:  nil,
 		},
+
+		{
+			name:     "it should match documents by title words",
+			keywords: []string{"Doc"},
+			wantIDs:  []string{"doc1", "doc2", "coding.doc3"},
+		},
+		{
+			name:            "it should return docs in scope when exactScopeMatch is true",
+			keywords:        []string{"coding"},
+			exactScopeMatch: true,
+			wantIDs:         []string{"coding.doc3"},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := idx.Search(tt.keywords, nil)
+			got := idx.Search(tt.keywords, nil, tt.exactScopeMatch)
 			if len(got) != len(tt.wantIDs) {
 				t.Errorf("Search() got %d docs, want %d", len(got), len(tt.wantIDs))
 			}

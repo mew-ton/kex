@@ -1,49 +1,55 @@
 <!-- kex: auto-update start -->
-## 1. Design Phase Guidelines
+# Project Guidelines (Ref: Kex)
 
-Before proposing changes or writing code, understand the existing design. **Always use MCP tools for content search.**
+This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these guidelines.
 
-1. **Search for design documents** using the `kex` MCP tool `search_documents`.
-   * **Keywords:** "architecture", "design", "requirements", "flow", "specification".
-2. **Read the relevant design docs** using `read_document`.
-3. **Validate your plan** against these design principles.
+**Core Rule:** Before taking action in any phase, you MUST consult the project's documentation using `kex`.
 
-**Note:** Use `Glob`/`Read` only for file existence checks or duplication verification, not for content search.
 
-## 2. Implementation Phase Guidelines
+## Design & Implementation Phase
 
-Ensure you follow the established coding standards. **Always use MCP tools for content search.**
+**Core Rule**: Before proposing changes or writing code, understand existing design and coding standards.
 
-1. **Search for coding guidelines** using the `kex` MCP tool `search_documents`.
-   * **Keywords:** "logging", "error", "structure", "naming", "testing", "component", "frontend", "backend".
-2. **Read the relevant coding docs** using `read_document`.
-3. **Adhere strictly** to the guidelines found.
+1.  **Search for guidelines** using `search_documents`.
+    *   **Keywords**: "architecture", "design", "coding", "style", "naming", "testing", "strategy".
+    *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
+2.  **Read relevant docs** using `read_document`.
+3.  **Validate your plan** (or existing code) against principles found.
 
-**Note:** Use `Glob`/`Read` only for file existence checks or duplication verification, not for content search.
+## Refactoring & Code Audit Phase
 
-## 3. Documentation Phase Guidelines
+**Core Rule**: When asked to review code, find bugs, or check for guideline violations, you MUST NOT rely solely on your internal training.
 
-Maintain clarity and consistency in documentation. **Always use MCP tools for content search.**
+1.  **Identify the context** (Language, Framework, Component, Function).
+2.  **Search for specific rules** using `search_documents`.
+    *   **Keywords**: "anti-pattern", "best practice", "forbidden", "required", "error handling", [Context Specific Keywords].
+3.  **Verify the code** against the *explicit* rules retrieved from Kex.
+    *   *Do not assume* standard conventions apply if Kex has specific overrides.
 
-1. **Search for documentation guidelines** using the `kex` MCP tool `search_documents`.
-   * **Keywords:** "documentation", "style", "markdown", "language", "grammar", "frontmatter", "format".
-2. **Read the relevant style guides** using `read_document`.
-3. **Adhere strictly** to the formatting rules found.
 
-**Note:** Use `Glob`/`Read` only for file existence checks or duplication verification, not for content search.
 
-## 4. Adding New Knowledge
+## Documentation Phase
 
-To add new knowledge to this project:
+**Core Rule**: When editing documents under `./contents` (or configured Kex root), maintain clarity and consistency.
 
-1. **Search for existing guidelines** using the `kex` MCP tool `search_documents` to understand format and structure.
-   * **Keywords:** Related to the topic you're documenting, plus "format", "structure", "template".
-2. **Read relevant examples** using `read_document` to understand the expected format.
-3. **Check for file conflicts** using `Glob` to ensure no duplicate filenames exist.
-4. Create a Markdown file in the appropriate `contents/` subdirectory.
-5. Follow the directory structure and format patterns from existing documents.
-6. Ensure the file has valid frontmatter (title, description, keywords).
-7. Run `kex check` to validate your new documents.
+1.  **Search for style guides** using `search_documents`.
+    *   **Keywords**: "documentation", "style", "markdown", "format".
+    *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
+2.  **Read relevant guides** using `read_document`.
+3.  **Adhere strictly** to formatting rules.
+
+## Adding New Knowledge
+
+1.  **Search existing structure** to understand where new files belong.
+2.  **Check for conflicts** using `Glob`.
+3.  **Create Markdown files** with valid Frontmatter (id, title, description, keywords).
+4.  **Run `kex check`** to validate.
+
+
+## General Usage Note
+
+**Note**: Use `Glob`/`read_file_content` (or equivalent file system tools) only for existence checks, not for content search. Always rely on the indexed knowledge base via `search_documents`.
+
 <!-- kex: auto-update end -->
 
 Always ensure you are following the project's own documentation ("Dogfooding").

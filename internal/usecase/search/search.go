@@ -1,8 +1,9 @@
 package search
 
 import (
-	"github.com/mew-ton/kex/internal/domain"
 	"path/filepath"
+
+	"github.com/mew-ton/kex/internal/domain"
 )
 
 type UseCase struct {
@@ -18,9 +19,9 @@ type Result struct {
 	Message   string
 }
 
-func (uc *UseCase) Execute(keywords []string, filePath string) Result {
+func (uc *UseCase) Execute(keywords []string, filePath string, exactScopeMatch bool) Result {
 	scopes := deriveScopes(filePath)
-	docs := uc.Repo.Search(keywords, scopes)
+	docs := uc.Repo.Search(keywords, scopes, exactScopeMatch)
 
 	return Result{
 		Documents: docs,
