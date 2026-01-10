@@ -6,6 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mew-ton/kex/assets"
+	"github.com/mew-ton/kex/internal/infrastructure/config"
+	"github.com/mew-ton/kex/internal/usecase/generator"
 )
 
 func TestKexUpdate(t *testing.T) {
@@ -32,22 +36,23 @@ func TestKexUpdate(t *testing.T) {
 		t.Fatalf("Failed to modify file: %v", err)
 	}
 
-	// 3. Create a dummy AGENTS.md with markers
-	agentsPath := filepath.Join(dir, "AGENTS.md")
-	initialAgentsContent := `
-# My Custom Rules
-Do whatever.
+	// 3. Setup user content in .agent/rules/kex-coding.md
+	rulePath := filepath.Join(dir, ".agent/rules/kex-coding.md")
+	// Note: The template places the dogfooding line APTER the marker block.
+	// We want to test that content OUTSIDE the marker block is preserved.
+	// But our template has content BEFORE and AFTER marker block?
+	// Actually kex-coding.md has header (outside), markers, footer (outside).
+	// Let's modify the header part.
 
-<!-- kex: auto-update start -->
-Old Rules
-<!-- kex: auto-update end -->
-`
-	err = os.WriteFile(agentsPath, []byte(initialAgentsContent), 0644)
+	initialContent, _ := os.ReadFile(rulePath)
+	// Inject a custom header line
+	customHeader := "# My Custom Rules\n" + string(initialContent)
+	err = os.WriteFile(rulePath, []byte(customHeader), 0644)
 	if err != nil {
-		t.Fatalf("Failed to write AGENTS.md: %v", err)
+		t.Fatalf("Failed to write kex-coding.md: %v", err)
 	}
 
-	// 4. Run Update
+	// 4. Run Update (general agent default)
 	runKex("update")
 
 	// 5. Verify system document is reverted (Overwritten)
@@ -58,60 +63,85 @@ Old Rules
 	if string(content) == "Modified Content" {
 		t.Errorf("System document was NOT overwritten/updated")
 	}
-	// The template content changes based on source, but we check if it's NOT modified content.
-	// And ideally it contains something from the template.
 
-	// 6. Verify AGENTS.md is updated (Marker logic)
-	agentsContent, err := os.ReadFile(agentsPath)
+	// 6. Verify kex-coding.md is PRESERVED (New Default Behavior: Rules default to skip)
+	contentPreservedRule, _ := os.ReadFile(rulePath)
+	if !strings.Contains(string(contentPreservedRule), "# My Custom Rules") {
+		t.Errorf("Rule file should have been preserved (skipped) by default update, but was overwritten")
+	}
+
+	// 7. Test Strategy Override via Config (Force Overwrite)
+	// Modify content again to verify we can force overwrite it
+	customContent2 := "# Another Custom Rule\n"
+	err = os.WriteFile(rulePath, []byte(customContent2), 0644)
 	if err != nil {
-		t.Fatalf("Failed to read AGENTS.md: %v", err)
-	}
-	agentsStr := string(agentsContent)
-
-	// Custom content should be preserved
-	if !strings.Contains(agentsStr, "# My Custom Rules") {
-		t.Errorf("User content in AGENTS.md was lost")
+		t.Fatalf("Failed to modify kex-coding.md for overwrite test: %v", err)
 	}
 
-	// Marker content should be updated (Old Rules replaced)
-	if strings.Contains(agentsStr, "Old Rules") {
-		t.Errorf("Content between markers was NOT updated")
+	// Configure kex-coding.md to overwrite (Explicit override)
+	gen := generator.New(assets.Templates)
+	agentConfig := &config.Agent{Type: "general", Scopes: []string{"coding", "documentation"}}
+	strategies := config.Strategies{
+		AgentKexCoding: "overwrite",
 	}
 
-	// Check for new content (Default Scopes: Coding + Documentation)
-	if !strings.Contains(agentsStr, "Design & Implementation Phase") {
-		t.Errorf("Coding guidelines were not injected into AGENTS.md")
-	}
-	if !strings.Contains(agentsStr, "Documentation Phase") {
-		t.Errorf("Documentation guidelines were not injected into AGENTS.md")
-	}
-	if !strings.Contains(agentsStr, "Project Guidelines") {
-		t.Errorf("Header was not injected")
+	err = gen.Update(dir, "", generator.AgentTypeGeneral, strategies, agentConfig)
+	if err != nil {
+		t.Fatalf("Update (Overwrite Strategy) failed: %v", err)
 	}
 
-	// 7. Verify Configural Update (Change Scopes)
-	// Modify .kex.yaml to only have "coding" scope
+	contentOverwritten, _ := os.ReadFile(rulePath)
+	if strings.Contains(string(contentOverwritten), "# Another Custom Rule") {
+		t.Errorf("Expected content to be overwritten to template, but custom content persisted")
+	}
+	if !strings.Contains(string(contentOverwritten), "Coding Rules") {
+		t.Errorf("Expected content to be overwritten to template (missing header)")
+	}
+
+	// 8. Test Default Fallback with Empty Config (Pass empty struct)
+	// Resolution: Empty string in struct -> ResolveStrategy defaults to Overwrite.
+	strategiesFallback := config.Strategies{}
+
+	err = gen.Update(dir, "", generator.AgentTypeGeneral, strategiesFallback, agentConfig)
+	if err != nil {
+		t.Fatalf("Update (Empty Strategy) failed: %v", err)
+	}
+	// Content should still be overwritten (template)
+	contentFallback, _ := os.ReadFile(rulePath)
+	if !strings.Contains(string(contentFallback), "Coding Rules") {
+		t.Errorf("Expected content to be standard template after empty strategy update")
+	}
+
+	// 7. Verify Agent Type Switch (General -> Claude)
+	runKex("update", "--agent-type=claude")
+
+	claudeRulePath := filepath.Join(dir, ".claude/rules/kex/follow-coding-rules.md")
+	if _, err := os.Stat(claudeRulePath); os.IsNotExist(err) {
+		t.Errorf("Claude rules were not generated in .claude/rules/kex/follow-coding-rules.md")
+	}
+
+	// 8. Verify Configural Update (Scope filtering)
+	// Modify .kex.yaml to only have "documentation" scope
 	configData := `root: contents
 agent:
   type: general
-  scopes: ["coding"]
+  scopes: ["documentation"]
 `
 	if err := os.WriteFile(filepath.Join(dir, ".kex.yaml"), []byte(configData), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Run Update again
-	runKex("update")
+	// Run Update again as general
+	runKex("update", "--agent-type=general")
 
-	// Verify AGENTS.md again
-	agentsContent, _ = os.ReadFile(agentsPath)
-	agentsStr = string(agentsContent)
-
-	if !strings.Contains(agentsStr, "Design & Implementation Phase") {
-		t.Errorf("Coding guidelines should still be present")
-	}
-	if strings.Contains(agentsStr, "Documentation Phase") {
-		t.Errorf("Documentation guidelines should have been removed based on config")
+	// Check if coding rule is removed?
+	// The generator does NOT delete files. It just doesn't generate/update valid ones.
+	// But kex-documentation.md should be updated/generated.
+	// Check if kex-documentation.md has correct templated path
+	docRulePath := filepath.Join(dir, ".agent/rules/kex-documentation.md")
+	docRuleContent, _ := os.ReadFile(docRulePath)
+	if !strings.Contains(string(docRuleContent), "documents under `./contents`") {
+		t.Errorf("Documentation rule content should contain default root path `./contents`")
 	}
 }
 

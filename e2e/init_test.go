@@ -33,5 +33,10 @@ func TestKexInit(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(tempDir, "contents", "documentation", "kex", "write-concise-content.md")); os.IsNotExist(err) {
 			t.Error("contents/documentation/kex/write-concise-content.md was not extracted")
 		}
+
+		// Verify .agent/rules/kex-coding.md exists (general agent)
+		if _, err := os.Stat(filepath.Join(tempDir, ".agent", "rules", "kex-coding.md")); os.IsNotExist(err) {
+			t.Error(".agent/rules/kex-coding.md was not created")
+		}
 	})
 }
