@@ -122,26 +122,52 @@ func printJSONError(msg string) {
 
 func printHumanReport(report validator.ValidationReport, totalDocs int) {
 	// Print Global Errors
-	for _, err := range report.GlobalErrors {
-		pterm.Error.Printf("Parse Error: %v\n", err)
+	if len(report.GlobalErrors) > 0 {
+		pterm.DefaultSection.Println("Parse Errors")
+		for _, err := range report.GlobalErrors {
+			pterm.Error.Printf("- %v\n", err)
+		}
+		pterm.Println()
 	}
 
-	// Print Document Errors
+	// Filter documents
+	var drafts []validator.DocumentReport
+	var errorDocs []validator.DocumentReport
+
 	for _, doc := range report.Documents {
-		for _, err := range doc.Errors {
-			// Logic to print based on status is now presentation concern
-			// We can assume ValidationReport contains necessary info
-			// Re-mapping status for display
-			if doc.Status == "draft" {
-				pterm.Warning.Printf("[%s] (Draft) %s\n", doc.ID, err)
-			} else {
-				pterm.Error.Printf("[%s] (Adopted) %s\n", doc.ID, err)
-			}
+		if doc.Status == "draft" {
+			drafts = append(drafts, doc)
+		}
+		if len(doc.Errors) > 0 {
+			errorDocs = append(errorDocs, doc)
 		}
 	}
 
+	// Print Drafts
+	if len(drafts) > 0 {
+		pterm.DefaultSection.Println("Drafts")
+		for _, doc := range drafts {
+			pterm.Println(fmt.Sprintf("- %s", doc.ID))
+		}
+		pterm.Println()
+	}
+
+	// Print Document Errors
+	if len(errorDocs) > 0 {
+		pterm.DefaultSection.Println("Validation Errors")
+		for _, doc := range errorDocs {
+			for _, err := range doc.Errors {
+				if doc.Status == "draft" {
+					pterm.Warning.Printf("[%s] (Draft) %s\n", doc.ID, err)
+				} else {
+					pterm.Error.Printf("[%s] (Adopted) %s\n", doc.ID, err)
+				}
+			}
+		}
+		pterm.Println()
+	}
+
 	// Statistics
-	pterm.Println() // Spacer
 	pterm.DefaultSection.Println("Statistics")
 
 	tableData := [][]string{

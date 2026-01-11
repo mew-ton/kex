@@ -1,3 +1,4 @@
+---
 title: Prevent Dead Code and Asset Mismatch
 description: Guidelines for maintaining synchronization between application logic and static assets.
 keywords:
