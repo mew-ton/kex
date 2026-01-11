@@ -28,14 +28,6 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 3.  **Verify the code** against the *explicit* rules retrieved from Kex.
     *   *Do not assume* standard conventions apply if Kex has specific overrides.
 
-## Self-Hosting Development (Kex on Kex)
-
-**Core Rule**: When developing Kex itself, you MUST prioritize keeping the existing binary stable to continue using MCP tools.
-
-1.  **Do NOT run `make build`/`make e2e` immediately**: Overwriting `./bin/kex` during development risks breaking your MCP connection.
-2.  **Use `go test` for logic**: verify changes using `go test ./internal/...` or `go test ./e2e/...` (without build) first.
-3.  **Build Last**: Only run `make build` or full `make e2e` after logic is verified and tests pass.
-
 ## General Usage Note
 
 **Note**: Use `Glob`/`read_file_content` (or equivalent file system tools) only for existence checks, not for content search. Always rely on the indexed knowledge base via `search_documents`.
