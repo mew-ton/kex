@@ -42,34 +42,22 @@ baseURL: https://example.com/docs/
 ```yaml
 update:
   strategies:
-    "contents/documentation/kex/*": "overwrite"
-    "AGENTS.md": "marker-update"
+    kex: all
+    antigravity: coding-only
+    cursor: all
 ```
 
-- **strategies**: Glob パターンと更新戦略のマップです。
-  - `overwrite`: ファイルをテンプレートで完全に置換します。
-  - `marker-update`: マーカー間のコンテンツのみを更新します (`AGENTS.md` のようなファイル向け)。
-  - `append`: コンテンツが欠落している場合、末尾に追加します 既存の内容は変更しません。
-  - `skip`: 何もしません。
+- **strategies**: スコープを更新するための **ディレクティブ (Directive)** のマップです。
+    - **キー (Keys)**:
+        - `kex`: Kex システムドキュメントを管理します。
+        - `antigravity`, `cursor`, `claude`: エージェント固有のルールファイルを管理します。
+    - **値 (Directives)**:
+        - `all`: すべてのカテゴリ (Coding + Documentation) を有効にします。
+        - `coding-only`: Coding ルールのみを有効にします。
+        - `documentation-only`: Documentation ルールのみを有効にします。
+        - `none` (または省略): このキーのファイルを生成/更新しません。
 
-### `agent` (任意)
-
-AI エージェント用のガイドライン生成を設定します。
-
-```yaml
-agent:
-  type: general # または "claude"
-  scopes:
-    - coding
-    - documentation
-```
-
-- **type**: 生成するエージェントガイドラインのタイプ。
-    - `general`: 標準的な `AGENTS.md`。
-    - `claude`: Anthropic Claude 向けの `CLAUDE.md`。
-- **scopes**: ガイドラインに含めるセクション (スコープ) のリスト。
-    - `coding`: 設計および実装フェーズのガイドライン。
-    - `documentation`: ドキュメント作成フェーズのルール。
+> **Note**: `kex init` は選択内容に基づいてこの設定を自動的に生成します。
 
 ### `logging` (任意)
 

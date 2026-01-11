@@ -3,27 +3,33 @@ package cli
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/mew-ton/kex/assets"
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/usecase/generator"
+	"gopkg.in/yaml.v3"
 
 	"github.com/pterm/pterm"
 	"github.com/urfave/cli/v2"
 )
 
 var InitCommand = &cli.Command{
-	Name:  "init",
-	Usage: "Initialize kex repository",
+	Name:   "init",
+	Usage:  "Initialize kex repository",
+	Action: runInit,
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "agent-type",
-			Usage:   "Agent type for guidelines (general, claude)",
-			Value:   "general",
+		&cli.StringSliceFlag{
+			Name:    "agents",
 			Aliases: []string{"a"},
+			Usage:   "AI Agents to enable (Antigravity, Cursor, Claude)",
+		},
+		&cli.StringSliceFlag{
+			Name:    "scopes",
+			Aliases: []string{"s"},
+			Usage:   "Scopes to enable (coding, documentation)",
 		},
 	},
-	Action: runInit,
 }
 
 func runInit(c *cli.Context) error {
@@ -34,16 +40,24 @@ func runInit(c *cli.Context) error {
 		return err
 	}
 
-	agentType, scopes, err := determineAgentConfig(c)
+	selectedAgents, err := selectAgents(c)
 	if err != nil {
 		return err
 	}
 
-	pterm.Info.Printf("Initializing in: %s (Agent: %s, Scopes: %v)\n", cwd, agentType, scopes)
+	selectedScopes, err := selectScopes(c)
+	if err != nil {
+		return err
+	}
 
-	saveConfig(agentType, scopes)
+	pterm.Info.Printf("Initializing in: %s (Agents: %v, Scopes: %v)\n", cwd, selectedAgents, selectedScopes)
 
-	return generateProject(cwd, agentType, scopes)
+	if err := saveConfig(selectedAgents, selectedScopes); err != nil {
+		return err
+	}
+
+	// Run Update logic
+	return runUpdate(c)
 }
 
 func printWelcome() {
@@ -53,67 +67,130 @@ func printWelcome() {
 	pterm.DefaultHeader.Println("Initializing Kex Repository")
 }
 
-func determineAgentConfig(c *cli.Context) (generator.AgentType, []string, error) {
-	if c.IsSet("agent-type") {
-		// Non-interactive Mode
-		pterm.Info.Println("Agent Type provided via flag. Skipping interactive mode.")
-		switch c.String("agent-type") {
-		case string(generator.AgentTypeGeneral):
-			return generator.AgentTypeGeneral, []string{"coding", "documentation"}, nil
-		case string(generator.AgentTypeClaude):
-			return generator.AgentTypeClaude, []string{"coding", "documentation"}, nil
-		default:
-			return "", nil, fmt.Errorf("invalid agent type: %s. Must be 'general' or 'claude'", c.String("agent-type"))
+func selectAgents(c *cli.Context) ([]string, error) {
+	manifest, err := generator.LoadManifest(assets.Assets)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build options map
+	nameToKey := make(map[string]string) // Name -> Key
+	keyToKey := make(map[string]string)  // Key -> Key (validation)
+	var options []string
+
+	for key, def := range manifest.AiAgents {
+		options = append(options, def.Name)
+		nameToKey[def.Name] = key
+		keyToKey[key] = key
+	}
+	sort.Strings(options)
+
+	var inputs []string
+	if c.IsSet("agents") {
+		inputs = c.StringSlice("agents")
+	} else {
+		preSelected := map[string]bool{
+			"Antigravity": true,
+			"Cursor":      true,
+		}
+
+		resultNames, err := Multiselect("Select AI Agents", options, preSelected)
+		if err != nil {
+			return nil, err
+		}
+		inputs = resultNames
+	}
+
+	if len(inputs) == 0 {
+		return nil, fmt.Errorf("at least one agent must be selected")
+	}
+
+	var validKeys []string
+	for _, input := range inputs {
+		// 1. Check if it matches a Key
+		if _, ok := keyToKey[input]; ok {
+			validKeys = append(validKeys, input)
+			continue
+		}
+		// 2. Check if it matches a Name
+		if key, ok := nameToKey[input]; ok {
+			validKeys = append(validKeys, key)
+			continue
+		}
+		// 3. Fallback: Case-insensitive check against Name or Key?
+		// For robustness, let's assume if user types "antigravity" (key) or "Antigravity" (name), it works.
+		// Previous checks covered exact matches.
+		// Let's add simple normalization failure.
+		return nil, fmt.Errorf("unknown agent: %s", input)
+	}
+
+	return validKeys, nil
+}
+
+func selectScopes(c *cli.Context) ([]string, error) {
+	if c.IsSet("scopes") {
+		return c.StringSlice("scopes"), nil
+	}
+
+	options := []string{"coding", "documentation"}
+	preSelected := map[string]bool{
+		"coding":        true,
+		"documentation": true,
+	}
+
+	return Multiselect("Select Scopes", options, preSelected)
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+func saveConfig(agents []string, scopes []string) error {
+	// Create Config with strategies map
+	strategies := make(map[string]string)
+
+	// System Docs: Always Enable
+	strategies["kex"] = "all"
+
+	// Agents
+	hasCoding := contains(scopes, "coding")
+	hasDoc := contains(scopes, "documentation")
+
+	mode := "none"
+	if hasCoding && hasDoc {
+		mode = "all"
+	} else if hasCoding {
+		mode = "coding-only"
+	} else if hasDoc {
+		mode = "documentation-only"
+	}
+
+	if mode != "none" {
+		for _, agentKey := range agents {
+			strategies[agentKey] = mode
 		}
 	}
 
-	// Interactive Mode
-	selectedType, _ := pterm.DefaultInteractiveSelect.
-		WithOptions([]string{string(generator.AgentTypeGeneral), string(generator.AgentTypeClaude)}).
-		WithDefaultText("Select Agent Type").
-		Show()
-
-	selectedScopes, _ := pterm.DefaultInteractiveMultiselect.
-		WithOptions([]string{"coding", "documentation"}).
-		WithDefaultText("Select Scopes").
-		WithFilter(false).
-		WithDefaultOptions([]string{"coding", "documentation"}).
-		Show()
-
-	return generator.AgentType(selectedType), selectedScopes, nil
-}
-
-func saveConfig(agentType generator.AgentType, scopes []string) {
-	scopesYaml := "["
-	for i, s := range scopes {
-		if i > 0 {
-			scopesYaml += ", "
-		}
-		scopesYaml += fmt.Sprintf("\"%s\"", s)
+	cfg := config.Config{
+		Root: "contents",
+		Update: config.Update{
+			Strategies: strategies,
+		},
 	}
-	scopesYaml += "]"
 
-	configData := fmt.Sprintf("root: contents\nagent:\n  type: %s\n  scopes: %s\n", agentType, scopesYaml)
-	if err := os.WriteFile(".kex.yaml", []byte(configData), 0644); err != nil {
-		pterm.Warning.Printf("Failed to save .kex.yaml: %v\n", err)
-	}
-}
-
-func generateProject(cwd string, agentType generator.AgentType, scopes []string) error {
-	gen := generator.New(assets.Templates)
-	spinner, _ := pterm.DefaultSpinner.Start("Generating project structure...")
-
-	agentConfig := &config.Agent{Type: string(agentType), Scopes: scopes}
-
-	if err := gen.Generate(cwd, agentType, agentConfig); err != nil {
-		spinner.Fail(err.Error())
+	data, err := yaml.Marshal(&cfg)
+	if err != nil {
 		return err
 	}
-	spinner.Success("Project structure generated")
 
-	pterm.Println() // Spacer
-	pterm.DefaultSection.Println("Initialization complete!")
-	pterm.Info.Println("Run 'kex check' to validate your documents.")
-
+	if err := os.WriteFile(".kex.yaml", data, 0644); err != nil {
+		pterm.Warning.Printf("Failed to save .kex.yaml: %v\n", err)
+		return err
+	}
 	return nil
 }

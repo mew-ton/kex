@@ -4,192 +4,91 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 )
 
-type AgentType string
-
-const (
-	AgentTypeGeneral AgentType = "general"
-	AgentTypeClaude  AgentType = "claude"
-)
+const ()
 
 type Generator struct {
-	Templates embed.FS
+	Assets embed.FS
 }
 
-func New(templates embed.FS) *Generator {
-	return &Generator{Templates: templates}
+func New(assets embed.FS) *Generator {
+	return &Generator{Assets: assets}
 }
 
-func (g *Generator) Generate(cwd string, agentType AgentType, agentConfig *config.Agent) error {
-	// Extract templates mirroring the structure in assets/templates
-	err := fs.WalkDir(g.Templates, "templates", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel("templates", path)
-		if err != nil {
-			return err
-		}
-
-		if relPath == "." {
-			return nil
-		}
-
-		// Filter based on AgentType
-		// General -> Skip .claude
-		// Claude -> Skip .agent
-		if agentType == AgentTypeGeneral && strings.HasPrefix(relPath, ".claude") {
-			return nil
-		}
-		if agentType == AgentTypeClaude && strings.HasPrefix(relPath, ".agent") {
-			return nil
-		}
-
-		// Skip directories themselves (we create them as needed)
-		if d.IsDir() {
-			return nil
-		}
-
-		// Filter rules based on scope
-		// Check for rules in any agent directory
-		if strings.Contains(relPath, "/rules/") {
-			if agentConfig != nil && len(agentConfig.Scopes) > 0 {
-				filename := filepath.Base(relPath)
-				// Check if the rule file corresponds to an enabled scope
-				// Convention: kex-<scope>.md
-				// e.g. kex-coding.md -> scope: coding
-				scopeName := strings.TrimPrefix(strings.TrimSuffix(filename, ".md"), "kex-")
-				// Map imperative filenames to scopes
-				if filename == "follow-coding-rules.md" {
-					scopeName = "coding"
-				} else if filename == "follow-documentation-rules.md" {
-					scopeName = "documentation"
-				}
-
-				scopeEnabled := false
-				for _, s := range agentConfig.Scopes {
-					if s == scopeName {
-						scopeEnabled = true
-						break
-					}
-				}
-
-				if !scopeEnabled {
-					return nil // Skip this rule file
-				}
-			}
-		}
-
-		targetPath := filepath.Join(cwd, relPath)
-
-		// Ensure parent dir exists
-		if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-			return err
-		}
-
-		data, err := fs.ReadFile(g.Templates, path)
-		if err != nil {
-			return err
-		}
-
-		// Don't overwrite if exists
-		if _, err := os.Stat(targetPath); err == nil {
-			return nil
-		}
-
-		// Substitute template variables
-		// Currently only .Root is supported
-		contentStr := string(data)
-
-		// For Generate (Init), we assume default root "contents"
-		effectiveRoot := "contents"
-		if !strings.HasPrefix(effectiveRoot, "./") && !strings.HasPrefix(effectiveRoot, "/") {
-			effectiveRoot = "./" + effectiveRoot
-		}
-
-		contentStr = strings.ReplaceAll(contentStr, "{{.Root}}", effectiveRoot)
-		data = []byte(contentStr)
-
-		return os.WriteFile(targetPath, data, 0644)
-	})
-
+// Update updates the kex repository files based on configuration strategies
+func (g *Generator) Update(cwd, rootDir string, strategies config.Strategies) error {
+	manifest, err := LoadManifest(g.Assets)
 	if err != nil {
-		return fmt.Errorf("failed to extract templates: %w", err)
+		return err
 	}
 
-	return nil
-}
+	// 1. Determine which files to update
+	// path -> strategyName (e.g. "overwrite", "skip")
+	filesToUpdate := make(map[string]string)
 
-// Update updates the kex repository files based on configuration
-func (g *Generator) Update(cwd, rootDir string, agentType AgentType, strategies config.Strategies, agentConfig *config.Agent) error {
-	return fs.WalkDir(g.Templates, "templates", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+	// Kex Files
+	// Check "kex" config. Default to "skip" (create only) if missing? or "all"?
+	// If "kex" key is present with "all", generate everything with "overwrite".
+	// If "kex" key is missing, defaults?
+	// Given earlier requirements, "kex init" sets "kex: all" (to be implemented).
+	// So we can be strict: only generate if configured.
+	// But what about updates? If user has no "kex" key (legacy or manual), we might want to default to something.
+	// For now, let's respect the map. If "kex": "all" -> overwrite.
+	kexMode := strategies["kex"]
+	if kexMode == "all" {
+		for _, f := range manifest.Kex {
+			filesToUpdate[f] = "overwrite" // Enforce overwrite for kex system files
+		}
+	}
+
+	// Agent Files
+	for agentKey, agentDef := range manifest.AiAgents {
+		mode := strategies[agentKey]
+		if mode == "" || mode == "none" {
+			continue
 		}
 
-		relPath, err := filepath.Rel("templates", path)
-		if err != nil {
-			return err
-		}
+		targetStrategy := "overwrite" // Default to overwrite (enforce kex management)
+		// "skip" mode was removed. If user wants to stop updates, they should remove the key or set to "none".
 
-		if relPath == "." {
-			return nil
-		}
-
-		// Filter based on AgentType
-		if agentType == AgentTypeGeneral && strings.HasPrefix(relPath, ".claude") {
-			return nil
-		}
-		if agentType == AgentTypeClaude && strings.HasPrefix(relPath, ".agent") {
-			return nil
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		// Filter rules based on scope
-		if strings.Contains(relPath, "/rules/") {
-			if agentConfig != nil && len(agentConfig.Scopes) > 0 {
-				filename := filepath.Base(relPath)
-				scopeName := strings.TrimPrefix(strings.TrimSuffix(filename, ".md"), "kex-")
-
-				scopeEnabled := false
-				for _, s := range agentConfig.Scopes {
-					if s == scopeName {
-						scopeEnabled = true
-						break
-					}
-				}
-
-				if !scopeEnabled {
-					return nil // Skip
-				}
+		scopes := ResolveFileScopes(mode)
+		for _, scope := range scopes {
+			files := scope.SelectFiles(agentDef)
+			// Helper to add files
+			for _, f := range files {
+				filesToUpdate[f] = targetStrategy
 			}
 		}
+	}
 
+	// 2. Process Files
+	for relPath, strategyName := range filesToUpdate {
+		strategy := ResolveStrategy(strategyName)
+		if strategy == nil {
+			continue
+		}
+
+		// Map contents/... paths to respect rootDir
 		mappedPath := relPath
-		// Use custom root for contents
 		if rootDir != "" && strings.HasPrefix(mappedPath, "contents") {
 			mappedPath = filepath.Join(rootDir, strings.TrimPrefix(mappedPath, "contents"))
 		}
 
 		targetPath := filepath.Join(cwd, mappedPath)
+		templatePath := filepath.Join("templates", relPath)
 
-		data, err := fs.ReadFile(g.Templates, path)
+		data, err := fs.ReadFile(g.Assets, templatePath)
 		if err != nil {
-			return err
+			// If template is missing but present in manifest, that's an issue.
+			return fmt.Errorf("failed to read template %s: %w", templatePath, err)
 		}
 
 		// Substitute template variables
-		// Currently only .Root is supported
 		contentStr := string(data)
 
 		// Determine root path for display/template
@@ -204,19 +103,17 @@ func (g *Generator) Update(cwd, rootDir string, agentType AgentType, strategies 
 		contentStr = strings.ReplaceAll(contentStr, "{{.Root}}", effectiveRoot)
 		data = []byte(contentStr)
 
-		// RELPATH (from template structure) is used for strategy lookup to match .agent/... or .claude/...
-		// But wait, strategy lookup expects the CANONICAL path.
-		// If relPath is .claude/rules/..., that is the canonical path.
-		// If relPath is contents/..., that is the canonical path.
-		// So passing relPath to ResolveStrategy is correct.
-		strategy := ResolveStrategy(relPath, strategies)
 		ctx := UpdateContext{
 			TargetPath:   targetPath,
 			TemplateData: data,
-			AgentConfig:  agentConfig,
+			Strategy:     strategyName, // Just for context/logging if needed
 			Generator:    g,
 		}
 
-		return strategy.Apply(ctx)
-	})
+		if err := strategy.Apply(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
