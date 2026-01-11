@@ -38,11 +38,23 @@ func runStart(c *cli.Context) error {
 	arg := c.Args().First()
 	isRemote := strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://")
 
-	cfg, appLogger, projectRoot, err := resolveConfigAndLogger(c, arg, isRemote)
+	// 1. Resolve Project Root
+	projectRoot := "."
+	if !isRemote && arg != "" {
+		projectRoot = arg
+	}
+
+	// 2. Load Config
+	cfg, err := config.Load(projectRoot)
 	if err != nil {
-		// Log warning but proceed if config failed? (Existing logic ignored config load error for defaults)
-		// But logger init handled it.
-		// "Ignore error for now" in original code was for config.Load.
+		// Proceed with default config if load fails (consistent with previous behavior)
+	}
+
+	// 3. Setup Logger
+	appLogger, err := resolveLogger(c, cfg, projectRoot)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
+		appLogger = logger.NewStderrLogger()
 	}
 
 	repo, err := createRepository(c, cfg, appLogger, arg, isRemote, projectRoot)
@@ -57,33 +69,24 @@ func runStart(c *cli.Context) error {
 	return startServer(repo, appLogger)
 }
 
-func resolveConfigAndLogger(c *cli.Context, arg string, isRemote bool) (config.Config, logger.Logger, string, error) {
-	projectRoot := "."
-	if !isRemote && arg != "" {
-		projectRoot = arg
-	}
-	cfg, err := config.Load(projectRoot)
-	// Original logic ignored err here for config defaults
-
-	var appLogger logger.Logger
+func resolveLogger(c *cli.Context, cfg config.Config, projectRoot string) (logger.Logger, error) {
 	logFile := c.String("log-file")
 	if logFile == "" {
 		logFile = cfg.Logging.File
 	}
 
+	if logFile != "" && !filepath.IsAbs(logFile) && projectRoot != "." {
+		logFile = filepath.Join(projectRoot, logFile)
+	}
+
 	if logFile != "" {
 		fl, err := logger.NewFileLogger(logFile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to open log file '%s': %v. Using stderr.\n", logFile, err)
-			appLogger = logger.NewStderrLogger()
-		} else {
-			appLogger = fl
+			return nil, fmt.Errorf("failed to open log file '%s': %w", logFile, err)
 		}
-	} else {
-		appLogger = logger.NewStderrLogger()
+		return fl, nil
 	}
-
-	return cfg, appLogger, projectRoot, err
+	return logger.NewStderrLogger(), nil
 }
 
 func createRepository(c *cli.Context, cfg config.Config, l logger.Logger, arg string, isRemote bool, projectRoot string) (*fs.Indexer, error) {
