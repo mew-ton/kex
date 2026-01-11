@@ -8,11 +8,13 @@ Initializes a new Kex repository.
 kex init [options]
 ```
 
-- **Interactive Mode**: Prompts for Agent Type and Scopes (Coding, Documentation) if no flags provided.
-- **Flags**: `--agent-type=<type>` (e.g., `general`, `claude`) to bypass prompts.
+- **Interactive Mode**: Prompts for AI Agents (Antigravity, Cursor, Claude) and Scopes (Coding, Documentation) if no flags provided.
+- **Flags**:
+    - `--agents=<agent>`: Select AI agents (can be repeated).
+    - `--scopes=<scope>`: Select scopes (can be repeated).
 - Creates `.kex.yaml` with selected configuration.
 - Creates `contents/` directory.
-- Generates `AGENTS.md` (or `CLAUDE.md`) with dynamic content based on selected scopes.
+- Generates Agent Rule Files (e.g. `.antigravity/rules/kex-coding.md`) based on selections.
 
 ## `kex check`
 
@@ -66,5 +68,5 @@ kex update [options]
 ```
 
 - **System Docs (`contents/documentation/kex/*`)**: Updates to match the current binary version (Overwrite).
-- **`AGENTS.md`**: Safely updates guidelines between `<!-- kex: auto-update start -->` markers.
+- **Agent Rules**: Updates based on the `.kex.yaml` strategies (Overwrite).
 - See `.kex.yaml` configuration to customize behavior.

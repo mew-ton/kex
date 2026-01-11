@@ -2,5 +2,5 @@ package assets
 
 import "embed"
 
-//go:embed all:templates
-var Templates embed.FS
+//go:embed all:templates manifest.json
+var Assets embed.FS

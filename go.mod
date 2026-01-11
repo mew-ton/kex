@@ -3,14 +3,14 @@ module github.com/mew-ton/kex
 go 1.25.5
 
 require (
+	atomicgo.dev/cursor v0.2.0
+	atomicgo.dev/keyboard v0.2.9
 	github.com/pterm/pterm v0.12.82
 	github.com/urfave/cli/v2 v2.27.7
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	atomicgo.dev/cursor v0.2.0 // indirect
-	atomicgo.dev/keyboard v0.2.9 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect

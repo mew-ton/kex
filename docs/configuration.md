@@ -39,47 +39,25 @@ Authentication token for private repositories (e.g. GitHub Private Pages).
 
 Configures the behavior of `kex update`.
 
-### `update` (Optional)
-
-Configures the behavior of `kex update`.
-
 ```yaml
 update:
   strategies:
-    ".agent/rules/kex-coding.md": "skip"
-    ".claude/rules/kex-coding.md": "skip"
-    "contents/documentation/kex/choose-effective-keywords.md": "overwrite"
+    kex: all
+    antigravity: coding-only
+    cursor: all
 ```
 
-- **strategies**: A map of **Canonical Paths** to update strategies.
-    - **Rule Files**: Use the specific path for the agent type (e.g., `.agent/rules/kex-coding.md` for General, `.claude/rules/kex-coding.md` for Claude/Cursor).
-    - **System Documentation**: Always use the path starting with `contents/` (e.g., `contents/documentation/kex/choose-effective-keywords.md`), even if you have configured a custom `root`.
-    - **Strategies**:
-        - `overwrite`: Replaces the file with the template.
-        - `skip`: Creates the file if missing, but strictly preserves existing content if the file exists.
-    - **Defaults**:
-        - **Rule Files**: Default to `skip` to preserve user customizations.
-        - **System Documentation**: Defaults to `overwrite`.
+- **strategies**: A map of **Directives** to update scopes.
+    - **Keys**:
+        - `kex`: Manages Kex system documentation.
+        - `antigravity`, `cursor`, `claude`: Manages agent-specific rule files.
+    - **Values (Directives)**:
+        - `all`: Enable all categories (Coding + Documentation).
+        - `coding-only`: Enable only Coding rules.
+        - `documentation-only`: Enable only Documentation rules.
+        - `none` (or omitted): Do not generate/update files for this key.
 
-
-### `agent` (Optional)
-
-Configures the AI Agent guidelines generation.
-
-```yaml
-agent:
-  type: general # or "claude"
-  scopes:
-    - coding
-    - documentation
-```
-
-- **type**: The type of agent guidelines to generate.
-    - `general`: Standard `AGENTS.md`.
-    - `claude`: `CLAUDE.md` tailored for Anthropic Claude.
-- **scopes**: A list of guideline sections to include.
-    - `coding`: Design and Implementation phase guidelines.
-    - `documentation`: Documentation phase rules.
+> **Note**: `kex init` automatically generates this configuration based on your selections.
 
 ### `logging` (Optional)
 
