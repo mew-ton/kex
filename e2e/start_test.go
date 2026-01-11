@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestKexStart_Failure_MissingRoot(t *testing.T) {
@@ -156,5 +157,60 @@ Content`
 		// We assume that if it stays up for a bit, it's good.
 		// Ideally we would check output for "Server listening", but standard pipe might block or require reading.
 		// For now keeping it consistent with existing tests.
+	})
+}
+
+func TestKexStart_LogFile(t *testing.T) {
+	t.Run("it should create log file and record startup stats", func(t *testing.T) {
+		tempDir := t.TempDir()
+		contentsDir := filepath.Join(tempDir, "contents")
+		os.MkdirAll(contentsDir, 0755)
+
+		// Create a valid document
+		doc := `---
+id: log-doc
+title: Log Doc
+description: Test
+---
+Content`
+		os.WriteFile(filepath.Join(contentsDir, "doc.md"), []byte(doc), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: contents\n"), 0644)
+
+		logFile := filepath.Join(tempDir, "server.log")
+
+		cmd := exec.Command(kexBinary, "start", "--log-file", logFile)
+		cmd.Dir = tempDir
+
+		if err := cmd.Start(); err != nil {
+			t.Fatalf("Failed to start command: %v", err)
+		}
+
+		// Cleanup
+		defer func() {
+			if cmd.Process != nil {
+				cmd.Process.Kill()
+			}
+		}()
+
+		// Wait for logs to be written
+		success := false
+		for i := 0; i < 20; i++ {
+			if _, err := os.Stat(logFile); err == nil {
+				content, _ := os.ReadFile(logFile)
+				if strings.Contains(string(content), "Kex Server Starting...") &&
+					strings.Contains(string(content), "Documents Loaded: 1") &&
+					strings.Contains(string(content), "IDs=[doc]") {
+					success = true
+					break
+				}
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+
+		if !success {
+			// Read file content for debug
+			content, _ := os.ReadFile(logFile)
+			t.Errorf("Expected log file to contain startup stats. Content:\n%s", content)
+		}
 	})
 }

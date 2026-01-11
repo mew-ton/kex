@@ -13,12 +13,11 @@ import (
 
 // Server handles MCP JSON-RPC requests
 type Server struct {
-	Repo   domain.DocumentRepository
-	Logger logger.Logger
+	Repo domain.DocumentRepository
 }
 
-func New(repo domain.DocumentRepository, logger logger.Logger) *Server {
-	return &Server{Repo: repo, Logger: logger}
+func New(repo domain.DocumentRepository) *Server {
+	return &Server{Repo: repo}
 }
 
 // JSON-RPC types
@@ -74,9 +73,7 @@ func (s *Server) handleMessage(msg []byte) {
 	var err *rpcError
 	var result interface{}
 
-	if s.Logger != nil {
-		s.Logger.Info("[MCP] Request: %s", req.Method)
-	}
+	logger.Info("[MCP] Request: %s", req.Method)
 
 	switch req.Method {
 	case "initialize":
@@ -124,13 +121,11 @@ func (s *Server) sendResponse(res response) {
 	}
 	fmt.Printf("%s\n", bytes)
 
-	if s.Logger != nil {
-		status := "Success"
-		if res.Error != nil {
-			status = fmt.Sprintf("Error (%d: %s)", res.Error.Code, res.Error.Message)
-		}
-		s.Logger.Info("[MCP] Response Sent: ID=%s, Status=%s", stringifyID(res.ID), status)
+	status := "Success"
+	if res.Error != nil {
+		status = fmt.Sprintf("Error (%d: %s)", res.Error.Code, res.Error.Message)
 	}
+	logger.Info("[MCP] Response Sent: ID=%s, Status=%s", stringifyID(res.ID), status)
 }
 
 func stringifyID(id *json.RawMessage) string {
@@ -221,6 +216,14 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 	uc := search.New(s.Repo)
 	result := uc.Execute(args.Keywords, args.FilePath, args.ExactScopeMatch)
 
+	logger.Info("[Tool:search_documents] Query: Keywords=%v, FilePath=%s, Exact=%v", args.Keywords, args.FilePath, args.ExactScopeMatch)
+
+	var foundIDs []string
+	for _, doc := range result.Documents {
+		foundIDs = append(foundIDs, doc.ID)
+	}
+	logger.Info("[Tool:search_documents] Result: Found %d documents, IDs=%v", len(result.Documents), foundIDs)
+
 	var content []map[string]interface{}
 
 	if len(result.Documents) == 0 {
@@ -250,8 +253,11 @@ func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcE
 		return nil, &rpcError{Code: -32700, Message: "Invalid arguments"}
 	}
 
+	logger.Info("[Tool:read_document] ID: %s", args.ID)
+
 	doc, ok := s.Repo.GetByID(args.ID)
 	if !ok {
+		logger.Info("[Tool:read_document] Result: Not Found")
 		return map[string]interface{}{
 			"content": []map[string]interface{}{
 				{"type": "text", "text": "Document not found."},
@@ -259,6 +265,8 @@ func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcE
 			"isError": true,
 		}, nil
 	}
+
+	logger.Info("[Tool:read_document] Result: Success (%d bytes)", len(doc.Body))
 
 	return map[string]interface{}{
 		"content": []map[string]interface{}{

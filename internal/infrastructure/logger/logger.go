@@ -8,10 +8,34 @@ import (
 	"time"
 )
 
+var (
+	// globalLogger is the global logger instance
+	globalLogger Logger = &NoOpLogger{}
+)
+
 type Logger interface {
 	Info(format string, args ...interface{})
 	Error(format string, args ...interface{})
 	Debug(format string, args ...interface{})
+}
+
+// SetGeneric sets the global logger
+func SetGeneric(l Logger) {
+	globalLogger = l
+}
+
+// Global logging helpers
+
+func Info(format string, args ...interface{}) {
+	globalLogger.Info(format, args...)
+}
+
+func Error(format string, args ...interface{}) {
+	globalLogger.Error(format, args...)
+}
+
+func Debug(format string, args ...interface{}) {
+	globalLogger.Debug(format, args...)
 }
 
 type StandardLogger struct {
