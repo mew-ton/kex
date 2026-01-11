@@ -1,5 +1,11 @@
 # Changelog
 
+## [v2.0.0](https://github.com/mew-ton/kex/compare/v1.0.3...v2.0.0) - 2026-01-11
+- Fix/issue 54 by @mew-ton in https://github.com/mew-ton/kex/pull/55
+- refactor: update kex rules structure and configuration strategies by @mew-ton in https://github.com/mew-ton/kex/pull/60
+- Fix/issue 59 by @mew-ton in https://github.com/mew-ton/kex/pull/61
+- feat: enhance check output and fix startup/logging issues (Ref #56, #62) by @mew-ton in https://github.com/mew-ton/kex/pull/64
+
 ## [v1.0.3](https://github.com/mew-ton/kex/compare/v1.0.2...v1.0.3) - 2026-01-08
 - chore: refine Japanese documentation (Issue #39) by @mew-ton in https://github.com/mew-ton/kex/pull/48
 - chore: change build output path to bin/kex by @mew-ton in https://github.com/mew-ton/kex/pull/50
