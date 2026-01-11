@@ -21,9 +21,9 @@ func TestResolveStrategy(t *testing.T) {
 			wantType:   "*generator.OverwriteStrategy",
 		},
 		{
-			name:       "kex coding skip matches config (agent)",
-			path:       ".agent/rules/kex-coding.md",
-			strategies: config.Strategies{AgentKexCoding: "skip"},
+			name:       "kex coding skip matches config (antigravity)",
+			path:       ".antigravity/rules/kex-coding.md",
+			strategies: config.Strategies{AntigravityKexCoding: "skip"},
 			wantType:   "*generator.CreateStrategy",
 		},
 		{
@@ -34,24 +34,30 @@ func TestResolveStrategy(t *testing.T) {
 		},
 
 		{
-			name:       "default fallback is overwrite",
+			name:       "default fallback is ignore",
 			path:       "random.txt",
 			strategies: config.Strategies{}, // Empty config matches nothing -> fallback
-			wantType:   "*generator.OverwriteStrategy",
+			wantType:   "<nil>",
 		},
 		{
-			name:       "unconfigured file defaults to overwrite match",
-			path:       ".agent/rules/kex-coding.md",
-			strategies: config.Strategies{AgentKexCoding: ""},
-			// Empty string -> default case in switch (default overwrite)
-			wantType: "*generator.OverwriteStrategy",
+			name:       "unconfigured file defaults to ignore (nil)",
+			path:       ".antigravity/rules/kex-coding.md",
+			strategies: config.Strategies{AntigravityKexCoding: ""},
+			// Empty string -> ResolveStrategy returns nil (ignore)
+			wantType: "<nil>",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			strategy := ResolveStrategy(tt.path, tt.strategies)
-			gotType := reflect.TypeOf(strategy).String()
+			var gotType string
+			if strategy == nil {
+				gotType = "<nil>"
+			} else {
+				gotType = reflect.TypeOf(strategy).String()
+			}
+
 			if gotType != tt.wantType {
 				t.Errorf("ResolveStrategy() type = %v, want %v", gotType, tt.wantType)
 			}
