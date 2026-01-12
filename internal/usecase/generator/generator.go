@@ -29,11 +29,26 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 	}
 
 	// 1. Determine which files to update
+	filesToUpdate := g.determineFilesToUpdate(manifest, cfg)
+
+	// 2. Process Template Files (MCP Rules & System Docs)
+	if err := g.processTemplateFiles(cwd, rootDir, filesToUpdate); err != nil {
+		return err
+	}
+
+	// 3. Process AI Skills (Dynamic Content)
+	if err := g.processAiSkills(cwd, rootDir, cfg, manifest); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (g *Generator) determineFilesToUpdate(manifest *Manifest, cfg config.UpdateConfig) map[string]string {
 	// path -> strategyName (e.g. "overwrite", "skip")
 	filesToUpdate := make(map[string]string)
 
 	// A. System Documents (legacy "kex" key support via Documents map)
-	// If "kex": "all" is present in Documents map
 	if cfg.Documents["kex"] == "all" {
 		for _, f := range manifest.Kex {
 			filesToUpdate[f] = "overwrite"
@@ -41,6 +56,12 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 	}
 
 	// B. MCP Rules (AiMcpRules)
+	g.resolveMcpFiles(manifest, cfg, filesToUpdate)
+
+	return filesToUpdate
+}
+
+func (g *Generator) resolveMcpFiles(manifest *Manifest, cfg config.UpdateConfig, filesToUpdate map[string]string) {
 	targets := cfg.AiMcpRules.Targets
 	scopesList := cfg.AiMcpRules.Scopes
 	// clean up whitespace
@@ -58,8 +79,6 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 
 		agentDef, ok := manifest.AiAgents[agentName]
 		if !ok {
-			// Unknown agent, maybe warn? or ignore?
-			// For now ignore to avoid noise if user mistypes
 			continue
 		}
 
@@ -71,8 +90,9 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 			}
 		}
 	}
+}
 
-	// 2. Process Template Files (MCP Rules & System Docs)
+func (g *Generator) processTemplateFiles(cwd, rootDir string, filesToUpdate map[string]string) error {
 	for relPath, strategyName := range filesToUpdate {
 		strategy := ResolveStrategy(strategyName)
 		if strategy == nil {
@@ -80,10 +100,7 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 		}
 
 		// Calculate Source and Target Paths
-		// 1. Source: explicit relPath from manifest (e.g., "templates/foo.md.template")
 		templatePath := filepath.Join("templates", relPath)
-
-		// 2. Target: strip .template if present, and map to rootDir if needed
 		targetRelPath := strings.TrimSuffix(relPath, ".template")
 
 		// Map contents/... paths to respect rootDir
@@ -125,59 +142,50 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 			return err
 		}
 	}
+	return nil
+}
 
-	// 3. Process AI Skills (Dynamic Content)
-	if len(cfg.AiSkills.Targets) > 0 && len(cfg.AiSkills.Keywords) > 0 {
-		skillsGen := NewSkillsGenerator(cfg.AiSkills)
+func (g *Generator) processAiSkills(cwd, rootDir string, cfg config.UpdateConfig, manifest *Manifest) error {
+	if len(cfg.AiSkills.Targets) == 0 || len(cfg.AiSkills.Keywords) == 0 {
+		return nil
+	}
 
-		// Determine source directory for documents (root/contents or just root?)
-		// Config.Root points to where contents are.
-		// If rootDir is "contents", we assume documents are in cwd/contents.
-		contentSourceDir := filepath.Join(cwd, rootDir)
+	skillsGen := NewSkillsGenerator(cfg.AiSkills)
+	contentSourceDir := filepath.Join(cwd, rootDir)
 
-		// Determine targets
-		skillTargets := cfg.AiSkills.Targets
-		for _, t := range skillTargets {
-			agentName := strings.TrimSpace(t)
-			agentDef, ok := manifest.AiAgents[agentName]
-			if !ok {
-				continue
+	skillTargets := cfg.AiSkills.Targets
+	for _, t := range skillTargets {
+		agentName := strings.TrimSpace(t)
+		agentDef, ok := manifest.AiAgents[agentName]
+		if !ok {
+			continue
+		}
+
+		for _, skillManifestPath := range agentDef.Files.Skills {
+			skillTemplatePath := filepath.Join("templates", skillManifestPath)
+			skillTemplateData, err := fs.ReadFile(g.Assets, skillTemplatePath)
+			if err != nil {
+				return fmt.Errorf("failed to read skill template %s: %w", skillTemplatePath, err)
 			}
 
-			// Iterate over configured skills templates in manifest
-			for _, skillManifestPath := range agentDef.Files.Skills {
-				// Source: templates/ + manifest path
-				skillTemplatePath := filepath.Join("templates", skillManifestPath)
-				skillTemplateData, err := fs.ReadFile(g.Assets, skillTemplatePath)
-				if err != nil {
-					return fmt.Errorf("failed to read skill template %s: %w", skillTemplatePath, err)
+			targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
+
+			skills, err := skillsGen.Generate(contentSourceDir, string(skillTemplateData), targetPattern)
+			if err != nil {
+				return fmt.Errorf("failed to generate skills for %s: %w", skillManifestPath, err)
+			}
+
+			for filename, content := range skills {
+				outPath := filepath.Join(cwd, filename)
+				if err := EnsureDir(filepath.Dir(outPath)); err != nil {
+					return err
 				}
-
-				// Target Pattern: strip .template
-				// e.g. .claude/skills/kex/{{.SkillName}}.md.template -> .claude/skills/kex/{{.SkillName}}.md
-				targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
-
-				// Generate with explicit pattern
-				skills, err := skillsGen.Generate(contentSourceDir, string(skillTemplateData), targetPattern)
-				if err != nil {
-					return fmt.Errorf("failed to generate skills for %s: %w", skillManifestPath, err)
-				}
-
-				// Write generated skills
-				for filename, content := range skills {
-					outPath := filepath.Join(cwd, filename)
-					// Strategy: overwrite? Use simple overwrite logic
-					if err := EnsureDir(filepath.Dir(outPath)); err != nil {
-						return err
-					}
-					if err := WriteFile(outPath, []byte(content)); err != nil {
-						return err
-					}
+				if err := WriteFile(outPath, []byte(content)); err != nil {
+					return err
 				}
 			}
 		}
 	}
-
 	return nil
 }
 
