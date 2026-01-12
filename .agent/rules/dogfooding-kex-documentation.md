@@ -5,7 +5,7 @@ trigger: always_on
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these rules.
 
-**Core Rule:** Before taking action in any phase, you MUST consult the project's documentation using `kex`.
+**Core Rule (STRICT):** You are FORBIDDEN from writing any content until you have explicitly searched for and read relevant guidelines. "Guessing" or "Reading the room" is considered a violation.
 
 ## Documentation Phase
 

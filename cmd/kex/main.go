@@ -12,7 +12,7 @@ import (
 func main() {
 	app := &cli.App{
 		Name:  "kex",
-		Usage: "Document Librarian MCP",
+		Usage: "Document Librarian Tool (MCP / Skills Management)",
 		Commands: []*cli.Command{
 			kexcli.InitCommand,
 			kexcli.CheckCommand,

@@ -2,7 +2,7 @@
 
 [English](./README.md) | **日本語**
 
-**Kex** は、キーワード検索を通じて **最小限かつ最適なコーディングガイドライン** を AI に提供する、**司書 (Librarian)** のような機能を持った **MCP サーバー** です。「Vibe Coding」を支援するために設計されており、AI エージェント (および人間) が必要な瞬間に適切なドキュメントへアクセスできるようサポートします。
+**Kex** は、キーワード検索を通じて **最小限かつ最適なコーディングガイドライン** を AI に提供する、**司書ツール (MCP / Skills 管理)** です。「Vibe Coding」を支援するために設計されており、AI エージェント (および人間) が必要な瞬間に適切なドキュメントへアクセスできるようサポートします。
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.25+-blue)
@@ -34,11 +34,12 @@ kex start https://my-org.github.io/guidelines/
 
 詳細なドキュメントは `docs/ja/` ディレクトリに格納されています:
 
-- **[機能解説](docs/ja/feature.md)**: キーワードとスコープの仕組みについて。
+- **[機能解説](docs/ja/feature-index.md)**: キーワードとスコープの仕組みについて。
 - **[コアコンセプト](docs/ja/concept.md)**: 設計哲学、アーキテクチャ、Draft/Adopted ステータスについて。
 - **[CLI リファレンス](docs/ja/cli.md)**: `init`, `check`, `start`, `generate` コマンドの使い方。
 - **[設定](docs/ja/configuration.md)**: `.kex.yaml` 設定ファイルのリファレンス。
-- **[MCP ツール](docs/ja/mcp.md)**: AI エージェントに提供されるツール群とクライアント設定。
+- **[MCP ツール](docs/ja/feature-mcp.md)**: AI エージェントに提供されるツール群とクライアント設定。
+- **[AI Skills](docs/ja/feature-skills.md)**: AI エージェント向けの動的ナレッジ生成。
 - **[ドキュメントの執筆](docs/ja/documentation.md)**: Frontmatter スキーマとコンテンツのガイドライン。
 - **[ベストプラクティス](docs/ja/best-practice.md)**: ナレッジベースの効果的な構造化方法。
 
