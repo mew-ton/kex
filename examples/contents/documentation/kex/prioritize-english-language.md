@@ -1,8 +1,7 @@
 ---
 
 title: Prioritize English language
-description: >
-  Write documentation in English to optimize for AI processing, unless specific needs dictate otherwise.
+description: When writing documentation, prioritize English to optimize for AI processing and universality.
 keywords:
   - language
   - english

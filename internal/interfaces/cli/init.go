@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/mew-ton/kex/assets"
 	"github.com/mew-ton/kex/internal/infrastructure/config"
@@ -29,6 +29,11 @@ var InitCommand = &cli.Command{
 			Aliases: []string{"s"},
 			Usage:   "Scopes to enable (coding, documentation)",
 		},
+		// Add skills flag for completeness?
+		&cli.StringSliceFlag{
+			Name:  "skills",
+			Usage: "Keywords for Skills (e.g. go, typescript)",
+		},
 	},
 }
 
@@ -40,19 +45,78 @@ func runInit(c *cli.Context) error {
 		return err
 	}
 
-	selectedAgents, err := selectAgents(c)
-	if err != nil {
-		return err
+	var selectedMcpAgents map[string]bool
+	var selectedMcpScopes []string
+	var selectedSkillsAgents map[string]bool
+	var skillsKeywords []string
+
+	// Check if flags are used for non-interactive mode
+	if c.IsSet("agents") || c.IsSet("scopes") || c.IsSet("skills") {
+		// Non-interactive mode
+		selectedMcpAgents = make(map[string]bool)
+		for _, a := range c.StringSlice("agents") {
+			selectedMcpAgents[strings.ToLower(a)] = true
+		}
+
+		selectedMcpScopes = c.StringSlice("scopes")
+
+		// If custom skills are provided, we enable skills for Claude by default?
+		// Or assume agents flag covers it?
+		// For backward compat (and simplicity), let's say if "claude" is in agents, we enable MCP rules.
+		// If "skills" are provided, we enable skills for Claude (since currently only Claude supports it).
+		if c.IsSet("skills") {
+			selectedSkillsAgents = map[string]bool{"claude": true}
+			skillsKeywords = c.StringSlice("skills")
+		}
+	} else {
+		// Interactive Mode
+		// 1. Select Capabilities
+		capabilities, err := selectCapabilities()
+		if err != nil {
+			return err
+		}
+
+		selectedMcpAgents = make(map[string]bool)
+		selectedSkillsAgents = make(map[string]bool)
+
+		hasMcpCapability := false
+		hasSkillsCapability := false
+
+		for _, cap := range capabilities {
+			if strings.Contains(cap, "(MCP Rules)") {
+				hasMcpCapability = true
+				agentName := strings.Split(cap, " ")[0]
+				selectedMcpAgents[strings.ToLower(agentName)] = true
+			}
+			if strings.Contains(cap, "(Skills)") {
+				hasSkillsCapability = true
+				agentName := strings.Split(cap, " ")[0]
+				selectedSkillsAgents[strings.ToLower(agentName)] = true
+			}
+		}
+
+		// 2. Select Scopes for MCP Rules
+		if hasMcpCapability {
+			scopes, err := selectMcpScopes()
+			if err != nil {
+				return err
+			}
+			selectedMcpScopes = scopes
+		}
+
+		// 3. Input Skills Keywords
+		if hasSkillsCapability {
+			keywords, err := inputSkillsKeywords()
+			if err != nil {
+				return err
+			}
+			skillsKeywords = keywords
+		}
 	}
 
-	selectedScopes, err := selectScopes(c)
-	if err != nil {
-		return err
-	}
+	pterm.Info.Printf("Initializing in: %s\n", cwd)
 
-	pterm.Info.Printf("Initializing in: %s (Agents: %v, Scopes: %v)\n", cwd, selectedAgents, selectedScopes)
-
-	if err := saveConfig(selectedAgents, selectedScopes); err != nil {
+	if err := saveConfig(selectedMcpAgents, selectedMcpScopes, selectedSkillsAgents, skillsKeywords); err != nil {
 		return err
 	}
 
@@ -67,119 +131,122 @@ func printWelcome() {
 	pterm.DefaultHeader.Println("Initializing Kex Repository")
 }
 
-func selectAgents(c *cli.Context) ([]string, error) {
+func selectCapabilities() ([]string, error) {
 	manifest, err := generator.LoadManifest(assets.Assets)
 	if err != nil {
 		return nil, err
 	}
 
-	// Build options map
-	nameToKey := make(map[string]string) // Name -> Key
-	keyToKey := make(map[string]string)  // Key -> Key (validation)
+	// Dynamically build capabilities list from manifest
+	// For v2, we hardcode known logic mapping for now based on the feedback
+	// "Select Agent Capabilities to enable"
+	// [x] Antigravity (MCP Rules)
+	// [x] Claude (MCP Rules)
+	// [ ] Claude (Skills)
+	// [ ] Cursor (MCP Rules)
+
 	var options []string
-
-	for key, def := range manifest.AiAgents {
-		options = append(options, def.Name)
-		nameToKey[def.Name] = key
-		keyToKey[key] = key
+	// Sort agent keys to have consistent order?
+	var agentKeys []string
+	for k := range manifest.AiAgents {
+		agentKeys = append(agentKeys, k)
 	}
-	sort.Strings(options)
+	sort.Strings(agentKeys)
 
-	var inputs []string
-	if c.IsSet("agents") {
-		inputs = c.StringSlice("agents")
-	} else {
-		preSelected := map[string]bool{
-			"Antigravity": true,
-			"Cursor":      true,
-		}
-
-		resultNames, err := Multiselect("Select AI Agents", options, preSelected)
-		if err != nil {
-			return nil, err
-		}
-		inputs = resultNames
+	// Custom mapping logic for display
+	// Verify agent exists in manifest before adding option
+	if _, ok := manifest.AiAgents["antigravity"]; ok {
+		options = append(options, "Antigravity (MCP Rules)")
+	}
+	if _, ok := manifest.AiAgents["claude"]; ok {
+		options = append(options, "Claude (MCP Rules)")
+		options = append(options, "Claude (Skills)")
+	}
+	if _, ok := manifest.AiAgents["cursor"]; ok {
+		options = append(options, "Cursor (MCP Rules)")
 	}
 
-	if len(inputs) == 0 {
-		return nil, fmt.Errorf("at least one agent must be selected")
+	pterm.Info.Println("MCP Rules are static guidelines enforced by the AI. Skills are dynamic knowledge retrieved by keywords.")
+
+	preSelected := map[string]bool{
+		"Antigravity (MCP Rules)": true,
+		"Claude (MCP Rules)":      true,
 	}
 
-	var validKeys []string
-	for _, input := range inputs {
-		// 1. Check if it matches a Key
-		if _, ok := keyToKey[input]; ok {
-			validKeys = append(validKeys, input)
-			continue
-		}
-		// 2. Check if it matches a Name
-		if key, ok := nameToKey[input]; ok {
-			validKeys = append(validKeys, key)
-			continue
-		}
-		// 3. Fallback: Case-insensitive check against Name or Key?
-		// For robustness, let's assume if user types "antigravity" (key) or "Antigravity" (name), it works.
-		// Previous checks covered exact matches.
-		// Let's add simple normalization failure.
-		return nil, fmt.Errorf("unknown agent: %s", input)
-	}
-
-	return validKeys, nil
+	return Multiselect("Select Agent Capabilities to enable", options, preSelected)
 }
 
-func selectScopes(c *cli.Context) ([]string, error) {
-	if c.IsSet("scopes") {
-		return c.StringSlice("scopes"), nil
-	}
-
+func selectMcpScopes() ([]string, error) {
 	options := []string{"coding", "documentation"}
 	preSelected := map[string]bool{
 		"coding":        true,
 		"documentation": true,
 	}
-
-	return Multiselect("Select Scopes", options, preSelected)
+	return Multiselect("Select Scopes for MCP Rules (What logic should be enforced via MCP?)", options, preSelected)
 }
 
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
+func inputSkillsKeywords() ([]string, error) {
+	prompt := pterm.DefaultInteractiveTextInput
+	prompt.DefaultText = "go, typescript"
+	prompt.Delimiter = ": "
+
+	pterm.Println()
+	pterm.Print(pterm.Cyan("? ") + "Enter keywords for Skills (comma separated) (Examples: coding, documentation, kex)\n")
+
+	result, err := prompt.Show("> ")
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.TrimSpace(result) == "" {
+		// Defaults
+		return []string{"coding", "documentation", "kex"}, nil
+	}
+
+	parts := strings.Split(result, ",")
+	var keywords []string
+	for _, p := range parts {
+		clean := strings.TrimSpace(p)
+		if clean != "" {
+			keywords = append(keywords, clean)
 		}
 	}
-	return false
+	return keywords, nil
 }
 
-func saveConfig(agents []string, scopes []string) error {
-	// Create Config with strategies map
-	strategies := make(map[string]string)
+func saveConfig(mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[string]bool, skillsKeywords []string) error {
+	// Build AiMcpRules
+	var mcpTargets []string
+	for agent := range mcpAgents {
+		mcpTargets = append(mcpTargets, agent)
+	}
+	sort.Strings(mcpTargets)
 
-	// System Docs: Always Enable
-	strategies["kex"] = "all"
+	// Build AiSkills
+	var skillsTargets []string
+	for agent := range skillsAgents {
+		skillsTargets = append(skillsTargets, agent)
+	}
+	sort.Strings(skillsTargets)
 
-	// Agents
-	hasCoding := contains(scopes, "coding")
-	hasDoc := contains(scopes, "documentation")
-
-	mode := "none"
-	if hasCoding && hasDoc {
-		mode = "all"
-	} else if hasCoding {
-		mode = "coding-only"
-	} else if hasDoc {
-		mode = "documentation-only"
+	// Documents defaults
+	docs := map[string]string{
+		"kex": "all",
 	}
 
-	if mode != "none" {
-		for _, agentKey := range agents {
-			strategies[agentKey] = mode
-		}
-	}
-
+	// Create Config
 	cfg := config.Config{
 		Root: "contents",
-		Update: config.Update{
-			Strategies: strategies,
+		Update: config.UpdateConfig{
+			Documents: docs,
+			AiMcpRules: config.AiMcpRules{
+				Targets: strings.Join(mcpTargets, ", "),
+				Scopes:  strings.Join(mcpScopes, ", "),
+			},
+			AiSkills: config.AiSkills{
+				Targets:  strings.Join(skillsTargets, ", "),
+				Keywords: skillsKeywords,
+			},
 		},
 	}
 

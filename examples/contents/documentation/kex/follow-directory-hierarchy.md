@@ -1,8 +1,7 @@
 ---
 
 title: Folder Structure
-description: >
-  Organize documents by Domain > Platform (Optional) > Technology.
+description: When organizing documents, structure folders by Domain, Platform, and Technology.
 keywords:
   - directory
   - structure

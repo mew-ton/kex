@@ -1,6 +1,6 @@
 ---
 title: Avoid Unrequested Scope Expansion
-description: Guidelines for staying focused on the immediate problem and avoiding implementing unrelated features.
+description: When planning work, avoid implementing unrequested features (scope creep) and stay focused on the immediate problem.
 keywords:
   - best-practice
   - scope-creep

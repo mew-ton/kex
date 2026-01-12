@@ -1,32 +1,34 @@
 {
   "kex": [
-    "contents/documentation/kex/choose-effective-keywords.md",
-    "contents/documentation/kex/follow-directory-hierarchy.md",
-    "contents/documentation/kex/include-valid-frontmatter.md",
-    "contents/documentation/kex/prioritize-english-language.md",
-    "contents/documentation/kex/use-imperative-filenames.md",
-    "contents/documentation/kex/write-concise-content.md"
+    "contents/documentation/kex/choose-effective-keywords.md.template",
+    "contents/documentation/kex/follow-directory-hierarchy.md.template",
+    "contents/documentation/kex/include-valid-frontmatter.md.template",
+    "contents/documentation/kex/prioritize-english-language.md.template",
+    "contents/documentation/kex/use-imperative-filenames.md.template",
+    "contents/documentation/kex/write-concise-content.md.template",
+    "contents/documentation/kex/write-effective-description.md.template"
   ],
   "ai-agents": {
     "antigravity": {
       "name": "Google Antigravity",
       "files": {
-        "coding": [".antigravity/rules/kex-coding.md"],
-        "documentation": [".antigravity/rules/kex-documentation.md"]
+        "coding": [".antigravity/rules/kex-coding.md.template"],
+        "documentation": [".antigravity/rules/kex-documentation.md.template"]
       }
     },
     "cursor": {
       "name": "Cursor",
       "files": {
-        "coding": [".cursor/rules/kex-coding.md"],
-        "documentation": [".cursor/rules/kex-documentation.md"]
+        "coding": [".cursor/rules/kex-coding.md.template"],
+        "documentation": [".cursor/rules/kex-documentation.md.template"]
       }
     },
     "claude": {
       "name": "Claude",
       "files": {
-        "coding": [".claude/rules/kex/follow-coding-rules.md"],
-        "documentation": [".claude/rules/kex/follow-documentation-rules.md"]
+        "coding": [".claude/rules/kex/follow-coding-rules.md.template"],
+        "documentation": [".claude/rules/kex/follow-documentation-rules.md.template"],
+        "skills": [".claude/skills/kex/{{.SkillName}}.md.template"]
       }
     }
   }

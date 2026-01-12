@@ -2,7 +2,7 @@
 
 title: Commit Messages (Conventional Commits)
 description: >
-  Follow Conventional Commits for git history.
+  When writing commit messages, follow the Conventional Commits specification.
 keywords:
   - git
   - naming

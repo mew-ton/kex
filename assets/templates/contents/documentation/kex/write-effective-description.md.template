@@ -1,0 +1,43 @@
+---
+title: Write Effective Descriptions
+description: >
+  When writing descriptions for Kex knowledge base documents (in {{.Root}}/), use a "When X, do Y" format to optimize for AI retrieval.
+keywords:
+  - documentation
+  - seo
+  - llm
+  - metadata
+  - frontmatter
+---
+
+# Write Effective Descriptions
+
+When writing documentation managed by Kex, the `description` field in the frontmatter is critical. It is used not only for human readability but also as a primary signal for AI Agents (like Claude or Cursor) to retrieve the correct context (Skills).
+
+## The "When/What" Format
+
+You **MUST** write descriptions that directly state the context and the content's purpose or requirement, without meta-instructions like "use this to".
+
+### Format
+
+```yaml
+description: When [Context/Trigger], [Action/Requirement/Fact].
+```
+
+### Examples
+
+**Good:**
+> description: When implementing authentication flows, security tokens must be validated.
+
+**Good:**
+> description: When writing Go code, Clean Architecture principles and directory structure rules apply.
+
+**Bad (Meta-instruction):**
+> description: When writing Go code, **use this to** enforce Clean Architecture.
+
+**Bad (Vague):**
+> description: Authentication documentation.
+
+## Why This Matters
+
+AI Agents use semantic matching. Removing filler phrasing like "use this to" increases the density of meaningful keywords (Context + Action) and improves retrieval accuracy.

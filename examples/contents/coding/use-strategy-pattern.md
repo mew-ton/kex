@@ -1,6 +1,7 @@
 ---
 
 title: Use Strategy Pattern
+description: When implementing varying behavior, apply the Strategy Pattern for decoupling and testability.
 status: adopted
 keywords: [design-pattern, strategy, interface, decoupling]
 ---

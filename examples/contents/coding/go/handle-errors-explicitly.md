@@ -2,7 +2,7 @@
 
 title: Explicit Error Handling
 description: >
-  Never ignore errors. Handle them or return them.
+  When writing Go code, explicit error handling is required to prevent silent failures.
 keywords:
   - go
   - error-handling

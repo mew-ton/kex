@@ -2,7 +2,7 @@
 
 title: Prioritize English language
 description: >
-  Write documentation in English to optimize for AI processing, unless specific needs dictate otherwise.
+  When writing content for the Kex knowledge base (in {{.Root}}/), use English as the primary language to maximize accessibility.
 keywords:
   - language
   - english

@@ -2,7 +2,7 @@
 
 title: Use BDD-style test naming
 description: >
-  Test descriptions must describe the expected behavior using "it should" or "it must".
+  When writing test descriptions, enforce BDD-style naming with "it should" or "it must".
 keywords:
   - testing
   - naming

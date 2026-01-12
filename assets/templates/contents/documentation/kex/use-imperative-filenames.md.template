@@ -2,7 +2,7 @@
 
 title: Use imperative filenames
 description: >
-  Filenames for guidelines must be imperative instructions to serve as actionable prompts.
+  When naming Kex knowledge base files (in {{.Root}}/), use imperative, action-oriented kebab-case names.
 keywords:
   - filename
   - convention

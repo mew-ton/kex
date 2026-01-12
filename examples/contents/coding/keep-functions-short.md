@@ -2,7 +2,7 @@
 
 title: Keep functions short by top-down decomposition
 description: >
-  Write functions by detailing steps as comments first, then converting them to function calls.
+  When implementing logic, keep functions short by applying top-down decomposition using comments-first development.
 keywords:
   - readability
   - maintainability

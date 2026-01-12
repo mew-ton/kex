@@ -20,18 +20,18 @@ func (s *DocumentationFileScope) SelectFiles(def AgentDef) []string {
 }
 
 // ResolveFileScopes maps a configuration directive to a list of scope strategies
-func ResolveFileScopes(directive string) []AssetFileScopeStrategy {
-	switch directive {
-	case "all":
-		return []AssetFileScopeStrategy{&CodingFileScope{}, &DocumentationFileScope{}}
-	case "coding", "coding-only":
-		return []AssetFileScopeStrategy{&CodingFileScope{}}
-	case "documentation", "documentation-only":
-		return []AssetFileScopeStrategy{&DocumentationFileScope{}}
-	case "none", "":
-		return []AssetFileScopeStrategy{}
-	default:
-		// Default behavior for unknown directives matches "all"
-		return []AssetFileScopeStrategy{&CodingFileScope{}, &DocumentationFileScope{}}
+func ResolveFileScopes(scopes []string) []AssetFileScopeStrategy {
+	var strategies []AssetFileScopeStrategy
+
+	for _, scope := range scopes {
+		switch scope {
+		case "coding":
+			strategies = append(strategies, &CodingFileScope{})
+		case "documentation":
+			strategies = append(strategies, &DocumentationFileScope{})
+		case "all":
+			return []AssetFileScopeStrategy{&CodingFileScope{}, &DocumentationFileScope{}}
+		}
 	}
+	return strategies
 }

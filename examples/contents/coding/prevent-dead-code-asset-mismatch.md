@@ -1,6 +1,6 @@
 ---
 title: Prevent Dead Code and Asset Mismatch
-description: Guidelines for maintaining synchronization between application logic and static assets.
+description: When modifying code or assets, prevent dead code and ensure synchronization between application logic and static resources.
 keywords:
   - best-practice
   - maintenance

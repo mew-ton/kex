@@ -2,7 +2,7 @@
 
 title: Naming Conventions
 description: >
-  General naming conventions for identifiers.
+  When naming identifiers, ensure consistency across the codebase using standard conventions.
 keywords:
   - naming
   - style
