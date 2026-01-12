@@ -1,0 +1,40 @@
+# AI Skills
+
+Kex can generate **Dynamic Skills** for compatible AI agents (currently Claude Desktop and Claude Code).
+
+## What are Skills?
+
+Skills are dynamic rule files that Kex generates based on your documentation. Unlike static MCP rules (which are fixed instructions), Skills are essentially **retrieval-augmented prompts**.
+
+- Kex scans your documentation directory.
+- It finds documents matching your configured `keywords`.
+- It generates a "Skill" file (e.g., `.claude/skills/kex/go.md`) that summarizes these documents.
+
+## How it Works
+
+When `kex update` runs:
+
+1.  It checks `.kex.yaml` for `ai-skills` configuration.
+2.  It uses the `keywords` to perform a search in your knowledge base.
+3.  It retrieves relevant documents (title, description, path).
+4.  It injects this list into a Skill template (e.g., `assets/templates/.claude/skills/kex/skill.md.template`).
+5.  It saves the result to your repo (e.g., `.claude/skills/kex/my-skill.md`).
+
+## Configuration
+
+In `.kex.yaml`:
+
+```yaml
+update:
+  ai-skills:
+    targets: [claude]        # Agents to generate skills for
+    keywords: [go, testing]  # Keywords to gather knowledge about
+```
+
+This configuration tells Kex: "Find all documents related to `go` or `testing`, and create a Skill for Claude so it knows we have guidelines about these topics."
+
+## Benefits
+
+- **Context Awareness**: The agent knows *what* guidelines exist without reading every file.
+- **Token Efficiency**: The Skill file only contains summaries, not full content.
+- **Discovery**: The agent can then use the `search_documents` MCP tool to read the specific details when needed.

@@ -30,9 +30,6 @@ sources: # 任意: 外部参照へのリンク
 
 - **型**: `string`
 - **説明**: ドキュメント内容の簡潔な要約です。これは、AI エージェントが関連するガイドラインを選定する際の重要な判断材料となります。
-- **ガイドライン**: **"When [context], use this to [goal]"** 形式を使用してください。
-    - **Bad**: `このドキュメントは命名規則についてです。`
-    - **Good**: `When naming variables, use this to ensure consistency.`
 
 ### `keywords` (必須)
 
