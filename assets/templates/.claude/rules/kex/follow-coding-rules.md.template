@@ -1,19 +1,19 @@
 ---
-paths: "**/*.{go,ts,js,jsx,tsx,py,rb,java,rs}"
+trigger: always_on
 ---
 # Coding Rules (Ref: Kex)
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these rules.
 
-**Core Rule:** Before taking action in any phase, you MUST consult the project's documentation using `kex`.
+**Core Rule (STRICT):** You are FORBIDDEN from writing any code until you have explicitly searched for and read relevant guidelines. "Guessing" or "Reading the room" is considered a violation.
 
 ## Design & Implementation Phase
 
-**Core Rule**: Before proposing changes or writing code, understand existing design and coding standards.
+**Core Rule**: Before planning or coding, you must prove you have consulted the knowledge base.
 
-1.  **Search for rules** using `search_documents`.
+1.  **Mandatory Search** using `search_documents`.
     *   **Keywords**: "architecture", "design", "coding", "style", "naming", "testing", "strategy".
-    *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
+    *   **STOP**: Do not proceed until you have successfully retrieved and read at least one relevant document or confirmed none exist.
 2.  **Read relevant docs** using `read_document`.
 3.  **Validate your plan** (or existing code) against principles found.
 
@@ -24,10 +24,22 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 1.  **Identify the context** (Language, Framework, Component, Function).
 2.  **Search for specific rules** using `search_documents`.
     *   **Keywords**: "anti-pattern", "best practice", "forbidden", "required", "error handling", [Context Specific Keywords].
-    *   **Tip**: When focusing on a specific layer or component (e.g., `domain`, `infrastructure`), use `search_documents` with `exactScopeMatch: true` and the component name as the keyword to see all rules for that scope.
+    *   **Requirement**: When focusing on a specific layer or component (e.g., `go`, `typescript`, `frontend`), you **MUST** use `search_documents` with `exactScopeMatch: true` and the scope names as keywords. This ensures you see *all* rules for that scope, protecting against "unknown unknowns".
 3.  **Verify the code** against the *explicit* rules retrieved from Kex.
     *   *Do not assume* standard conventions apply if Kex has specific overrides.
 
-## General Usage Note
+## Self-Hosting Development (Kex on Kex)
 
-**Note**: Use `Glob`/`read_file_content` (or equivalent file system tools) only for existence checks, not for content search. Always rely on the indexed knowledge base via `search_documents`.
+**Core Rule**: When developing Kex itself, you MUST prioritize keeping the existing binary stable to continue using MCP tools.
+
+1.  **Do NOT run `make build`/`make e2e` immediately**: Overwriting `./bin/kex` during development risks breaking your MCP connection.
+2.  **Use `go test` for logic**: verify changes using `go test ./internal/...` or `go test ./e2e/...` (without build) first.
+3.  **Build Last**: Only run `make build` or full `make e2e` after logic is verified and tests pass.
+
+## Critical Anti-Patterns (Forbidden Actions)
+
+**Restriction**: You MUST NOT use file system tools (`list_dir`, `view_file`, `read_file_content`, `grep`) to read, search, or discover guidelines in `examples/contents` (or any configured Kex root).
+
+- **Why?**: Accessing files directly bypasses the "Dogfooding" process. We must test the *retrieval accuracy* of Kex itself. If you read the files directly, you are not testing the product.
+- **Correct Action**: Use `search_documents` and `read_document`.
+- **Exception**: You may read these files ONLY if your task is specifically to *edit* the text of the guideline itself (after retrieving it via Kex) or to debug the *parser logic*.

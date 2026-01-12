@@ -11,12 +11,8 @@ import (
 )
 
 type LocalProvider struct {
-	Root    string
-	Logger  logger.Logger
-	BaseURL string // Optional, for generating absolute URLs if needed (though mostly for generate)
-	// Actually LocalProvider for 'start' just needs Root.
-	// schema generation logic uses BaseURL but that might be separate?
-	// Let's keep it simple.
+	Root   string
+	Logger logger.Logger
 }
 
 func NewLocalProvider(root string, logger logger.Logger) *LocalProvider {
@@ -36,7 +32,7 @@ func (l *LocalProvider) Load() (*IndexSchema, []error) {
 	}
 
 	for _, path := range paths {
-		doc, err := domain.ParseDocument(path, l.Root)
+		doc, err := ParseDocument(path, l.Root)
 		if err != nil {
 			// We might want to handle errors differently (collect them?),
 			// but Provider interface signature simply returns error for Load.

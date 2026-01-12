@@ -10,6 +10,7 @@ import (
 
 	"github.com/mew-ton/kex/internal/domain"
 	"github.com/mew-ton/kex/internal/infrastructure/config"
+	kexfs "github.com/mew-ton/kex/internal/infrastructure/fs"
 )
 
 type SkillsGenerator struct {
@@ -50,7 +51,7 @@ func (g *SkillsGenerator) Generate(rootDir, templateContent, outputPattern strin
 		}
 
 		// Parse document to check keywords
-		doc, err := domain.ParseDocument(path, rootDir)
+		doc, err := kexfs.ParseDocument(path, rootDir)
 		if err != nil {
 			// Skip malformed documents
 			return nil

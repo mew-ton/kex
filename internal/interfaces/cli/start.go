@@ -10,6 +10,8 @@ import (
 	"github.com/mew-ton/kex/internal/infrastructure/fs"
 	"github.com/mew-ton/kex/internal/infrastructure/logger"
 	"github.com/mew-ton/kex/internal/interfaces/mcp"
+	"github.com/mew-ton/kex/internal/usecase/retrieve"
+	"github.com/mew-ton/kex/internal/usecase/search"
 	"github.com/mew-ton/kex/internal/usecase/validator"
 
 	"github.com/urfave/cli/v2"
@@ -184,7 +186,9 @@ func validateRepository(repo *fs.Indexer) error {
 }
 
 func startServer(repo *fs.Indexer) error {
-	srv := mcp.New(repo)
+	searchUC := search.New(repo)
+	retrieveUC := retrieve.New(repo)
+	srv := mcp.New(searchUC, retrieveUC)
 	fmt.Fprintf(os.Stderr, "Server listening on stdio...\n")
 	if err := srv.Serve(); err != nil {
 		logger.Error("Server error: %v", err)
