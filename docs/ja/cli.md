@@ -35,14 +35,17 @@ kex check
 MCP サーバーを起動します。
 
 ```bash
-kex start [options] [path|url]
+kex start [options] [path|url...]
 ```
 
+**マルチプレキシング** (複数のソースの結合) をサポートしています。複数のパスまたは URL を指定できます。
+
 - **ローカルモード**: `kex start ./my-docs`
-- **リモートモード**: `kex start https://example.com/docs/` (`kex.json` が配置されている必要があります)
+- **リモートモード**: `kex start https://example.com/docs/`
+- **マルチプレキシング**: `kex start ./backend ./frontend https://common-lib.com/docs/`
+
 - **フラグ**:
     - `--log-file=<path>`: ログを標準エラー出力ではなく、指定したファイルに書き込みます。
-    - `--root=<path>`: ガイドラインのコンテンツルートを指定します (ローカルモードのみ有効)。
 
 
 

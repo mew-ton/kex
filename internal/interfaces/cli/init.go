@@ -236,7 +236,7 @@ func saveConfig(mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[
 
 	// Create Config
 	cfg := config.Config{
-		Root: "contents",
+		Sources: []string{"contents"},
 		Update: config.UpdateConfig{
 			Documents: docs,
 			AiMcpRules: config.AiMcpRules{

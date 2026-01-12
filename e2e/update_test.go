@@ -110,7 +110,7 @@ func TestKexUpdate(t *testing.T) {
 	// Or run kex init again? Or kex update with config hack?
 	// Let's hack .kex.yaml
 
-	cfgData := `root: contents
+	cfgData := `sources: [contents]
 update:
   documents:
     kex: all
@@ -186,7 +186,7 @@ func TestKexUpdate_CustomRoot(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// 1. Create .kex.yaml with custom root
-		configContent := "root: custom_docs\nupdate:\n  documents:\n    kex: all\n"
+		configContent := "sources: [custom_docs]\nupdate:\n  documents:\n    kex: all\n"
 		if err := os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(configContent), 0644); err != nil {
 			t.Fatal(err)
 		}

@@ -5,17 +5,21 @@
 The configuration file `kex.yaml` (or `.kex.yaml`) lives at the root of your project.
 
 ```yaml
-root: contents
+```yaml
+sources:
+  - contents
+  - docs/guidelines
 baseURL: https://example.com/docs/
 ```
 
-### `root` (Optional)
+### `sources` (Optional)
 
-Specifies the directory containing your markdown documentation files.
+Specifies the directories containing your markdown documentation files.
 
-- **Type**: `string`
-- **Default**: `contents`
-- **Description**: Kex will recursively index all `.md` files within this directory. This path is relative to the directory where `kex start` or `kex check` is run (usually the project root).
+- **Type**: `[]string` (List of strings)
+- **Default**: `["contents"]`
+- **Description**: Kex will recursively index all `.md` files within these directories. These paths are relative to the directory where `.kex.yaml` resides.
+- **Description**: Kex will recursively index all `.md` files within these directories. These paths are relative to the directory where `.kex.yaml` resides.
 
 ### `baseURL` (Optional)
 

@@ -39,7 +39,16 @@ func runUpdate(c *cli.Context) error {
 	// Pass strategies from config (map[string]string)
 	// Strategies are populated by config.Load defaults
 	updateConfig := cfg.Update
-	if err := gen.Update(cwd, cfg.Root, updateConfig); err != nil {
+
+	// Update uses the first source as the primary location for system docs (e.g. kex/*)
+	// This might need refinement for multiplexing, but "kex update" is mainly for
+	// the primary documentation repo.
+	sourceRoot := "contents"
+	if len(cfg.Sources) > 0 {
+		sourceRoot = cfg.Sources[0]
+	}
+
+	if err := gen.Update(cwd, sourceRoot, updateConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
 	}
