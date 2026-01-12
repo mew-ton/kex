@@ -23,104 +23,121 @@ var GenerateCommand = &cli.Command{
 func runGenerate(c *cli.Context) error {
 	pterm.DefaultSection.Println("Generating static site...")
 
-	// 1. Resolve Project Root
+	// 1. Resolve Config
 	projectRoot := c.Args().First()
 	if projectRoot == "" {
 		projectRoot = "."
 	}
+	cfg := loadConfig(projectRoot)
 
+	// 2. Scan Documents
+	schema, err := scanDocuments(projectRoot, cfg)
+	if err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	// 3. Prepare Dist Directory
+	outputDir := filepath.Join(projectRoot, "dist")
+	if err := prepareDistDir(outputDir); err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	// 4. Copy Contents
+	if err := copyContents(projectRoot, outputDir, cfg, schema); err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	// 5. Apply BaseURL (if needed) and Write Manifest
+	if err := writeManifest(outputDir, cfg, schema); err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	pterm.Success.Println("Generated static site in 'dist/'")
+	return nil
+}
+
+// Helpers
+
+func loadConfig(projectRoot string) config.Config {
 	cfg, err := config.Load(projectRoot)
 	if err != nil {
 		pterm.Warning.Printf("Failed to load config: %v\n", err)
+		return config.Config{} // Return empty/default config
 	}
+	return cfg
+}
 
+func scanDocuments(projectRoot string, cfg config.Config) (*fs.IndexSchema, error) {
 	root := filepath.Join(projectRoot, cfg.Root)
-	outputDir := filepath.Join(projectRoot, "dist")
-
-	// 2. Load Indexer (Local Scan)
 	spinner, _ := pterm.DefaultSpinner.Start("Scanning documents...")
+
 	l := logger.NewStderrLogger()
 	provider := fs.NewLocalProvider(root, l)
 	repo := fs.New(provider, l)
+
 	if err := repo.Load(); err != nil {
 		spinner.Fail(fmt.Sprintf("Failed to load: %v", err))
-		return cli.Exit("", 1)
+		return nil, fmt.Errorf("failed to scan documents: %w", err)
 	}
 	spinner.Success("Documents scanned")
 
-	// 3. Export Schema
 	schema, err := repo.Export()
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to export: %v", err), 1)
+		return nil, fmt.Errorf("failed to export schema: %w", err)
 	}
+	return schema, nil
+}
 
-	// 4. Apply BaseURL Transformation if needed
-	// Note: We modifying Schema in place or treating paths?
-	// Schema.Documents[i].Path is relative.
-	// If Config.BaseURL is set, we might want to make them absolute URLs in kex.json
-	// BUT, if we do that, mirroring files logic needs to know original relative path.
-	// Export() returns relative paths (or abs if failed).
-	// Let's copy files first, then update schema paths if needed.
-
-	// 5. Clean/Create dist
-	os.RemoveAll(outputDir)
+func prepareDistDir(outputDir string) error {
+	if err := os.RemoveAll(outputDir); err != nil {
+		return fmt.Errorf("failed to clean dist: %w", err)
+	}
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to create dist: %v", err), 1)
+		return fmt.Errorf("failed to create dist: %w", err)
 	}
+	return nil
+}
 
-	// 6. Copy Files
+func copyContents(projectRoot, outputDir string, cfg config.Config, schema *fs.IndexSchema) error {
+	root := filepath.Join(projectRoot, cfg.Root)
 	copySpinner, _ := pterm.DefaultSpinner.Start("Copying files...")
+
 	for _, doc := range schema.Documents {
-		// doc.Path is relative to cfg.Root usually
 		srcPath := filepath.Join(root, doc.Path)
-		dstPath := filepath.Join(outputDir, "contents", doc.Path) // Mirror structure under dist/contents?
-		// Or mirror under dist/ root?
-		// Issue requirement says: "dist ディレクトリを作り、そのルートには kex.json を置く. markdown は配下に構造維持してコピーする"
-		// If doc.Path involves folders, we mirror them.
-		// Let's mirror starting from root.
-		// If doc.Path is "coding/style.md", dst is "dist/coding/style.md".
-		dstPath = filepath.Join(outputDir, doc.Path)
+		dstPath := filepath.Join(outputDir, doc.Path)
 
 		if err := copyFile(srcPath, dstPath); err != nil {
 			copySpinner.Fail(fmt.Sprintf("Failed to copy %s: %v", srcPath, err))
-			return cli.Exit("", 1)
+			return fmt.Errorf("failed to copy file: %w", err)
 		}
 	}
 	copySpinner.Success("Files copied")
+	return nil
+}
 
-	// 7. Transform Schema Paths if BaseURL is set
+func writeManifest(outputDir string, cfg config.Config, schema *fs.IndexSchema) error {
+	// Transform Schema Paths if BaseURL is set
 	if cfg.BaseURL != "" {
+		base := cfg.BaseURL
+		if base[len(base)-1] != '/' {
+			base += "/"
+		}
 		for _, doc := range schema.Documents {
-			// doc.Path becomes absolute URL
-			// Ensure BaseURL doesn't end with slash and Path doesn't start with slash (relative)
-			// But ensure we process all.
-			// Is doc.Path URL encoded? Assume simple paths.
-			// doc.Path is "coding/style.md"
-			// URL: BaseURL + "/" + doc.Path
-			// Or just simple string concat.
-			// Use simple string concat ensuring separator.
-			base := cfg.BaseURL
-			if base[len(base)-1] != '/' {
-				base += "/"
-			}
 			doc.Path = base + doc.Path
 		}
 	}
 
-	// 8. Write kex.json
 	f, err := os.Create(filepath.Join(outputDir, "kex.json"))
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to create kex.json: %v", err), 1)
+		return fmt.Errorf("failed to create kex.json: %v", err)
 	}
 	defer f.Close()
 
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(schema); err != nil {
-		return cli.Exit("Failed to encode kex.json", 1)
+		return fmt.Errorf("failed to encode kex.json: %w", err)
 	}
-
-	pterm.Success.Println("Generated static site in 'dist/'")
 	return nil
 }
 

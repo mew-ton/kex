@@ -24,7 +24,7 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 1.  **Identify the context** (Language, Framework, Component, Function).
 2.  **Search for specific rules** using `search_documents`.
     *   **Keywords**: "anti-pattern", "best practice", "forbidden", "required", "error handling", [Context Specific Keywords].
-    *   **Tip**: When focusing on a specific layer or component (e.g., `domain`, `infrastructure`), use `search_documents` with `exactScopeMatch: true` and the component name as the keyword to see all rules for that scope.
+    *   **Requirement**: When focusing on a specific layer or component (e.g., `go`, `typescript`, `frontend`), you **MUST** use `search_documents` with `exactScopeMatch: true` and the scope names as keywords. This ensures you see *all* rules for that scope, protecting against "unknown unknowns".
 3.  **Verify the code** against the *explicit* rules retrieved from Kex.
     *   *Do not assume* standard conventions apply if Kex has specific overrides.
 

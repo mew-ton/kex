@@ -24,7 +24,7 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 1.  **Identify the context** (Language, Framework, Component, Function).
 2.  **Search for specific rules** using `search_documents`.
     *   **Keywords**: "anti-pattern", "best practice", "forbidden", "required", "error handling", [Context Specific Keywords].
-    *   **Tip**: When focusing on a specific layer or component (e.g., `domain`, `infrastructure`), use `search_documents` with `exactScopeMatch: true` and the component name as the keyword to see all rules for that scope.
+    *   **Requirement**: When focusing on a specific layer or component (e.g., `go`, `typescript`, `frontend`), you **MUST** use `search_documents` with `exactScopeMatch: true` and the scope names as keywords. This ensures you see *all* rules for that scope, protecting against "unknown unknowns".
 3.  **Verify the code** against the *explicit* rules retrieved from Kex.
     *   *Do not assume* standard conventions apply if Kex has specific overrides.
 
@@ -36,6 +36,10 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 2.  **Use `go test` for logic**: verify changes using `go test ./internal/...` or `go test ./e2e/...` (without build) first.
 3.  **Build Last**: Only run `make build` or full `make e2e` after logic is verified and tests pass.
 
-## General Usage Note
+## Critical Anti-Patterns (Forbidden Actions)
 
-**Note**: Use `Glob`/`read_file_content` (or equivalent file system tools) only for existence checks, not for content search. Always rely on the indexed knowledge base via `search_documents`.
+**Restriction**: You MUST NOT use file system tools (`list_dir`, `view_file`, `read_file_content`, `grep`) to read, search, or discover guidelines in `examples/contents` (or any configured Kex root).
+
+- **Why?**: Accessing files directly bypasses the "Dogfooding" process. We must test the *retrieval accuracy* of Kex itself. If you read the files directly, you are not testing the product.
+- **Correct Action**: Use `search_documents` and `read_document`.
+- **Exception**: You may read these files ONLY if your task is specifically to *edit* the text of the guideline itself (after retrieving it via Kex) or to debug the *parser logic*.

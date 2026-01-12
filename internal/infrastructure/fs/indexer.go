@@ -12,10 +12,7 @@ import (
 type Indexer struct {
 	Provider DocumentProvider
 	Logger   logger.Logger
-	BaseURL  string // Should this be removed? Provider has it.
-	// We might need it if we're doing path resolution here, but Provider handles Paths in Schema.
-	// Actually GetByID delegates to Provider.FetchContent.
-	// So we don't need BaseURL here.
+
 	IncludeDrafts bool                          // If true, draft documents are indexed
 	Documents     map[string]*domain.Document   // ID -> Document
 	KeywordIndex  map[string][]*domain.Document // Keyword -> Documents
@@ -125,7 +122,7 @@ func (i *Indexer) parseDocuments(paths []string) ([]*domain.Document, []error) {
 	var errs []error
 
 	for _, path := range paths {
-		doc, err := domain.ParseDocument(path, "") // Root is no longer needed here
+		doc, err := ParseDocument(path, "") // Root is no longer needed here
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", path, err))
 			continue
@@ -313,21 +310,9 @@ func (i *Indexer) GetByID(id string) (*domain.Document, bool) {
 			doc.Body = content
 		} else {
 			// Log error?
-			fmt.Printf("Failed to fetch content for %s: %v\n", id, err)
+			i.Logger.Error("Failed to fetch content for %s: %v", id, err)
 		}
 	}
 
 	return doc, ok
-}
-
-func hasIntersection(a, b []string) bool {
-	// Optimize for small slices
-	for _, vA := range a {
-		for _, vB := range b {
-			if vA == vB {
-				return true
-			}
-		}
-	}
-	return false
 }
