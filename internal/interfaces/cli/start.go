@@ -56,6 +56,7 @@ func runStart(c *cli.Context) error {
 		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
 		appLogger = logger.NewStderrLogger()
 	}
+	logger.SetGeneric(appLogger)
 
 	repo, err := createRepository(c, cfg, appLogger, arg, isRemote, projectRoot)
 	if err != nil {
@@ -66,7 +67,30 @@ func runStart(c *cli.Context) error {
 		return err
 	}
 
-	return startServer(repo, appLogger)
+	// 4. Log Startup Stats
+	logger.Info("Kex Server Starting...")
+	logger.Info("Root: %s", projectRoot)
+	logger.Info("Mode: %s", func() string {
+		if isRemote {
+			return "Remote"
+		}
+		return "Local"
+	}())
+	var loadedIDs []string
+	for id := range repo.Documents {
+		loadedIDs = append(loadedIDs, id)
+	}
+
+	logger.Info("Documents Loaded: %d, IDs=%v", len(repo.Documents), loadedIDs)
+	if len(repo.Errors) > 0 {
+		logger.Info("Load Errors: %d", len(repo.Errors))
+	} else {
+		logger.Info("Load Status: OK")
+	}
+
+	defer logger.Info("Kex Server Stopping...")
+
+	return startServer(repo)
 }
 
 func resolveLogger(c *cli.Context, cfg config.Config, projectRoot string) (logger.Logger, error) {
@@ -159,10 +183,11 @@ func validateRepository(repo *fs.Indexer) error {
 	return nil
 }
 
-func startServer(repo *fs.Indexer, l logger.Logger) error {
-	srv := mcp.New(repo, l)
+func startServer(repo *fs.Indexer) error {
+	srv := mcp.New(repo)
 	fmt.Fprintf(os.Stderr, "Server listening on stdio...\n")
 	if err := srv.Serve(); err != nil {
+		logger.Error("Server error: %v", err)
 		return cli.Exit(fmt.Sprintf("Server error: %v", err), 1)
 	}
 	return nil
