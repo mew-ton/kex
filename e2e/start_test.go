@@ -15,7 +15,7 @@ func TestKexStart_Failure_MissingRoot(t *testing.T) {
 		// No contents dir created
 
 		// Create config pointing to contents
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("sources: [contents]\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "start")
 		cmd.Dir = tempDir
@@ -45,7 +45,7 @@ Content`
 
 		os.Mkdir(filepath.Join(tempDir, "contents"), 0755)
 		os.WriteFile(filepath.Join(tempDir, "contents", "broken.md"), []byte(doc), 0644)
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("sources: [contents]\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "start")
 		cmd.Dir = tempDir
@@ -68,13 +68,13 @@ func TestKexStart_Multiplexing(t *testing.T) {
 		// Project 1
 		proj1 := filepath.Join(tempDir, "proj1")
 		os.MkdirAll(filepath.Join(proj1, "docs"), 0755)
-		os.WriteFile(filepath.Join(proj1, ".kex.yaml"), []byte("sources: [docs]\n"), 0644)
+		os.WriteFile(filepath.Join(proj1, ".kex.yaml"), []byte("source: docs\n"), 0644)
 		os.WriteFile(filepath.Join(proj1, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\n---\n"), 0644)
 
 		// Project 2
 		proj2 := filepath.Join(tempDir, "proj2")
 		os.MkdirAll(filepath.Join(proj2, "notes"), 0755)
-		os.WriteFile(filepath.Join(proj2, ".kex.yaml"), []byte("sources: [notes]\n"), 0644)
+		os.WriteFile(filepath.Join(proj2, ".kex.yaml"), []byte("source: notes\n"), 0644)
 		os.WriteFile(filepath.Join(proj2, "notes", "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\n---\n"), 0644)
 
 		// Run start with both project paths
@@ -129,7 +129,7 @@ Content`
 		os.WriteFile(filepath.Join(contentsDir, "doc.md"), []byte(doc), 0644)
 
 		// Create config in projectRoot pointing to contentsDir (relative to projectRoot)
-		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("sources: [custom_contents]\n"), 0644)
+		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("source: custom_contents\n"), 0644)
 
 		// Run kex start <projectRoot> from baseDir
 		cmd := exec.Command(kexBinary, "start", projectRoot)
@@ -174,7 +174,7 @@ description: Test
 ---
 Content`
 		os.WriteFile(filepath.Join(contentsDir, "doc.md"), []byte(doc), 0644)
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("sources: [contents]\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		logFile := filepath.Join(tempDir, "server.log")
 

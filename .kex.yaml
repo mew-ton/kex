@@ -1,4 +1,4 @@
-root: examples/contents
+sources: examples/contents
 logging:
   file: ".kex/kex.log"
   level: info

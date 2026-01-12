@@ -68,55 +68,29 @@ func loadConfig(projectRoot string) config.Config {
 }
 
 func scanDocuments(projectRoot string, cfg config.Config) (*fs.IndexSchema, error) {
-	// For generate, we might want to support multiple sources?
-	// For now, let's assume we scan all sources defined?
-	// But copyContents assumes a single structure?
-	// The CLI "generate" is typically for generating a static site from specific docs.
-	// Issue #34 says "multiplexing" is for start (MCP).
-	// kex generate documentation usually processes one set of docs.
-	// But if config defines multiple sources...
-	// Let's iterate all sources and aggregate?
-	// or just take the first one as default "main" docs?
-	// Given "generate" creates a site structure, multiplexing sources into one site
-	// would require collision handling etc.
-	// For backward compatibility and simplicity, let's iterate all and merge into one list,
-	// checking for collisions or simply overriding.
-
-	// Scan all sources
-	var collectedDocs []*fs.DocumentSchema
-
+	// Scan single source
 	l := logger.NewStderrLogger()
 	spinner, _ := pterm.DefaultSpinner.Start("Scanning documents...")
 
-	for _, source := range cfg.Sources {
-		root := filepath.Join(projectRoot, source)
-		if _, err := os.Stat(root); os.IsNotExist(err) {
-			continue
-		}
+	source := cfg.Source
+	root := filepath.Join(projectRoot, source)
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		return nil, fmt.Errorf("source directory %s does not exist", source)
+	}
 
-		provider := fs.NewLocalProvider(root, l)
-		repo := fs.New(provider, l)
+	provider := fs.NewLocalProvider(root, l)
+	repo := fs.New(provider, l)
 
-		if err := repo.Load(); err != nil {
-			// Warn but maybe continue?
-			pterm.Warning.Printf("Failed to load source %s: %v\n", source, err)
-			continue
-		}
+	if err := repo.Load(); err != nil {
+		return nil, fmt.Errorf("failed to load documents: %w", err)
+	}
 
-		schema, err := repo.Export()
-		if err != nil {
-			pterm.Warning.Printf("Failed to export schema for %s: %v\n", source, err)
-			continue
-		}
-		collectedDocs = append(collectedDocs, schema.Documents...)
+	schema, err := repo.Export()
+	if err != nil {
+		return nil, fmt.Errorf("failed to export schema: %w", err)
 	}
 
 	spinner.Success("Documents scanned")
-
-	// Construct aggregate schema
-	schema := &fs.IndexSchema{
-		Documents: collectedDocs,
-	}
 
 	return schema, nil
 }
@@ -134,35 +108,14 @@ func prepareDistDir(outputDir string) error {
 func copyContents(projectRoot, outputDir string, cfg config.Config, schema *fs.IndexSchema) error {
 	copySpinner, _ := pterm.DefaultSpinner.Start("Copying files...")
 
-	// To copy correctly, we need to know WHICH source a doc came from.
-	// But schema.Documents only has relative Path (e.g. "foo.md").
-	// And we are flattening everything into Dist.
-	// If we have multiple sources:
-	// source1/foo.md
-	// source2/bar.md
-	// We need to look up where "foo.md" exists.
+	source := cfg.Source
 
 	for _, doc := range schema.Documents {
-		// Find source for this doc
-		// Check each source for the file
-		var foundSrc string
-		for _, source := range cfg.Sources {
-			srcPath := filepath.Join(projectRoot, source, doc.Path)
-			if _, err := os.Stat(srcPath); err == nil {
-				foundSrc = srcPath
-				break
-			}
-		}
-
-		if foundSrc == "" {
-			pterm.Warning.Printf("File not found for %s\n", doc.Path)
-			continue
-		}
-
+		srcPath := filepath.Join(projectRoot, source, doc.Path)
 		dstPath := filepath.Join(outputDir, doc.Path)
 
-		if err := copyFile(foundSrc, dstPath); err != nil {
-			copySpinner.Fail(fmt.Sprintf("Failed to copy %s: %v", foundSrc, err))
+		if err := copyFile(srcPath, dstPath); err != nil {
+			copySpinner.Fail(fmt.Sprintf("Failed to copy %s: %v", srcPath, err))
 			return fmt.Errorf("failed to copy file: %w", err)
 		}
 	}

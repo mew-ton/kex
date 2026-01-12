@@ -93,19 +93,16 @@ func runStart(c *cli.Context) error {
 			// But Load returns error only if yaml unmarshal fails.
 		}
 
-		// Create a provider for each Source defined in this project
-		for _, source := range cfg.Sources {
-			fullSourcePath := filepath.Join(projectRoot, source)
-			if _, err := os.Stat(fullSourcePath); os.IsNotExist(err) {
-				// Warn but don't fail hard? Or fail? The user configured it.
-				// Consistent with old behavior: explicit root must exist.
-				return cli.Exit(fmt.Sprintf("Error: source directory '%s' not found in project '%s'.", source, projectRoot), 1)
-			}
-
-			fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullSourcePath)
-			p := fs.NewLocalProvider(fullSourcePath, appLogger)
-			providers = append(providers, p)
+		// Create a provider for the Source defined in this project
+		source := cfg.Source
+		fullSourcePath := filepath.Join(projectRoot, source)
+		if _, err := os.Stat(fullSourcePath); os.IsNotExist(err) {
+			return cli.Exit(fmt.Sprintf("Error: source directory '%s' not found in project '%s'.", source, projectRoot), 1)
 		}
+
+		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullSourcePath)
+		p := fs.NewLocalProvider(fullSourcePath, appLogger)
+		providers = append(providers, p)
 		loadedRoots = append(loadedRoots, projectRoot)
 	}
 

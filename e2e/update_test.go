@@ -186,7 +186,7 @@ func TestKexUpdate_CustomRoot(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// 1. Create .kex.yaml with custom root
-		configContent := "sources: [custom_docs]\nupdate:\n  documents:\n    kex: all\n"
+		configContent := "source: custom_docs\nupdate:\n  documents:\n    kex: all\n"
 		if err := os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(configContent), 0644); err != nil {
 			t.Fatal(err)
 		}

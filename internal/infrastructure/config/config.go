@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Sources     []string     `yaml:"sources"`
+	Source      string       `yaml:"source"`
 	BaseURL     string       `yaml:"baseURL,omitempty"`
 	RemoteToken string       `yaml:"remoteToken,omitempty"`
 	Update      UpdateConfig `yaml:"update"`
@@ -41,7 +41,7 @@ type AiSkills struct {
 func Load(projectRoot string) (Config, error) {
 	// 1. Set Defaults
 	config := Config{
-		// Default sources will be handled after load if empty
+		Source:  "contents",
 		BaseURL: "",
 		Update: UpdateConfig{
 			Documents: make(map[string]string),
@@ -51,8 +51,6 @@ func Load(projectRoot string) (Config, error) {
 	configPath := filepath.Join(projectRoot, ".kex.yaml")
 	data, err := os.ReadFile(configPath)
 	if os.IsNotExist(err) {
-		// If no config, default to "contents" source
-		config.Sources = []string{"contents"}
 		return config, nil
 	}
 	if err != nil {
@@ -63,9 +61,8 @@ func Load(projectRoot string) (Config, error) {
 		return config, err
 	}
 
-	// Default if still empty
-	if len(config.Sources) == 0 {
-		config.Sources = []string{"contents"}
+	if config.Source == "" {
+		config.Source = "contents"
 	}
 
 	return config, nil

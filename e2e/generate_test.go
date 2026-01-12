@@ -35,7 +35,7 @@ status: draft
 Draft Content`
 		os.WriteFile(filepath.Join(contentsDir, "coding", "draft.md"), []byte(docDraft), 0644)
 
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("root: contents\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		// Run Generate
 		cmd := exec.Command(kexBinary, "generate", tempDir)
@@ -112,7 +112,7 @@ status: adopted
 Content`
 		os.WriteFile(filepath.Join(contentsDir, "doc.md"), []byte(doc), 0644)
 
-		config := "root: contents\nbaseURL: https://example.com/docs/"
+		config := "source: contents\nbaseURL: https://example.com/docs/"
 		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(config), 0644)
 
 		cmd := exec.Command(kexBinary, "generate", tempDir)

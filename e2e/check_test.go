@@ -50,7 +50,7 @@ func TestKexCheck_NoDocuments_WithConfig(t *testing.T) {
 	t.Run("it should pass when config exists but no documents are present (empty root)", func(t *testing.T) {
 		tempDir := t.TempDir()
 		// If sources points to current dir, and there are no md files...
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("sources: ['.']\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: .\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "check")
 		cmd.Dir = tempDir
@@ -73,7 +73,7 @@ keywords: [json]
 Content`
 		os.Mkdir(filepath.Join(tempDir, "contents"), 0755)
 		os.WriteFile(filepath.Join(tempDir, "contents", "test-json.md"), []byte(doc), 0644)
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("sources: [contents]\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "check", "--json")
 		cmd.Dir = tempDir
@@ -110,7 +110,7 @@ Content`
 
 		os.Mkdir(filepath.Join(tempDir, "contents"), 0755)
 		os.WriteFile(filepath.Join(tempDir, "contents", "valid-doc.md"), []byte(doc), 0644)
-		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("sources: [contents]\n"), 0644)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte("source: contents\n"), 0644)
 
 		cmd := exec.Command(kexBinary, "check")
 		cmd.Dir = tempDir
@@ -143,7 +143,7 @@ Content`
 		os.WriteFile(filepath.Join(contentsDir, "pos-check-doc.md"), []byte(doc), 0644)
 
 		// Config at projectRoot
-		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("sources: [custom_check_contents]\n"), 0644)
+		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("source: custom_check_contents\n"), 0644)
 
 		// Run kex check <projectRoot> from baseDir
 		cmd := exec.Command(kexBinary, "check", projectRoot)

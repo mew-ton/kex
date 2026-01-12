@@ -44,8 +44,8 @@ func runUpdate(c *cli.Context) error {
 	// This might need refinement for multiplexing, but "kex update" is mainly for
 	// the primary documentation repo.
 	sourceRoot := "contents"
-	if len(cfg.Sources) > 0 {
-		sourceRoot = cfg.Sources[0]
+	if cfg.Source != "" {
+		sourceRoot = cfg.Source
 	}
 
 	if err := gen.Update(cwd, sourceRoot, updateConfig); err != nil {

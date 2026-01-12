@@ -53,7 +53,7 @@ func runCheck(c *cli.Context) error {
 	// Or strict check each source?
 	// Let's use CompositeProvider logic here too for consistency with Start.
 
-	repo, err := loadRepository(projectRoot, cfg.Sources, !isJSON)
+	repo, err := loadRepository(projectRoot, cfg.Source, !isJSON)
 	if err != nil {
 		if isJSON {
 			printJSONError(err.Error())
@@ -86,7 +86,7 @@ func resolveConfig(projectRoot string) (config.Config, error) {
 	return config.Load(projectRoot)
 }
 
-func loadRepository(projectRoot string, sources []string, showSpinner bool) (*fs.Indexer, error) {
+func loadRepository(projectRoot string, source string, showSpinner bool) (*fs.Indexer, error) {
 	var spinner *pterm.SpinnerPrinter
 	if showSpinner {
 		spinner, _ = pterm.DefaultSpinner.Start("Loading documents...")
@@ -96,16 +96,14 @@ func loadRepository(projectRoot string, sources []string, showSpinner bool) (*fs
 	l := &logger.NoOpLogger{}
 
 	var providers []fs.DocumentProvider
-	for _, source := range sources {
-		root := filepath.Join(projectRoot, source)
-		if _, err := os.Stat(root); os.IsNotExist(err) {
-			continue
-		}
+
+	root := filepath.Join(projectRoot, source)
+	if _, err := os.Stat(root); !os.IsNotExist(err) {
 		providers = append(providers, fs.NewLocalProvider(root, l))
 	}
 
 	if len(providers) == 0 {
-		return nil, fmt.Errorf("no valid content directories found in inputs %v", sources)
+		return nil, fmt.Errorf("no valid content directories found in input %s", source)
 	}
 
 	composite := fs.NewCompositeProvider(providers)
