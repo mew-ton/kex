@@ -12,10 +12,7 @@ import (
 type Indexer struct {
 	Provider DocumentProvider
 	Logger   logger.Logger
-	BaseURL  string // Should this be removed? Provider has it.
-	// We might need it if we're doing path resolution here, but Provider handles Paths in Schema.
-	// Actually GetByID delegates to Provider.FetchContent.
-	// So we don't need BaseURL here.
+
 	IncludeDrafts bool                          // If true, draft documents are indexed
 	Documents     map[string]*domain.Document   // ID -> Document
 	KeywordIndex  map[string][]*domain.Document // Keyword -> Documents

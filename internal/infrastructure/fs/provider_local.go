@@ -11,12 +11,8 @@ import (
 )
 
 type LocalProvider struct {
-	Root    string
-	Logger  logger.Logger
-	BaseURL string // Optional, for generating absolute URLs if needed (though mostly for generate)
-	// Actually LocalProvider for 'start' just needs Root.
-	// schema generation logic uses BaseURL but that might be separate?
-	// Let's keep it simple.
+	Root   string
+	Logger logger.Logger
 }
 
 func NewLocalProvider(root string, logger logger.Logger) *LocalProvider {

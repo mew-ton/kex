@@ -24,7 +24,7 @@ type Document struct {
 	Body string `yaml:"-"`
 
 	// Metadata derived from file path
-	Path     string   `yaml:"-"`
-	Language string   `yaml:"-"` // Deprecated: derived from Scopes logic if needed
-	Scopes   []string `yaml:"-"` // Derived from directory structure
+	Path string `yaml:"-"`
+
+	Scopes []string `yaml:"-"` // Derived from directory structure
 }
