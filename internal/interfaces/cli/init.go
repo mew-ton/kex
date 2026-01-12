@@ -240,11 +240,11 @@ func saveConfig(mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[
 		Update: config.UpdateConfig{
 			Documents: docs,
 			AiMcpRules: config.AiMcpRules{
-				Targets: strings.Join(mcpTargets, ", "),
-				Scopes:  strings.Join(mcpScopes, ", "),
+				Targets: mcpTargets,
+				Scopes:  mcpScopes,
 			},
 			AiSkills: config.AiSkills{
-				Targets:  strings.Join(skillsTargets, ", "),
+				Targets:  skillsTargets,
 				Keywords: skillsKeywords,
 			},
 		},

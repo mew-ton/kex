@@ -41,9 +41,8 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 	}
 
 	// B. MCP Rules (AiMcpRules)
-	// Targets: comma separated string, e.g. "antigravity, claude"
-	targets := strings.Split(cfg.AiMcpRules.Targets, ",")
-	scopesList := strings.Split(cfg.AiMcpRules.Scopes, ",")
+	targets := cfg.AiMcpRules.Targets
+	scopesList := cfg.AiMcpRules.Scopes
 	// clean up whitespace
 	for i := range scopesList {
 		scopesList[i] = strings.TrimSpace(scopesList[i])
@@ -128,7 +127,7 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 	}
 
 	// 3. Process AI Skills (Dynamic Content)
-	if cfg.AiSkills.Targets != "" && len(cfg.AiSkills.Keywords) > 0 {
+	if len(cfg.AiSkills.Targets) > 0 && len(cfg.AiSkills.Keywords) > 0 {
 		skillsGen := NewSkillsGenerator(cfg.AiSkills)
 
 		// Determine source directory for documents (root/contents or just root?)
@@ -137,7 +136,7 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 		contentSourceDir := filepath.Join(cwd, rootDir)
 
 		// Determine targets
-		skillTargets := strings.Split(cfg.AiSkills.Targets, ",")
+		skillTargets := cfg.AiSkills.Targets
 		for _, t := range skillTargets {
 			agentName := strings.TrimSpace(t)
 			agentDef, ok := manifest.AiAgents[agentName]

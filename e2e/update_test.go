@@ -115,10 +115,10 @@ update:
   documents:
     kex: all
   ai-mcp-rules:
-    targets: claude
-    scopes: coding
+    targets: [claude]
+    scopes: [coding]
   ai-skills:
-    targets: claude
+    targets: [claude]
     keywords: [kex]
 `
 	os.WriteFile(filepath.Join(dir, ".kex.yaml"), []byte(cfgData), 0644)

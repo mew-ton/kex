@@ -28,13 +28,13 @@ type UpdateConfig struct {
 
 // AiMcpRules configuration
 type AiMcpRules struct {
-	Targets string `yaml:"targets"` // Comma separated: "antigravity, claude, cursor"
-	Scopes  string `yaml:"scopes"`  // Comma separated: "all" or "coding, documentation"
+	Targets []string `yaml:"targets"` // List of agents: ["antigravity", "claude"]
+	Scopes  []string `yaml:"scopes"`  // List of scopes: ["coding", "documentation"]
 }
 
 // AiSkills configuration
 type AiSkills struct {
-	Targets  string   `yaml:"targets"`  // Comma separated: "claude"
+	Targets  []string `yaml:"targets"`  // List of agents: ["claude"]
 	Keywords []string `yaml:"keywords"` // List of keywords to include
 }
 
