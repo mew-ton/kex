@@ -30,6 +30,9 @@ sources: # Optional: External references
 
 - **Type**: `string`
 - **Description**: A brief summary of the document's content. This is used by the AI agent to select relevant guidelines.
+- **Guideline**: Use the **"When [context], use this to [goal]"** format.
+    - **Bad**: `This document is about naming conventions.`
+    - **Good**: `When naming variables, use this to ensure consistency.`
 
 ### `keywords` (Required)
 
