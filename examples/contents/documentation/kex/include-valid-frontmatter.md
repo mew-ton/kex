@@ -1,8 +1,7 @@
 ---
 
 title: Include valid frontmatter
-description: >
-  All guideline documents must have valid YAML frontmatter with required fields.
+description: When creating new guidelines, ensure valid frontmatter with required ID, title, and description.
 keywords:
   - frontmatter
   - yaml

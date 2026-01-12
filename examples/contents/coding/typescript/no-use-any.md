@@ -2,7 +2,7 @@
 
 title: Avoid using the any type
 description: >
-  Enforce strict type safety by avoiding 'any'.
+  When writing Typescript code, enforce strict type safety by avoiding the 'any' type.
 keywords:
   - typescript
   - type-safety

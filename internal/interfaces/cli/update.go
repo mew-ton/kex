@@ -38,8 +38,8 @@ func runUpdate(c *cli.Context) error {
 
 	// Pass strategies from config (map[string]string)
 	// Strategies are populated by config.Load defaults
-	strategies := cfg.Update.Strategies
-	if err := gen.Update(cwd, cfg.Root, strategies); err != nil {
+	updateConfig := cfg.Update
+	if err := gen.Update(cwd, cfg.Root, updateConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
 	}

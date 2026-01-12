@@ -85,7 +85,7 @@ func (s *Server) handleMessage(msg []byte) {
 			"protocolVersion": "2024-11-05", // Latest known or 0.1.0
 			"serverInfo": map[string]string{
 				"name":    "kex",
-				"version": "1.0.0",
+				"version": "2.0.0",
 			},
 			"capabilities": map[string]interface{}{
 				"tools": map[string]interface{}{},

@@ -1,14 +1,14 @@
+```
 ---
 
 title: Include valid frontmatter
 description: >
-  All guideline documents must have valid YAML frontmatter with required fields.
+  When creating Kex knowledge base documents (in {{.Root}}/), include valid YAML frontmatter with title, description, and keywords.
 keywords:
   - frontmatter
   - yaml
   - metadata
   - id
-  - title
   - description
 ---
 

@@ -2,7 +2,7 @@
 
 title: Folder Structure
 description: >
-  Organize documents by Domain > Platform (Optional) > Technology.
+  When organizing Kex knowledge base files (in {{.Root}}/), mirror the project's directory structure to provide implicit scope context.
 keywords:
   - directory
   - structure

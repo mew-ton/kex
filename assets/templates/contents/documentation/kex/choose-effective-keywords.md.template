@@ -2,7 +2,7 @@
 
 title: Choose effective keywords (3 Dimensions)
 description: >
-  Select keywords covering Object, Symptom, and Concept to maximize discoverability.
+  When defining metadata for Kex knowledge base documents (in {{.Root}}/), select keywords across Object, Symptom, and Concept dimensions.
 keywords:
   - keyword
   - search

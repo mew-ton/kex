@@ -1,8 +1,7 @@
 ---
 
 title: Write concise content
-description: >
-  Keep guideline text brief and direct. Code examples can be long if necessary for context.
+description: When writing content, keep text concise and focused on "what" and "why".
 keywords:
   - content
   - writing

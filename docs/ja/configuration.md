@@ -41,21 +41,24 @@ baseURL: https://example.com/docs/
 
 ```yaml
 update:
-  strategies:
+  documents:
     kex: all
-    antigravity: coding-only
-    cursor: all
+  ai-mcp-rules:
+    targets: [antigravity, claude]
+    scopes: [coding, documentation]
+  ai-skills:
+    targets: [claude]
+    keywords: [go, typescript]
 ```
 
-- **strategies**: スコープを更新するための **ディレクティブ (Directive)** のマップです。
-    - **キー (Keys)**:
-        - `kex`: Kex システムドキュメントを管理します。
-        - `antigravity`, `cursor`, `claude`: エージェント固有のルールファイルを管理します。
-    - **値 (Directives)**:
-        - `all`: すべてのカテゴリ (Coding + Documentation) を有効にします。
-        - `coding-only`: Coding ルールのみを有効にします。
-        - `documentation-only`: Documentation ルールのみを有効にします。
-        - `none` (または省略): このキーのファイルを生成/更新しません。
+- **documents**:
+    - `kex`: Kex システムドキュメントを管理します (`all` または `none`)。
+- **ai-mcp-rules**:
+    - `targets`: 静的ルールを生成するエージェントのリスト (例: `[antigravity, claude]`)。
+    - `scopes`: 強制するルールのスコープのリスト (例: `[coding, documentation]`)。
+- **ai-skills**:
+    - `targets`: 動的スキルを生成するエージェントのリスト (例: `[claude]`)。
+    - `keywords`: スキルをフィルタリングするためのキーワードリスト。
 
 > **Note**: `kex init` は選択内容に基づいてこの設定を自動的に生成します。
 

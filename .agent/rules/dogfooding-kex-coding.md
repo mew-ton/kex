@@ -5,15 +5,15 @@ trigger: always_on
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these rules.
 
-**Core Rule:** Before taking action in any phase, you MUST consult the project's documentation using `kex`.
+**Core Rule (STRICT):** You are FORBIDDEN from writing any code until you have explicitly searched for and read relevant guidelines. "Guessing" or "Reading the room" is considered a violation.
 
 ## Design & Implementation Phase
 
-**Core Rule**: Before proposing changes or writing code, understand existing design and coding standards.
+**Core Rule**: Before planning or coding, you must prove you have consulted the knowledge base.
 
-1.  **Search for rules** using `search_documents`.
+1.  **Mandatory Search** using `search_documents`.
     *   **Keywords**: "architecture", "design", "coding", "style", "naming", "testing", "strategy".
-    *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
+    *   **STOP**: Do not proceed until you have successfully retrieved and read at least one relevant document or confirmed none exist.
 2.  **Read relevant docs** using `read_document`.
 3.  **Validate your plan** (or existing code) against principles found.
 

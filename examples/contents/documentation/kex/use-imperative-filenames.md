@@ -1,8 +1,7 @@
 ---
 
 title: Use imperative filenames
-description: >
-  Filenames for guidelines must be imperative instructions to serve as actionable prompts.
+description: When naming guideline files, create imperative filenames that act as actionable prompts.
 keywords:
   - filename
   - convention

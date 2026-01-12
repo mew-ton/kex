@@ -2,7 +2,7 @@
 
 title: Synchronize multilingual content
 description: >
-  Maintain content synchronization between different language versions (e.g., Japanese and English) of documentation.
+  When maintaining multilingual documentation, ensure content synchronization and prevent version drift.
 keywords:
   - documentation
   - language

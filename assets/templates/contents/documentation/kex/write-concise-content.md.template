@@ -2,7 +2,7 @@
 
 title: Write concise content
 description: >
-  Keep guideline text brief and direct. Code examples can be long if necessary for context.
+  When writing Kex knowledge base content (in {{.Root}}/), keep it concise, focusing on actionable guidance and avoiding fluff.
 keywords:
   - content
   - writing

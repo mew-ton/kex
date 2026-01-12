@@ -1,8 +1,7 @@
 ---
 
 title: Choose effective keywords (3 Dimensions)
-description: >
-  Select keywords covering Object, Symptom, and Concept to maximize discoverability.
+description: When defining document metadata, select keywords across Object, Symptom, and Concept dimensions.
 keywords:
   - keyword
   - search

@@ -41,21 +41,24 @@ Configures the behavior of `kex update`.
 
 ```yaml
 update:
-  strategies:
+  documents:
     kex: all
-    antigravity: coding-only
-    cursor: all
+  ai-mcp-rules:
+    targets: [antigravity, claude]
+    scopes: [coding, documentation]
+  ai-skills:
+    targets: [claude]
+    keywords: [go, typescript]
 ```
 
-- **strategies**: A map of **Directives** to update scopes.
-    - **Keys**:
-        - `kex`: Manages Kex system documentation.
-        - `antigravity`, `cursor`, `claude`: Manages agent-specific rule files.
-    - **Values (Directives)**:
-        - `all`: Enable all categories (Coding + Documentation).
-        - `coding-only`: Enable only Coding rules.
-        - `documentation-only`: Enable only Documentation rules.
-        - `none` (or omitted): Do not generate/update files for this key.
+- **documents**:
+    - `kex`: Manages Kex system documentation (`all` or `none`).
+- **ai-mcp-rules**:
+    - `targets`: List of agents to generate static rules for (e.g., `[antigravity, claude]`).
+    - `scopes`: List of rule scopes to enforce (e.g., `[coding, documentation]`).
+- **ai-skills**:
+    - `targets`: List of agents to generate dynamic skills for (e.g., `[claude]`).
+    - `keywords`: List of keywords to filter skills by.
 
 > **Note**: `kex init` automatically generates this configuration based on your selections.
 

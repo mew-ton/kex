@@ -2,7 +2,7 @@
 
 title: Use Clean Architecture
 description: >
-  Organize Go projects using Clean Architecture layers to separate concerns and ensure testability.
+  When structuring Go projects, organize code into Clean Architecture layers for separation of concerns and testability.
 keywords:
   - architecture
   - clean-architecture
