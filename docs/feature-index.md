@@ -43,10 +43,10 @@ Given a file at `contents/frontend/components/Button.md`:
 
 If the user is editing a file in `src/frontend/login.tsx` (which implies scope `frontend`), Kex will prioritize/allow documents that have the `frontend` scope.
 
-### Scope Intersection
+### Subset Filtering
 
-Search results are filtered using **Scope Intersection**. A document matches if:
+Search results are strictly filtered using **Subset Filtering**. A document matches only if:
 - It matches a **Keyword**.
-- AND (if scopes are active) it shares at least one **Scope** with the query context.
+- AND **all of its Scopes** are present in the query context (or specified scopes).
 
-This ensures that searching for generalized terms like "Architecture" while working in `backend/` will prioritize backend-related architecture docs (if scoped appropriately), or return global docs if they share a common root scope.
+For example, `contents/frontend/components/Button.md` (Scopes: `[frontend, components]`) will NOT match if the context is just `frontend`. It requires both `frontend` AND `components` in the context. This prevents documents from specific sub-contexts invading broader search contexts.

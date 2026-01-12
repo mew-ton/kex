@@ -158,9 +158,11 @@ func (i *Indexer) addDocument(doc *domain.Document) {
 	}
 
 	// 2. Index Scopes (Directory names)
-	for _, scope := range doc.Scopes {
-		// Populate ScopeIndex for exact matching
-		scopeKey := strings.ToLower(strings.TrimSpace(scope))
+	// ONLY index the last scope (most specific) to prevent parent scopes from matching child documents
+	// Ref: https://github.com/mew-ton/kex/issues/63
+	if len(doc.Scopes) > 0 {
+		lastScope := doc.Scopes[len(doc.Scopes)-1]
+		scopeKey := strings.ToLower(strings.TrimSpace(lastScope))
 		if scopeKey != "" {
 			i.ScopeIndex[scopeKey] = append(i.ScopeIndex[scopeKey], doc)
 		}
@@ -181,50 +183,109 @@ func (i *Indexer) addDocument(doc *domain.Document) {
 
 // Search returns documents matching the keywords and scopes
 func (i *Indexer) Search(keywords []string, scopes []string, exactScopeMatch bool) []*domain.Document {
-	// 1. Find candidates
-	var candidates []*domain.Document
-	seen := make(map[string]struct{})
+	// 1. Identify Implicit Scopes from Keywords & Explicit Scopes
+	validScopes := i.inferScopes(keywords, scopes, exactScopeMatch)
 
-	for _, term := range keywords {
-		k := strings.ToLower(term)
+	// 2. Find Candidates (Standard OR Logic)
+	// If exactScopeMatch is true, we ONLY match scopes, not keywords.
+	candidates := i.findCandidates(keywords, exactScopeMatch, validScopes)
 
-		// 1. Check Scope Match
-		if docs, ok := i.ScopeIndex[k]; ok {
-			for _, doc := range docs {
-				if _, exists := seen[doc.ID]; !exists {
-					seen[doc.ID] = struct{}{}
-					candidates = append(candidates, doc)
-				}
-			}
-		}
-
-		// 2. Check Keyword/Content Match (if allowed)
-		if !exactScopeMatch {
-			if docs, ok := i.KeywordIndex[k]; ok {
-				for _, doc := range docs {
-					if _, exists := seen[doc.ID]; !exists {
-						seen[doc.ID] = struct{}{}
-						candidates = append(candidates, doc)
-					}
-				}
-			}
-		}
-	}
-
-	// 2. Filter by scopes (Intersection logic)
-	// If scopes is empty, return all candidates.
-	if len(scopes) == 0 {
-		return candidates
-	}
-
+	// 3. Filter Candidates by Scope Subset Rule
 	var results []*domain.Document
 	for _, doc := range candidates {
-		if hasIntersection(doc.Scopes, scopes) {
+		// Strict Rule: Document Scopes MUST be a subset of the Query Scopes (validScopes)
+		// Exception: If Document has NO scopes (Root doc), it is always included.
+		if isSubset(doc.Scopes, validScopes) {
 			results = append(results, doc)
 		}
 	}
 
 	return results
+}
+
+// inferScopes combines explicit scopes and implicit scopes found in keywords
+func (i *Indexer) inferScopes(keywords []string, explicitScopes []string, exactScopeMatch bool) map[string]struct{} {
+	validScopes := make(map[string]struct{})
+
+	// Add Explicit Scopes
+	for _, s := range explicitScopes {
+		validScopes[strings.ToLower(s)] = struct{}{}
+	}
+
+	// Add Implicit Scopes (if not exactScopeMatch mode)
+	if !exactScopeMatch {
+		for _, k := range keywords {
+			lowerK := strings.ToLower(k)
+			if _, ok := i.ScopeIndex[lowerK]; ok {
+				validScopes[lowerK] = struct{}{}
+			}
+		}
+	} else {
+		// In exactScopeMatch, keywords are explicitly treated as scopes
+		for _, k := range keywords {
+			lowerK := strings.ToLower(k)
+			if _, ok := i.ScopeIndex[lowerK]; ok {
+				validScopes[lowerK] = struct{}{}
+			}
+		}
+	}
+	return validScopes
+}
+
+// findCandidates returns documents that match ANY of the search criteria (OR logic)
+func (i *Indexer) findCandidates(keywords []string, exactScopeMatch bool, validScopes map[string]struct{}) []*domain.Document {
+	var candidates []*domain.Document
+	seen := make(map[string]struct{})
+
+	// Helper to add unique candidate
+	addCandidate := func(doc *domain.Document) {
+		if _, exists := seen[doc.ID]; !exists {
+			seen[doc.ID] = struct{}{}
+			candidates = append(candidates, doc)
+		}
+	}
+
+	// 1. Matches by Scope (Implicit or Explicit)
+	// If we have valid scopes, everything in them is a candidate
+	for scope := range validScopes {
+		if docs, ok := i.ScopeIndex[scope]; ok {
+			for _, doc := range docs {
+				addCandidate(doc)
+			}
+		}
+	}
+
+	// 2. Matches by Keyword (if allowed)
+	if !exactScopeMatch {
+		for _, term := range keywords {
+			k := strings.ToLower(term)
+
+			// Keyword Index
+			if docs, ok := i.KeywordIndex[k]; ok {
+				for _, doc := range docs {
+					addCandidate(doc)
+				}
+			}
+		}
+	}
+
+	return candidates
+}
+
+// isSubset returns true if every scope in docScopes exists in validScopes
+// If docScopes is empty, it returns true (Root documents are global).
+func isSubset(docScopes []string, validScopes map[string]struct{}) bool {
+	if len(docScopes) == 0 {
+		return true
+	}
+
+	for _, ds := range docScopes {
+		lowerDS := strings.ToLower(ds)
+		if _, ok := validScopes[lowerDS]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func (i *Indexer) GetAll() []*domain.Document {

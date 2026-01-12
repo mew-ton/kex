@@ -91,9 +91,17 @@ Content 2`
 			wantIDs:  nil,
 		},
 
+		// Under strict scope rules, searching for "Doc" should NOT return doc3 (coding scope)
+		// because the query does not include "coding".
+		// It should only return doc1, doc2 (root scope).
 		{
-			name:     "it should match documents by title words",
+			name:     "it should match documents by title words (excluding scoped docs if scope missing)",
 			keywords: []string{"Doc"},
+			wantIDs:  []string{"doc1", "doc2"},
+		},
+		{
+			name:     "it should match scoped documents if scope is provided in keywords",
+			keywords: []string{"Doc", "coding"},
 			wantIDs:  []string{"doc1", "doc2", "coding.doc3"},
 		},
 		{
@@ -180,4 +188,70 @@ Content`
 	if d.Status != domain.StatusAdopted {
 		t.Errorf("expected status %q, got %q", domain.StatusAdopted, d.Status)
 	}
+}
+
+func TestIndexer_ScopeFiltering(t *testing.T) {
+	// Setup temp dir with hierarchical docs
+	tmpDir := t.TempDir()
+
+	// coding/rule.md
+	if err := os.MkdirAll(filepath.Join(tmpDir, "coding"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	docCoding := "---\ntitle: Coding Rule\n---\nContent"
+	if err := os.WriteFile(filepath.Join(tmpDir, "coding", "rule.md"), []byte(docCoding), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// coding/go/rule.md
+	if err := os.MkdirAll(filepath.Join(tmpDir, "coding", "go"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	docGo := "---\ntitle: Go Rule\n---\nContent"
+	if err := os.WriteFile(filepath.Join(tmpDir, "coding", "go", "rule.md"), []byte(docGo), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	l := &logger.NoOpLogger{}
+	provider := NewLocalProvider(tmpDir, l)
+	idx := New(provider, l)
+	if err := idx.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Case 1: Search [coding]
+	t.Run("Search coding", func(t *testing.T) {
+		got := idx.Search([]string{"coding"}, nil, true)
+
+		foundGo := false
+		for _, d := range got {
+			if d.Title == "Go Rule" {
+				foundGo = true
+			}
+		}
+		if foundGo {
+			t.Errorf("Search [coding] returned 'Go Rule', but shouldn't")
+		}
+	})
+
+	// Case 2: Search [coding, go]
+	t.Run("Search coding, go", func(t *testing.T) {
+		got := idx.Search([]string{"coding", "go"}, nil, true)
+		foundCoding := false
+		foundGo := false
+		for _, d := range got {
+			if d.Title == "Coding Rule" {
+				foundCoding = true
+			}
+			if d.Title == "Go Rule" {
+				foundGo = true
+			}
+		}
+		if !foundCoding {
+			t.Errorf("Search [coding, go] missing Coding Rule")
+		}
+		if !foundGo {
+			t.Errorf("Search [coding, go] missing Go Rule")
+		}
+	})
 }
