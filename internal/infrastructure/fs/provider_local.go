@@ -36,7 +36,7 @@ func (l *LocalProvider) Load() (*IndexSchema, []error) {
 	}
 
 	for _, path := range paths {
-		doc, err := domain.ParseDocument(path, l.Root)
+		doc, err := ParseDocument(path, l.Root)
 		if err != nil {
 			// We might want to handle errors differently (collect them?),
 			// but Provider interface signature simply returns error for Load.

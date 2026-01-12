@@ -6,18 +6,22 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mew-ton/kex/internal/domain"
 	"github.com/mew-ton/kex/internal/infrastructure/logger"
+	"github.com/mew-ton/kex/internal/usecase/retrieve"
 	"github.com/mew-ton/kex/internal/usecase/search"
 )
 
 // Server handles MCP JSON-RPC requests
 type Server struct {
-	Repo domain.DocumentRepository
+	SearchUC   *search.UseCase
+	RetrieveUC *retrieve.UseCase
 }
 
-func New(repo domain.DocumentRepository) *Server {
-	return &Server{Repo: repo}
+func New(searchUC *search.UseCase, retrieveUC *retrieve.UseCase) *Server {
+	return &Server{
+		SearchUC:   searchUC,
+		RetrieveUC: retrieveUC,
+	}
 }
 
 // JSON-RPC types
@@ -213,8 +217,7 @@ func (s *Server) handleSearchDocuments(argsRaw json.RawMessage) (interface{}, *r
 	}
 
 	// Use Search Use Case
-	uc := search.New(s.Repo)
-	result := uc.Execute(args.Keywords, args.FilePath, args.ExactScopeMatch)
+	result := s.SearchUC.Execute(args.Keywords, args.FilePath, args.ExactScopeMatch)
 
 	logger.Info("[Tool:search_documents] Query: Keywords=%v, FilePath=%s, Exact=%v", args.Keywords, args.FilePath, args.ExactScopeMatch)
 
@@ -255,8 +258,8 @@ func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcE
 
 	logger.Info("[Tool:read_document] ID: %s", args.ID)
 
-	doc, ok := s.Repo.GetByID(args.ID)
-	if !ok {
+	result := s.RetrieveUC.Execute(args.ID)
+	if !result.Found {
 		logger.Info("[Tool:read_document] Result: Not Found")
 		return map[string]interface{}{
 			"content": []map[string]interface{}{
@@ -266,13 +269,13 @@ func (s *Server) handleReadDocument(argsRaw json.RawMessage) (interface{}, *rpcE
 		}, nil
 	}
 
-	logger.Info("[Tool:read_document] Result: Success (%d bytes)", len(doc.Body))
+	logger.Info("[Tool:read_document] Result: Success (%d bytes)", len(result.Document.Body))
 
 	return map[string]interface{}{
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("# %s\n\n%s", doc.Title, doc.Body),
+				"text": fmt.Sprintf("# %s\n\n%s", result.Document.Title, result.Document.Body),
 			},
 		},
 	}, nil
