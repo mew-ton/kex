@@ -53,7 +53,7 @@ func runCheck(c *cli.Context) error {
 	// Or strict check each source?
 	// Let's use CompositeProvider logic here too for consistency with Start.
 
-	repo, err := loadRepository(projectRoot, cfg.Source, !isJSON)
+	repo, err := loadRepository(projectRoot, cfg, !isJSON)
 	if err != nil {
 		if isJSON {
 			printJSONError(err.Error())
@@ -86,7 +86,7 @@ func resolveConfig(projectRoot string) (config.Config, error) {
 	return config.Load(projectRoot)
 }
 
-func loadRepository(projectRoot string, source string, showSpinner bool) (*fs.Indexer, error) {
+func loadRepository(projectRoot string, cfg config.Config, showSpinner bool) (*fs.Indexer, error) {
 	var spinner *pterm.SpinnerPrinter
 	if showSpinner {
 		spinner, _ = pterm.DefaultSpinner.Start("Loading documents...")
@@ -97,13 +97,72 @@ func loadRepository(projectRoot string, source string, showSpinner bool) (*fs.In
 
 	var providers []fs.DocumentProvider
 
-	root := filepath.Join(projectRoot, source)
-	if _, err := os.Stat(root); !os.IsNotExist(err) {
-		providers = append(providers, fs.NewLocalProvider(root, l))
+	// Helper to add provider
+	addProvider := func(pathOrURL string, isReference bool) error {
+		if strings.HasPrefix(pathOrURL, "http://") || strings.HasPrefix(pathOrURL, "https://") {
+			// Remote Provider
+			token := os.Getenv("KEX_REMOTE_TOKEN")
+			if token == "" && cfg.RemoteToken != "" {
+				token = cfg.RemoteToken
+			}
+			providers = append(providers, fs.NewRemoteProvider(pathOrURL, token, l))
+			return nil
+		}
+
+		// Local Provider
+		var fullPath string
+		if filepath.IsAbs(pathOrURL) {
+			fullPath = pathOrURL
+		} else {
+			fullPath = filepath.Join(projectRoot, pathOrURL)
+		}
+
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			if isReference {
+				return fmt.Errorf("reference '%s' not found", pathOrURL)
+			}
+			return fmt.Errorf("source '%s' not found", pathOrURL)
+		}
+
+		providers = append(providers, fs.NewLocalProvider(fullPath, l))
+		return nil
+	}
+
+	// Load Local Source
+	if cfg.Source != "" {
+		if err := addProvider(cfg.Source, false); err != nil {
+			if spinner != nil {
+				// Warn but continue
+				// spinner.Fail would stop spinner?
+				// Maybe just print warning to stderr?
+				// Since spinner is active, printing to stderr might break layout.
+				// pterm spinner handles Warning?
+				// Let's just create a warning printer
+				spinner.Warning(fmt.Sprintf("Failed to load source '%s': %v", cfg.Source, err))
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
+			}
+			// Do not return error
+		}
+	}
+
+	// Load References
+	for _, ref := range cfg.References {
+		if err := addProvider(ref, true); err != nil {
+			if spinner != nil {
+				spinner.Warning(fmt.Sprintf("Failed to load reference '%s': %v", ref, err))
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
+			}
+			// Do not return error
+		}
 	}
 
 	if len(providers) == 0 {
-		return nil, fmt.Errorf("no valid content directories found in input %s", source)
+		if spinner != nil {
+			spinner.Fail("No valid content directories found")
+		}
+		return nil, fmt.Errorf("no valid sources found in config (source or references)")
 	}
 
 	composite := fs.NewCompositeProvider(providers)

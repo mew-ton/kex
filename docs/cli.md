@@ -29,22 +29,37 @@ Checks for:
 - ID vs Filename mismatches
 - Missing required fields
 - Duplicate IDs
+ 
+ ## `kex add`
+ 
+ Adds a new document source to your configuration.
+ 
+ ```bash
+ kex add <path|url>
+ ```
+ 
+ - **path**: A local directory path (relative to project root). Checks for existence.
+ - **url**: A remote URL (must be reachable).
+ - **Behavior**: Appends the source to the `references` list in `.kex.yaml`.
 
 ## `kex start`
 
 Starts the MCP Server.
 
 ```bash
-kex start [options] [path|url...]
+kex start [options]
 ```
 
-Supports **Multiplexing** (combining multiple sources). You can specify multiple paths or URLs.
+Starts the MCP Server.
 
-- **Local Mode**: `kex start ./my-docs`
-- **Remote Mode**: `kex start https://example.com/docs/`
-- **Multiplexing**: `kex start ./backend ./frontend https://common-lib.com/docs/`
+- **Sources**: Loads configuration from `.kex.yaml`.
+    - Primary `source` directory.
+    - All configured `references` (local paths and remote URLs).
+
+> **Note**: To configure sources, use `kex add` or edit `.kex.yaml`.
 
 - **Flags**:
+    - `--cwd=<path>`: Specific working directory.
     - `--log-file=<path>`: Write logs to a file instead of Stderr.
 
 

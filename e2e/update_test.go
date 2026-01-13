@@ -96,7 +96,7 @@ func TestKexUpdate(t *testing.T) {
 	// If logic is "Ignore", then Update() does nothing. File preserves state.
 
 	gen := generator.New(assets.Assets)
-	err = gen.Update(dir, "", configFallback)
+	err = gen.Update(dir, "", nil, configFallback)
 	if err != nil {
 		t.Fatalf("Update (Empty Config) failed: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestKexUpdate(t *testing.T) {
 	// Or run kex init again? Or kex update with config hack?
 	// Let's hack .kex.yaml
 
-	cfgData := `sources: [contents]
+	cfgData := `source: contents
 update:
   documents:
     kex: all

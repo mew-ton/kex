@@ -17,6 +17,33 @@ type RemoteProvider struct {
 	Logger  logger.Logger
 }
 
+func (r *RemoteProvider) Validate() error {
+	// Check reachability of kex.json
+	req, err := http.NewRequest("HEAD", r.KexURL, nil)
+	if err != nil {
+		return err
+	}
+	if r.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+r.Token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		// Try GET if HEAD fails
+		req.Method = "GET"
+		resp, err = http.DefaultClient.Do(req)
+		if err != nil {
+			return fmt.Errorf("failed to reach %s: %w", r.KexURL, err)
+		}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("reachable check failed for %s: status %s", r.KexURL, resp.Status)
+	}
+	return nil
+}
+
 func NewRemoteProvider(rootURL, token string, logger logger.Logger) *RemoteProvider {
 	baseURL := rootURL
 	if !strings.HasSuffix(baseURL, "/") {

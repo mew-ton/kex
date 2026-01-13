@@ -1,37 +1,26 @@
----
-trigger: always_on
----
 # Documentation Rules (Ref: Kex)
 
-This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these rules.
+This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
-**Core Rule (STRICT):** You are FORBIDDEN from writing any content until you have explicitly searched for and read relevant guidelines. "Guessing" or "Reading the room" is considered a violation.
+**PRIMARY DIRECTIVE (STRICT):**
+Before writing, editing, or restructuring any documentation, you **MUST** first search the knowledge base for style guides and conventions.
 
-## Documentation Phase
-
-**Core Rule**: When editing documents under `./examples/contents`, maintain clarity and consistency.
-
-1.  **Search for style guides** using `search_documents`.
-    *   **Keywords**: "documentation", "style", "markdown", "format".
+**The "Search Signal" Protocol:**
+1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the style guidelines."
+2.  **SEARCH**: Execute `search_documents` immediately.
+    *   **Keywords**: "documentation", "style", "markdown", "format", "naming".
     *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
-2.  **Read relevant guides** using `read_document`.
-3.  **Adhere strictly** to formatting rules.
+3.  **VERIFY**: You are forbidden from proceeding until you have read relevant guidelines.
 
-## Adding New Knowledge
-
+**Adding New Knowledge**
 1.  **Search existing structure** to understand where new files belong.
-2.  **Check for conflicts** using `Glob`.
+2.  **Check for conflicts** using `Glob` or filesystem tools (only for this purpose).
 3.  **Create Markdown files** with valid Frontmatter (id, title, description, keywords).
 4.  **Run `kex check`** to validate.
 
-## Self-Hosting Development (Kex on Kex)
+**Language Synchronization (EN/JA)**
+*   **Requirement**: When updating documentation, you MUST update both English (`docs/`) and Japanese (`docs/ja/`) versions simultaneously.
+*   **Consistency**: Ensure the content structure and key information match across languages.
 
-**Core Rule**: When developing Kex itself, you MUST prioritize keeping the existing binary stable to continue using MCP tools.
-
-1.  **Do NOT run `make build`/`make e2e` immediately**: Overwriting `./bin/kex` during development risks breaking your MCP connection (and thus `kex check`).
-2.  **Use `go test` for logic**: verify changes using `go test ./internal/...` or `go test ./e2e/...` (without build) first.
-3.  **Build Last**: Only run `make build` or full `make e2e` after logic is verified and tests pass.
-
-## General Usage Note
-
-**Note**: Use `Glob`/`read_file_content` (or equivalent file system tools) only for existence checks, not for content search. Always rely on the indexed knowledge base via `search_documents`.
+**Forbidden Actions**:
+*   Do NOT use `grep`, `cat`, or file system tools to read/search existing content for the purpose of "learning the style". Use Kex tools ONLY.

@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,6 +14,17 @@ import (
 type LocalProvider struct {
 	Root   string
 	Logger logger.Logger
+}
+
+func (l *LocalProvider) Validate() error {
+	info, err := os.Stat(l.Root)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("path is not a directory: %s", l.Root)
+	}
+	return nil
 }
 
 func NewLocalProvider(root string, logger logger.Logger) *LocalProvider {

@@ -31,7 +31,7 @@ AI エディタで Kex を使用するには、MCP 設定を行う必要があ�
   "mcpServers": {
     "kex": {
       "command": "kex",
-      "args": ["start", "/absolute/path/to/your/repo"]
+      "args": ["start", "--cwd", "/absolute/path/to/your/repo"]
     }
   }
 }
@@ -45,7 +45,7 @@ Kex を [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude
 
 ```bash
 # Kex を Claude Code に追加
-claude mcp add kex -- kex start /absolute/path/to/your/repo
+claude mcp add kex -- kex start --cwd /absolute/path/to/your/repo
 ```
 
 **注意**: リポジトリ引数には絶対パス、または `~/` から始まるパスを使用してください。

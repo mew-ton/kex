@@ -31,7 +31,7 @@ Add this to your `claude_desktop_config.json` or MCP settings:
   "mcpServers": {
     "kex": {
       "command": "kex",
-      "args": ["start", "/absolute/path/to/your/repo"]
+      "args": ["start", "--cwd", "/absolute/path/to/your/repo"]
     }
   }
 }
@@ -45,7 +45,7 @@ To use Kex with [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tool
 
 ```bash
 # Add kex to Claude Code
-claude mcp add kex -- kex start /absolute/path/to/your/repo
+claude mcp add kex -- kex start --cwd /absolute/path/to/your/repo
 ```
 
 **Note**: Use absolute paths or `~/` for the repository argument.

@@ -14,8 +14,16 @@ baseURL: https://example.com/docs/
 Specifies the directory containing your markdown documentation files.
 
 - **Type**: `string`
-- **Default**: `"contents"`
-- **Description**: Kex will recursively index all `.md` files within this directory. This path is relative to the directory where `.kex.yaml` resides.
+- **Description**: Primary local source directory. Kex will recursively index all `.md` files within this directory. This path is relative to the directory where `.kex.yaml` resides.
+
+### `references` (Optional)
+
+Specifies a list of additional document sources.
+
+- **Type**: `[]string`
+- **Description**: List of paths or URLs to include in the Kex index.
+    - **Local Paths**: Relative to the project root.
+    - **Remote URLs**: Full HTTP/HTTPS URLs to external Kex repositories.
 
 ### `baseURL` (Optional)
 
@@ -87,7 +95,7 @@ Kex supports the following environment variables:
 - **Usage**:
   ```bash
   export KEX_REMOTE_TOKEN="your-secret-token"
-  kex start https://private.example.com/docs/
+  kex start
   ```
 
 

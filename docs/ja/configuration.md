@@ -14,8 +14,16 @@ baseURL: https://example.com/docs/
 マークダウン形式のドキュメントファイルが含まれるディレクトリを指定します。
 
 - **型**: `string` (文字列)
-- **デフォルト**: `"contents"`
-- **説明**: Kex はこのディレクトリ内のすべての `.md` ファイルを再帰的にインデックスします。このパスは `.kex.yaml` が配置されているディレクトリからの相対パスです。
+- **説明**: メインのローカルソースディレクトリ。Kex はこのディレクトリ内のすべての `.md` ファイルを再帰的にインデックスします。このパスは `.kex.yaml` が配置されているディレクトリからの相対パスです。
+
+### `references` (任意)
+
+追加のドキュメントソースのリストを指定します。
+
+- **型**: `[]string`
+- **説明**: Kexインデックスに含めるパスまたはURLのリスト。
+    - **Local Paths (ローカルパス)**: プロジェクトルートからの相対パス。
+    - **Remote URLs (リモートURL)**: 外部Kexリポジトリへの完全なHTTP/HTTPS URL。
 
 ### `baseURL` (任意)
 
@@ -87,7 +95,7 @@ Kex は以下の環境変数をサポートしています:
 - **使用方法**:
   ```bash
   export KEX_REMOTE_TOKEN="your-secret-token"
-  kex start https://private.example.com/docs/
+  kex start
   ```
 
 
