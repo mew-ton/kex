@@ -1,4 +1,4 @@
-sources: examples/contents
+source: examples/contents
 logging:
   file: ".kex/kex.log"
   level: info
