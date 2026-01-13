@@ -7,6 +7,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/mew-ton/kex/internal/infrastructure/config"
+	"gopkg.in/yaml.v3"
 )
 
 func TestKexStart_Failure_MissingRoot(t *testing.T) {
@@ -170,4 +173,91 @@ Content`
 			t.Errorf("Expected log file to contain startup stats. Content:\n%s", content)
 		}
 	})
+}
+
+func TestKexStart_InvalidReference_ShouldNotFailIfDocsExist(t *testing.T) {
+	// Setup
+	tmpDir, err := os.MkdirTemp("", "kex-test-start-invalid-ref")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create valid content
+	contentDir := filepath.Join(tmpDir, "contents")
+	os.Mkdir(contentDir, 0755)
+	os.WriteFile(filepath.Join(contentDir, "doc.md"), []byte("---\ntitle: Test Doc\n---\nHello"), 0644)
+
+	// Create config with valid source AND invalid reference
+	cfg := config.Config{
+		Source: "contents",
+		References: []string{
+			"non-existent-path",
+		},
+		Logging: config.Logging{
+			Level: "debug",
+		},
+	}
+	data, _ := yaml.Marshal(cfg)
+	os.WriteFile(filepath.Join(tmpDir, ".kex.yaml"), data, 0644)
+
+	// Run kex start
+	cmd := exec.Command(kexBinary, "start")
+	cmd.Dir = tmpDir
+
+	// Run asynchronously
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Failed to start command: %v", err)
+	}
+
+	// Wait a bit to ensure it keeps running (warning only)
+	time.Sleep(1 * time.Second)
+
+	if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
+		output, _ := cmd.CombinedOutput()
+		t.Fatalf("Command exited unexpectedly! Output: %s", output)
+	}
+
+	// Cleanup
+	cmd.Process.Kill()
+}
+
+func TestKexStart_AllSourcesInvalid_ShouldFail(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "kex-test-start-all-invalid")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Config with invalid source AND invalid reference
+	cfg := config.Config{
+		Source:     "invalid-source",
+		References: []string{"invalid-ref"},
+	}
+	data, _ := yaml.Marshal(cfg)
+	os.WriteFile(filepath.Join(tmpDir, ".kex.yaml"), data, 0644)
+
+	cmd := exec.Command(kexBinary, "start")
+	cmd.Dir = tmpDir
+
+	// It should exit quickly with error
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Failed to start command: %v", err)
+	}
+
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("Command exited successfully (0) but expected failure due to no docs")
+		}
+		// Expected error exit
+	case <-time.After(2 * time.Second):
+		cmd.Process.Kill()
+		t.Fatal("Command stuck running! Expected failure due to no docs")
+	}
 }

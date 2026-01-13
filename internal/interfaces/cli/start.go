@@ -49,65 +49,10 @@ func runStart(c *cli.Context) error {
 	}
 	logger.SetGeneric(appLogger)
 
-	// 2. Create Providers
-	var providers []fs.DocumentProvider
-	var loadedRoots []string
-
-	// Helper to add provider
-	addProvider := func(pathOrURL string, isReference bool) error {
-		if isURL(pathOrURL) {
-			// Remote Provider
-			token := os.Getenv("KEX_REMOTE_TOKEN")
-			// Try to use config's token as fallback if available
-			if token == "" && cfg.RemoteToken != "" {
-				token = cfg.RemoteToken
-			}
-
-			fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrURL)
-			p := fs.NewRemoteProvider(pathOrURL, token, appLogger)
-			providers = append(providers, p)
-			loadedRoots = append(loadedRoots, pathOrURL)
-			return nil
-		}
-
-		// Local Provider
-		// If it's a reference, the path is relative to CWD or absolute
-		// If it's the main source, it's relative to CWD
-		var fullPath string
-		if filepath.IsAbs(pathOrURL) {
-			fullPath = pathOrURL
-		} else {
-			fullPath = filepath.Join(cwd, pathOrURL)
-		}
-
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			if isReference {
-				return fmt.Errorf("reference '%s' not found", pathOrURL)
-			}
-			return fmt.Errorf("source '%s' not found", pathOrURL)
-		}
-
-		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullPath)
-		p := fs.NewLocalProvider(fullPath, appLogger)
-		providers = append(providers, p)
-		loadedRoots = append(loadedRoots, fullPath)
-		return nil
-	}
-
-	// Load Local Source
-	if cfg.Source != "" {
-		if err := addProvider(cfg.Source, false); err != nil {
-			// Warn but continue
-			fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
-		}
-	}
-
-	// Load References
-	for _, ref := range cfg.References {
-		if err := addProvider(ref, true); err != nil {
-			// Warn but continue
-			fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
-		}
+	// 2. Load Documents
+	providers, loadedRoots, err := loadProviders(cfg, appLogger, cwd)
+	if err != nil {
+		return cli.Exit(err.Error(), 1)
 	}
 
 	if len(providers) == 0 {
@@ -215,4 +160,61 @@ func startServer(repo *fs.Indexer) error {
 		return cli.Exit(fmt.Sprintf("Server error: %v", err), 1)
 	}
 	return nil
+}
+
+func loadProviders(cfg config.Config, l logger.Logger, cwd string) ([]fs.DocumentProvider, []string, error) {
+	var providers []fs.DocumentProvider
+	var loadedRoots []string
+
+	// Helper to add provider
+	addProvider := func(pathOrURL string, isReference bool) error {
+		if isURL(pathOrURL) {
+			// Remote Provider
+			token := os.Getenv("KEX_REMOTE_TOKEN")
+			if token == "" && cfg.RemoteToken != "" {
+				token = cfg.RemoteToken
+			}
+
+			fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrURL)
+			providers = append(providers, fs.NewRemoteProvider(pathOrURL, token, l))
+			loadedRoots = append(loadedRoots, pathOrURL)
+			return nil
+		}
+
+		// Local Provider
+		var fullPath string
+		if filepath.IsAbs(pathOrURL) {
+			fullPath = pathOrURL
+		} else {
+			fullPath = filepath.Join(cwd, pathOrURL)
+		}
+
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			if isReference {
+				return fmt.Errorf("reference '%s' not found", pathOrURL)
+			}
+			return fmt.Errorf("source '%s' not found", pathOrURL)
+		}
+
+		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullPath)
+		providers = append(providers, fs.NewLocalProvider(fullPath, l))
+		loadedRoots = append(loadedRoots, fullPath)
+		return nil
+	}
+
+	// Load Local Source
+	if cfg.Source != "" {
+		if err := addProvider(cfg.Source, false); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
+		}
+	}
+
+	// Load References
+	for _, ref := range cfg.References {
+		if err := addProvider(ref, true); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
+		}
+	}
+
+	return providers, loadedRoots, nil
 }

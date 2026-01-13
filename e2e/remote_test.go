@@ -129,10 +129,21 @@ func TestKexStart_RemoteAuthenticated(t *testing.T) {
 	mux.HandleFunc("/kex.json", auth(func(w http.ResponseWriter, r *http.Request) {
 		schema := fs.IndexSchema{
 			GeneratedAt: time.Now(),
-			Documents:   []*fs.DocumentSchema{},
+			Documents: []*fs.DocumentSchema{
+				{
+					ID:    "auth-doc",
+					Title: "Auth Doc",
+					Path:  "auth-doc.md",
+				},
+			},
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(schema)
+	}))
+
+	mux.HandleFunc("/auth-doc.md", auth(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/markdown")
+		fmt.Fprint(w, "---\nid: auth-doc\ntitle: Auth Doc\n---\nSecret Content")
 	}))
 
 	server := httptest.NewServer(mux)
