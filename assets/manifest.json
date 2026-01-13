@@ -12,8 +12,14 @@
     "antigravity": {
       "name": "Google Antigravity",
       "files": {
-        "coding": [".antigravity/rules/kex-coding.md.template"],
-        "documentation": [".antigravity/rules/kex-documentation.md.template"]
+        "coding": [
+          ".antigravity/rules/kex-coding.md.template",
+          ".antigravity/rules/implementation_plan.md.template"
+        ],
+        "documentation": [
+          ".antigravity/rules/kex-documentation.md.template",
+          ".antigravity/rules/implementation_plan.md.template"
+        ]
       }
     },
     "cursor": {
