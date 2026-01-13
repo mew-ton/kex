@@ -132,9 +132,17 @@ func loadRepository(projectRoot string, cfg config.Config, showSpinner bool) (*f
 	if cfg.Source != "" {
 		if err := addProvider(cfg.Source, false); err != nil {
 			if spinner != nil {
-				spinner.Fail(err.Error())
+				// Warn but continue
+				// spinner.Fail would stop spinner?
+				// Maybe just print warning to stderr?
+				// Since spinner is active, printing to stderr might break layout.
+				// pterm spinner handles Warning?
+				// Let's just create a warning printer
+				spinner.Warning(fmt.Sprintf("Failed to load source '%s': %v", cfg.Source, err))
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
 			}
-			return nil, err
+			// Do not return error
 		}
 	}
 
@@ -142,9 +150,11 @@ func loadRepository(projectRoot string, cfg config.Config, showSpinner bool) (*f
 	for _, ref := range cfg.References {
 		if err := addProvider(ref, true); err != nil {
 			if spinner != nil {
-				spinner.Fail(err.Error())
+				spinner.Warning(fmt.Sprintf("Failed to load reference '%s': %v", ref, err))
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
 			}
-			return nil, err
+			// Do not return error
 		}
 	}
 

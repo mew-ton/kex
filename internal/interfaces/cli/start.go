@@ -97,22 +97,21 @@ func runStart(c *cli.Context) error {
 	// Load Local Source
 	if cfg.Source != "" {
 		if err := addProvider(cfg.Source, false); err != nil {
-			return cli.Exit(fmt.Sprintf("Error loading source: %v", err), 1)
+			// Warn but continue
+			fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
 		}
 	}
 
 	// Load References
 	for _, ref := range cfg.References {
 		if err := addProvider(ref, true); err != nil {
-			// Validating references failure?
-			// Maybe warn and continue, or fail?
-			// Let's fail for now to be safe, consistent with add validation
-			return cli.Exit(fmt.Sprintf("Error loading reference '%s': %v", ref, err), 1)
+			// Warn but continue
+			fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
 		}
 	}
 
 	if len(providers) == 0 {
-		return cli.Exit("No sources defined. Run 'kex init' or 'kex add' to configure.", 1)
+		return cli.Exit("No valid sources configured. Please check your .kex.yaml.", 1)
 	}
 
 	// 3. Create Composite Repository
@@ -138,6 +137,12 @@ func runStart(c *cli.Context) error {
 	}
 
 	logger.Info("Documents Loaded: %d, IDs=%v", len(repo.Documents), loadedIDs)
+
+	// Fail if no documents found (per user request)
+	if len(repo.Documents) == 0 {
+		return cli.Exit("Error: No documents found in any sources. Please check your source/references path.", 1)
+	}
+
 	if len(repo.Errors) > 0 {
 		logger.Info("Load Errors: %d", len(repo.Errors))
 	} else {
