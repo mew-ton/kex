@@ -25,6 +25,10 @@ var StartCommand = &cli.Command{
 			Name:  "log-file",
 			Usage: "Path to log file",
 		},
+		&cli.StringFlag{
+			Name:  "cwd",
+			Usage: "Working directory for the operation",
+		},
 	},
 	Action: runStart,
 }
@@ -33,9 +37,18 @@ func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
 	// 1. Setup Logger
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
+	cwd := c.String("cwd")
+	var err error
+	if cwd == "" {
+		cwd, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+	} else {
+		cwd, err = filepath.Abs(cwd)
+		if err != nil {
+			return fmt.Errorf("invalid cwd path: %w", err)
+		}
 	}
 
 	// Load config for logging & sources

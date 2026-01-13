@@ -95,7 +95,7 @@ Kex supports the following environment variables:
 - **Usage**:
   ```bash
   export KEX_REMOTE_TOKEN="your-secret-token"
-  kex start https://private.example.com/docs/
+  kex start
   ```
 
 

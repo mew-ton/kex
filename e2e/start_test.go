@@ -261,3 +261,46 @@ func TestKexStart_AllSourcesInvalid_ShouldFail(t *testing.T) {
 		t.Fatal("Command stuck running! Expected failure due to no docs")
 	}
 }
+
+func TestKexStart_CwdFlag(t *testing.T) {
+	t.Run("it should start successfully when using --cwd flag", func(t *testing.T) {
+		tempDir := t.TempDir()
+		projectDir := filepath.Join(tempDir, "project")
+		os.MkdirAll(filepath.Join(projectDir, "docs"), 0755)
+
+		// Create a valid configuration and document in a sub-folder
+		os.WriteFile(filepath.Join(projectDir, ".kex.yaml"), []byte("source: docs\n"), 0644)
+		os.WriteFile(filepath.Join(projectDir, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\n---\n"), 0644)
+
+		// Run start from the parent tempDir (not inside projectDir)
+		cmd := exec.Command(kexBinary, "start", "--cwd", projectDir)
+		cmd.Dir = tempDir
+
+		if err := cmd.Start(); err != nil {
+			t.Fatalf("Failed to start command: %v", err)
+		}
+
+		// Cleanup
+		defer func() {
+			if cmd.Process != nil {
+				cmd.Process.Kill()
+			}
+		}()
+
+		done := make(chan error, 1)
+		go func() {
+			done <- cmd.Wait()
+		}()
+
+		// Wait briefly to assume validation passed
+		select {
+		case err := <-done:
+			if err != nil && !strings.Contains(err.Error(), "killed") {
+				t.Errorf("Command exited unexpectedly: %v", err)
+			}
+		case <-time.After(1 * time.Second):
+			// Success
+			cmd.Process.Kill()
+		}
+	})
+}

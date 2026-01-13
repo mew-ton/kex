@@ -59,6 +59,7 @@ Starts the MCP Server.
 > **Note**: To configure sources, use `kex add` or edit `.kex.yaml`.
 
 - **Flags**:
+    - `--cwd=<path>`: Specific working directory.
     - `--log-file=<path>`: Write logs to a file instead of Stderr.
 
 

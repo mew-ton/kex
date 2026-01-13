@@ -95,7 +95,7 @@ Kex は以下の環境変数をサポートしています:
 - **使用方法**:
   ```bash
   export KEX_REMOTE_TOKEN="your-secret-token"
-  kex start https://private.example.com/docs/
+  kex start
   ```
 
 
