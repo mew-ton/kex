@@ -51,32 +51,29 @@ func TestKexStart_Remote(t *testing.T) {
 		json.NewEncoder(w).Encode(schema)
 	})
 
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	t.Run("it should start with remote URL", func(t *testing.T) {
-		// Run kex start <url>
-		cmd := exec.Command(kexBinary, "start", server.URL)
 
-		// Wait, start is long running. CombinedOutput waits for exit.
-		// If start runs successfully, it blocks forever.
-		// We need to capture pipes.
+		workDir := t.TempDir()
 
-		// Revert to Start/Wait but capture pipes? Or just log file?
-		// StdoutPipe/StderrPipe.
-		/*
-			stdout, _ := cmd.StdoutPipe()
-			stderr, _ := cmd.StderrPipe()
-			if err := cmd.Start(); err != nil { ... }
-			// Read from pipes in goroutine?
-		*/
+		addCmd := exec.Command(kexBinary, "add", server.URL)
+		addCmd.Dir = workDir
+		if err := addCmd.Run(); err != nil {
+			t.Fatalf("Failed to add remote: %v", err)
+		}
 
-		// For now, let's just inspect output if it exits early.
-		// If it blocks, we kill it.
-		// Use a buffer?
-		// Simpler: use file for output?
+		// Run kex start (no args)
+		cmd := exec.Command(kexBinary, "start")
+		cmd.Dir = workDir
 
-		outfile, _ := os.Create(filepath.Join(t.TempDir(), "output.log"))
+		// ... rest of logic ...
+		outfile, _ := os.Create(filepath.Join(workDir, "output.log"))
 		defer outfile.Close()
 		cmd.Stdout = outfile
 		cmd.Stderr = outfile
@@ -142,11 +139,15 @@ func TestKexStart_RemoteAuthenticated(t *testing.T) {
 	defer server.Close()
 
 	t.Run("should fail without token", func(t *testing.T) {
-		cmd := exec.Command(kexBinary, "start", server.URL)
-		cmd.Env = os.Environ() // Inherit, but no KEX_REMOTE_TOKEN explicitly set (assuming clean env)
+		workDir := t.TempDir()
+		configContent := fmt.Sprintf("references: ['%s']\n", server.URL)
+		os.WriteFile(filepath.Join(workDir, ".kex.yaml"), []byte(configContent), 0644)
 
-		// Ensure variable is unset
-		// But os.Environ() might mimic host. Let's filter or unset.
+		cmd := exec.Command(kexBinary, "start")
+		cmd.Dir = workDir
+
+		cmd.Env = os.Environ() // Inherit, but no KEX_REMOTE_TOKEN
+
 		var env []string
 		for _, e := range os.Environ() {
 			if !strings.HasPrefix(e, "KEX_REMOTE_TOKEN=") {
@@ -164,12 +165,24 @@ func TestKexStart_RemoteAuthenticated(t *testing.T) {
 	})
 
 	t.Run("should succeed with KEX_REMOTE_TOKEN", func(t *testing.T) {
-		cmd := exec.Command(kexBinary, "start", server.URL)
+		workDir := t.TempDir()
+
+		// Configure references directly (bypass add to avoid auth check during add if add checks reachability?)
+		// kex add checks reachability. IF it fails 401, it errors.
+		// So we might need to verify kex add handles 401? Or we just write config directly for this test.
+		// Writing config is safer for "Authenticated" test start logic.
+
+		configContent := fmt.Sprintf("references: ['%s']\n", server.URL)
+		os.WriteFile(filepath.Join(workDir, ".kex.yaml"), []byte(configContent), 0644)
+
+		cmd := exec.Command(kexBinary, "start")
+		cmd.Dir = workDir
+
 		env := os.Environ()
 		env = append(env, "KEX_REMOTE_TOKEN="+token)
 		cmd.Env = env
 
-		outfile, _ := os.Create(filepath.Join(t.TempDir(), "auth_success.log"))
+		outfile, _ := os.Create(filepath.Join(workDir, "auth_success.log"))
 		cmd.Stdout = outfile
 		cmd.Stderr = outfile
 

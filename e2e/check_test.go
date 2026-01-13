@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -156,6 +157,41 @@ Content`
 
 		if !strings.Contains(string(output), "All checks passed") {
 			t.Errorf("Expected 'All checks passed', got: %s", string(output))
+		}
+	})
+}
+func TestKexCheck_References(t *testing.T) {
+	t.Run("it should validate documents in referenced paths", func(t *testing.T) {
+		tempDir := t.TempDir()
+
+		// Local Source (Optional, let's keep it empty/default to verify reference only?)
+		// But currently we set source to empty in defaults if not specified?
+		// Let's explicitly set source to empty or "." and have valid doc there,
+		// and verify invalid doc in reference is caught.
+
+		// 1. Create a reference project with an invalid document
+		refDir := filepath.Join(tempDir, "ref-proj")
+		os.MkdirAll(refDir, 0755)
+		invalidDoc := `---
+title: Invalid Doc
+: invalid
+---
+Content`
+		os.WriteFile(filepath.Join(refDir, "invalid.md"), []byte(invalidDoc), 0644)
+
+		// 2. Create main project config referencing ref-proj
+		configContent := fmt.Sprintf("references: ['%s']\n", refDir)
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(configContent), 0644)
+
+		// 3. Run check
+		cmd := exec.Command(kexBinary, "check")
+		cmd.Dir = tempDir
+		output, _ := cmd.CombinedOutput()
+
+		// 4. Verify failure
+		// The error message from validator usually contains "yaml: line ..." for invalid frontmatter
+		if !strings.Contains(string(output), "yaml:") && !strings.Contains(string(output), "error") {
+			t.Errorf("Expected validation error from referenced document, got: %s", string(output))
 		}
 	})
 }

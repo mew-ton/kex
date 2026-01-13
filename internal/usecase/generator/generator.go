@@ -22,7 +22,7 @@ func New(assets embed.FS) *Generator {
 }
 
 // Update updates the kex repository files based on configuration strategies
-func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
+func (g *Generator) Update(cwd, localSource string, references []string, cfg config.UpdateConfig) error {
 	manifest, err := LoadManifest(g.Assets)
 	if err != nil {
 		return err
@@ -32,12 +32,15 @@ func (g *Generator) Update(cwd, rootDir string, cfg config.UpdateConfig) error {
 	filesToUpdate := g.determineFilesToUpdate(manifest, cfg)
 
 	// 2. Process Template Files (MCP Rules & System Docs)
-	if err := g.processTemplateFiles(cwd, rootDir, filesToUpdate); err != nil {
+	// Template files are usually written to the local project structure.
+	// localSource determines where content-related templates go.
+	if err := g.processTemplateFiles(cwd, localSource, filesToUpdate); err != nil {
 		return err
 	}
 
 	// 3. Process AI Skills (Dynamic Content)
-	if err := g.processAiSkills(cwd, rootDir, cfg, manifest); err != nil {
+	// Skills can draw validation/context from both local source and references.
+	if err := g.processAiSkills(cwd, localSource, references, cfg, manifest); err != nil {
 		return err
 	}
 
@@ -145,13 +148,43 @@ func (g *Generator) processTemplateFiles(cwd, rootDir string, filesToUpdate map[
 	return nil
 }
 
-func (g *Generator) processAiSkills(cwd, rootDir string, cfg config.UpdateConfig, manifest *Manifest) error {
+func (g *Generator) processAiSkills(cwd, localSource string, references []string, cfg config.UpdateConfig, manifest *Manifest) error {
 	if len(cfg.AiSkills.Targets) == 0 || len(cfg.AiSkills.Keywords) == 0 {
 		return nil
 	}
 
 	skillsGen := NewSkillsGenerator(cfg.AiSkills)
-	contentSourceDir := filepath.Join(cwd, rootDir)
+
+	// Gather all roots (Local Source (if absolute/relative resolved) + References)
+	// Note: localSource is usually a relative path like "contents" or "docs".
+	// references might be absolute or relative or URLs.
+	// We need to resolve them to absolute paths or handle them appropriately.
+	// Start/Check logic resolves them. Generator should too.
+
+	var searchRoots []string
+	if localSource != "" {
+		searchRoots = append(searchRoots, filepath.Join(cwd, localSource))
+	}
+	for _, ref := range references {
+		// If URL, skip for now? Skills generator walks filesystem.
+		// Remote generator not supported yet for skills unless we fetch them to temp?
+		// Issue 72 description says "kex add remote path".
+		// If it's a remote URL, we probably can't walk it with filepath.WalkDir.
+		// So we skip URLs for skills generation for now unless we implement remote walker.
+		// The user requirement said: "When generating/updating skills, include documents from references".
+		// But if reference is remote, `go walk` won't work.
+		// We'll skip URL references for now and only support local references.
+		if strings.HasPrefix(ref, "http://") || strings.HasPrefix(ref, "https://") {
+			// TODO: Support remote references in skills generation
+			continue
+		}
+
+		if filepath.IsAbs(ref) {
+			searchRoots = append(searchRoots, ref)
+		} else {
+			searchRoots = append(searchRoots, filepath.Join(cwd, ref))
+		}
+	}
 
 	skillTargets := cfg.AiSkills.Targets
 	for _, t := range skillTargets {
@@ -170,12 +203,24 @@ func (g *Generator) processAiSkills(cwd, rootDir string, cfg config.UpdateConfig
 
 			targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
 
-			skills, err := skillsGen.Generate(contentSourceDir, string(skillTemplateData), targetPattern)
-			if err != nil {
-				return fmt.Errorf("failed to generate skills for %s: %w", skillManifestPath, err)
+			// Iterate all roots and merge results
+			allSkills := make(map[string]string)
+
+			for _, root := range searchRoots {
+				if _, err := os.Stat(root); os.IsNotExist(err) {
+					continue
+				}
+
+				skills, err := skillsGen.Generate(root, string(skillTemplateData), targetPattern)
+				if err != nil {
+					return fmt.Errorf("failed to generate skills for %s from root %s: %w", skillManifestPath, root, err)
+				}
+				for k, v := range skills {
+					allSkills[k] = v
+				}
 			}
 
-			for filename, content := range skills {
+			for filename, content := range allSkills {
 				outPath := filepath.Join(cwd, filename)
 				if err := EnsureDir(filepath.Dir(outPath)); err != nil {
 					return err

@@ -32,26 +32,17 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	args := c.Args().Slice()
-	if len(args) == 0 {
-		args = []string{"."}
+	// 1. Setup Logger
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
 	}
 
-	// 1. Setup Logger (Use config from first local path or CWD)
-	// We make a best-effort attempt to load config for logging purposes
-	primaryRoot := "."
-	for _, arg := range args {
-		if !isURL(arg) {
-			primaryRoot = arg
-			break
-		}
-	}
-
-	// Load primary config for logging/global settings
-	primaryCfg, _ := config.Load(primaryRoot)
+	// Load config for logging & sources
+	cfg, _ := config.Load(cwd)
 
 	// Setup Logger
-	appLogger, err := resolveLogger(c, primaryCfg, primaryRoot)
+	appLogger, err := resolveLogger(c, cfg, cwd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
 		appLogger = logger.NewStderrLogger()
@@ -62,48 +53,66 @@ func runStart(c *cli.Context) error {
 	var providers []fs.DocumentProvider
 	var loadedRoots []string
 
-	for _, arg := range args {
-		if isURL(arg) {
+	// Helper to add provider
+	addProvider := func(pathOrURL string, isReference bool) error {
+		if isURL(pathOrURL) {
 			// Remote Provider
 			token := os.Getenv("KEX_REMOTE_TOKEN")
-			// Try to use primary config's token as fallback if available
-			if token == "" && primaryCfg.RemoteToken != "" {
-				token = primaryCfg.RemoteToken
+			// Try to use config's token as fallback if available
+			if token == "" && cfg.RemoteToken != "" {
+				token = cfg.RemoteToken
 			}
 
-			fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", arg)
-			p := fs.NewRemoteProvider(arg, token, appLogger)
+			fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrURL)
+			p := fs.NewRemoteProvider(pathOrURL, token, appLogger)
 			providers = append(providers, p)
-			loadedRoots = append(loadedRoots, arg)
-			continue
+			loadedRoots = append(loadedRoots, pathOrURL)
+			return nil
 		}
 
-		// Local Provider (Project Root)
-		projectRoot := arg
-		if _, err := os.Stat(projectRoot); os.IsNotExist(err) {
-			return cli.Exit(fmt.Sprintf("Error: directory '%s' not found.", projectRoot), 1)
+		// Local Provider
+		// If it's a reference, the path is relative to CWD or absolute
+		// If it's the main source, it's relative to CWD
+		var fullPath string
+		if filepath.IsAbs(pathOrURL) {
+			fullPath = pathOrURL
+		} else {
+			fullPath = filepath.Join(cwd, pathOrURL)
 		}
 
-		cfg, err := config.Load(projectRoot)
-		if err != nil {
-			logger.Error("Failed to load config for %s: %v", projectRoot, err)
-			// Continue with defaults? Or fail?
-			// config.Load returns defaults if file missing, so this error is for corrupt yaml etc.
-			// Let's warn and continue with defaults returned by Load?
-			// But Load returns error only if yaml unmarshal fails.
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			if isReference {
+				return fmt.Errorf("reference '%s' not found", pathOrURL)
+			}
+			return fmt.Errorf("source '%s' not found", pathOrURL)
 		}
 
-		// Create a provider for the Source defined in this project
-		source := cfg.Source
-		fullSourcePath := filepath.Join(projectRoot, source)
-		if _, err := os.Stat(fullSourcePath); os.IsNotExist(err) {
-			return cli.Exit(fmt.Sprintf("Error: source directory '%s' not found in project '%s'.", source, projectRoot), 1)
-		}
-
-		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullSourcePath)
-		p := fs.NewLocalProvider(fullSourcePath, appLogger)
+		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullPath)
+		p := fs.NewLocalProvider(fullPath, appLogger)
 		providers = append(providers, p)
-		loadedRoots = append(loadedRoots, projectRoot)
+		loadedRoots = append(loadedRoots, fullPath)
+		return nil
+	}
+
+	// Load Local Source
+	if cfg.Source != "" {
+		if err := addProvider(cfg.Source, false); err != nil {
+			return cli.Exit(fmt.Sprintf("Error loading source: %v", err), 1)
+		}
+	}
+
+	// Load References
+	for _, ref := range cfg.References {
+		if err := addProvider(ref, true); err != nil {
+			// Validating references failure?
+			// Maybe warn and continue, or fail?
+			// Let's fail for now to be safe, consistent with add validation
+			return cli.Exit(fmt.Sprintf("Error loading reference '%s': %v", ref, err), 1)
+		}
+	}
+
+	if len(providers) == 0 {
+		return cli.Exit("No sources defined. Run 'kex init' or 'kex add' to configure.", 1)
 	}
 
 	// 3. Create Composite Repository

@@ -8,7 +8,6 @@ import (
 	"github.com/mew-ton/kex/assets"
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	"github.com/mew-ton/kex/internal/usecase/generator"
-	"gopkg.in/yaml.v3"
 
 	"github.com/pterm/pterm"
 	"github.com/urfave/cli/v2"
@@ -116,7 +115,7 @@ func runInit(c *cli.Context) error {
 
 	pterm.Info.Printf("Initializing in: %s\n", cwd)
 
-	if err := saveConfig(selectedMcpAgents, selectedMcpScopes, selectedSkillsAgents, skillsKeywords); err != nil {
+	if err := saveConfig(cwd, selectedMcpAgents, selectedMcpScopes, selectedSkillsAgents, skillsKeywords); err != nil {
 		return err
 	}
 
@@ -214,7 +213,7 @@ func inputSkillsKeywords() ([]string, error) {
 	return keywords, nil
 }
 
-func saveConfig(mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[string]bool, skillsKeywords []string) error {
+func saveConfig(cwd string, mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[string]bool, skillsKeywords []string) error {
 	// Build AiMcpRules
 	var mcpTargets []string
 	for agent := range mcpAgents {
@@ -250,12 +249,7 @@ func saveConfig(mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[
 		},
 	}
 
-	data, err := yaml.Marshal(&cfg)
-	if err != nil {
-		return err
-	}
-
-	if err := os.WriteFile(".kex.yaml", data, 0644); err != nil {
+	if err := config.Save(cwd, cfg); err != nil {
 		pterm.Warning.Printf("Failed to save .kex.yaml: %v\n", err)
 		return err
 	}

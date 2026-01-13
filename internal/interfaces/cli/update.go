@@ -41,14 +41,11 @@ func runUpdate(c *cli.Context) error {
 	updateConfig := cfg.Update
 
 	// Update uses the first source as the primary location for system docs (e.g. kex/*)
-	// This might need refinement for multiplexing, but "kex update" is mainly for
-	// the primary documentation repo.
-	sourceRoot := "contents"
-	if cfg.Source != "" {
-		sourceRoot = cfg.Source
-	}
+	// And references for additional context.
+	sourceRoot := cfg.Source
+	// Note: if cfg.Source is empty, it means no local source. generator handles empty source string.
 
-	if err := gen.Update(cwd, sourceRoot, updateConfig); err != nil {
+	if err := gen.Update(cwd, sourceRoot, cfg.References, updateConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
 	}

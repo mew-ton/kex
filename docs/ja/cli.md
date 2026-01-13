@@ -30,19 +30,33 @@ kex check
 - 必須フィールドが含まれているか
 - ID に重複がないか
 
+## `kex add`
+
+新しいドキュメントソースを設定に追加します。
+
+```bash
+kex add <path|url>
+```
+
+- **path**: ローカルディレクトリパス（プロジェクトルートからの相対パス）。存在確認を行います。
+- **url**: リモートURL（到達可能である必要があります）。
+- **動作**: ソースを `.kex.yaml` の `references` リストに追加します。
+
 ## `kex start`
 
 MCP サーバーを起動します。
 
 ```bash
-kex start [options] [path|url...]
+kex start [options]
 ```
 
-**マルチプレキシング** (複数のソースの結合) をサポートしています。複数のパスまたは URL を指定できます。
+MCP サーバーを起動します。
 
-- **ローカルモード**: `kex start ./my-docs`
-- **リモートモード**: `kex start https://example.com/docs/`
-- **マルチプレキシング**: `kex start ./backend ./frontend https://common-lib.com/docs/`
+- **ソース**: `.kex.yaml`の設定を読み込みます。
+    - メインの `source` ディレクトリ。
+    - 設定されたすべての `references`（ローカルパスおよびリモートURL）。
+
+> **Note**: ソースを設定するには `kex add` を使用するか、`.kex.yaml` を編集してください。
 
 - **フラグ**:
     - `--log-file=<path>`: ログを標準エラー出力ではなく、指定したファイルに書き込みます。

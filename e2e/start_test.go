@@ -61,8 +61,8 @@ Content`
 	})
 }
 
-func TestKexStart_Multiplexing(t *testing.T) {
-	t.Run("it should start successfully with multiple project roots", func(t *testing.T) {
+func TestKexStart_References(t *testing.T) {
+	t.Run("it should start successfully with references", func(t *testing.T) {
 		tempDir := t.TempDir()
 
 		// Project 1
@@ -77,8 +77,15 @@ func TestKexStart_Multiplexing(t *testing.T) {
 		os.WriteFile(filepath.Join(proj2, ".kex.yaml"), []byte("source: notes\n"), 0644)
 		os.WriteFile(filepath.Join(proj2, "notes", "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\n---\n"), 0644)
 
-		// Run start with both project paths
-		cmd := exec.Command(kexBinary, "start", proj1, proj2)
+		// Main Config with references
+		configContent := `references:
+  - proj1
+  - proj2
+`
+		os.WriteFile(filepath.Join(tempDir, ".kex.yaml"), []byte(configContent), 0644)
+
+		// Run start without args
+		cmd := exec.Command(kexBinary, "start")
 		cmd.Dir = tempDir
 
 		// Start the process
@@ -108,55 +115,6 @@ func TestKexStart_Multiplexing(t *testing.T) {
 			// Success
 			cmd.Process.Kill()
 		}
-	})
-}
-
-func TestKexStart_PositionalArg(t *testing.T) {
-	t.Run("it should start successfully with project root as positional argument", func(t *testing.T) {
-		// Use a subdirectory as the project root to ensure we are testing path resolution
-		baseDir := t.TempDir()
-		projectRoot := filepath.Join(baseDir, "my-project")
-		contentsDir := filepath.Join(projectRoot, "custom_contents")
-		os.MkdirAll(contentsDir, 0755)
-
-		// Create a valid document
-		doc := `---
-id: pos-doc
-title: Positional Doc
-description: Test
----
-Content`
-		os.WriteFile(filepath.Join(contentsDir, "doc.md"), []byte(doc), 0644)
-
-		// Create config in projectRoot pointing to contentsDir (relative to projectRoot)
-		os.WriteFile(filepath.Join(projectRoot, ".kex.yaml"), []byte("source: custom_contents\n"), 0644)
-
-		// Run kex start <projectRoot> from baseDir
-		cmd := exec.Command(kexBinary, "start", projectRoot)
-		cmd.Dir = baseDir
-
-		// Start the process
-		if err := cmd.Start(); err != nil {
-			t.Fatalf("Failed to start command: %v", err)
-		}
-
-		// Cleanup
-		defer func() {
-			if cmd.Process != nil {
-				cmd.Process.Kill()
-			}
-		}()
-
-		// Wait a bit or check if it crashes immediately
-		// Similar to other tests, if it runs for a short while, it passed validation
-		done := make(chan error, 1)
-		go func() {
-			done <- cmd.Wait()
-		}()
-
-		// We assume that if it stays up for a bit, it's good.
-		// Ideally we would check output for "Server listening", but standard pipe might block or require reading.
-		// For now keeping it consistent with existing tests.
 	})
 }
 
