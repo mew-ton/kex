@@ -18,8 +18,9 @@ Before writing, editing, or restructuring any documentation, you **MUST** first 
 3.  **Create Markdown files** with valid Frontmatter (id, title, description, keywords).
 4.  **Run `kex check`** to validate.
 
-**Self-Hosting Development**
-*   **Safety First**: Do NOT overwrite `./bin/kex` during documentation updates unless explicitly testing the build process.
+**Language Synchronization (EN/JA)**
+*   **Requirement**: When updating documentation, you MUST update both English (`docs/`) and Japanese (`docs/ja/`) versions simultaneously.
+*   **Consistency**: Ensure the content structure and key information match across languages.
 
 **Forbidden Actions**:
 *   Do NOT use `grep`, `cat`, or file system tools to read/search existing content for the purpose of "learning the style". Use Kex tools ONLY.
