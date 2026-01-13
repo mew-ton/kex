@@ -1,26 +1,25 @@
+---
+trigger: always_on
+---
 # Documentation Rules (Ref: Kex)
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
 **PRIMARY DIRECTIVE (STRICT):**
-Before writing, editing, or restructuring any documentation, you **MUST** first search the knowledge base for style guides and conventions.
+Before writing any documentation, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base.
 
 **The "Search Signal" Protocol:**
-1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the style guidelines."
+1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the rules."
 2.  **SEARCH**: Execute `search_documents` immediately.
-    *   **Keywords**: "documentation", "style", "markdown", "format", "naming".
-    *   **Critical:** If `kex` tools are unavailable or fail, **STOP** and report this to the user.
-3.  **VERIFY**: You are forbidden from proceeding until you have read relevant guidelines.
+    *   **Keywords**: Use terms related to the task (e.g., "documentation", "style", "formatting", "naming").
+    *   **Scope**: When working in a specific domain, you MUST use `exactScopeMatch: true` with the relevant scope (e.g., `["documentation", "kex"]`).
+3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
-**Adding New Knowledge**
-1.  **Search existing structure** to understand where new files belong.
-2.  **Check for conflicts** using `Glob` or filesystem tools (only for this purpose).
-3.  **Create Markdown files** with valid Frontmatter (id, title, description, keywords).
-4.  **Run `kex check`** to validate.
-
-**Language Synchronization (EN/JA)**
-*   **Requirement**: When updating documentation, you MUST update both English (`docs/`) and Japanese (`docs/ja/`) versions simultaneously.
-*   **Consistency**: Ensure the content structure and key information match across languages.
+**MCP Failure Protocol:**
+If `kex` MCP server is unavailable or `search_documents` fails:
+1.  **STOP** immediately.
+2.  **REPORT** the issue to the user ("Kex MCP is unavailable").
+3.  **WAIT** for further instructions. Do **NOT** revert to manual file search (`grep`, `find`, etc.) without explicit permission.
 
 **Forbidden Actions**:
-*   Do NOT use `grep`, `cat`, or file system tools to read/search existing content for the purpose of "learning the style". Use Kex tools ONLY.
+*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `examples/contents/*. Use Kex tools ONLY.
