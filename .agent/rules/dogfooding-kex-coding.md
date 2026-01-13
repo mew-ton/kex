@@ -11,7 +11,7 @@ Before writing any code, planning a refactor, or answering technical questions, 
 **The "Search Signal" Protocol:**
 1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the rules."
 2.  **SEARCH**: Execute `search_documents` immediately.
-    *   **Keywords**: Use terms related to the task (e.g., "coding", "style", "testing", "naming", "architecture").
+    *   **Keywords**: Use terms related to the task (e.g., "coding", "style", "testing", "naming", "architecture", "function", "component").
     *   **Scope**: When working in a specific language/domain (e.g., Go, TypeScript), you MUST use `exactScopeMatch: true` with the relevant scope (e.g., `["coding", "go"]`, `["coding", "react", "component"]`, `["coding", "utils", "function"]`).
 3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
