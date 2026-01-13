@@ -36,80 +36,110 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	// 1. Setup Logger
-	cwd := c.String("cwd")
-	var err error
-	if cwd == "" {
-		cwd, err = os.Getwd()
-		if err != nil {
-			return err
-		}
-	} else {
-		cwd, err = filepath.Abs(cwd)
-		if err != nil {
-			return fmt.Errorf("invalid cwd path: %w", err)
-		}
+	// 1. Resolve Working Directory
+	cwd, err := resolveCwd(c)
+	if err != nil {
+		return err
 	}
 
-	// Load config for logging & sources
-	cfg, _ := config.Load(cwd)
-
-	// Setup Logger
-	appLogger, err := resolveLogger(c, cfg, cwd)
+	// 2. Load Configuration
+	cfg, err := loadConfiguration(cwd)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
-		appLogger = logger.NewStderrLogger()
+		fmt.Fprintf(os.Stderr, "Warning: config load failed: %v. Using defaults.\n", err)
+	}
+
+	// 3. Setup Logger
+	appLogger, err := setupAppLogger(c, cfg, cwd)
+	if err != nil {
+		return err
 	}
 	logger.SetGeneric(appLogger)
 
-	// 2. Load Documents
-	providers, loadedRoots, err := loadProviders(cfg, appLogger, cwd)
+	// 4. Create and Prepare Repository
+	repo, loadedRoots, err := createRepository(cfg, appLogger, cwd)
 	if err != nil {
 		return cli.Exit(err.Error(), 1)
 	}
 
-	if len(providers) == 0 {
-		return cli.Exit("No valid sources configured. Please check your .kex.yaml.", 1)
-	}
+	// 5. Log Startup Stats & Checks
+	logStartupStats(repo, loadedRoots)
 
-	// 3. Create Composite Repository
-	compositeProvider := fs.NewCompositeProvider(providers)
-	repo := fs.New(compositeProvider, appLogger)
-
-	if err := repo.Load(); err != nil {
-		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
-	}
-
-	if err := validateRepository(repo); err != nil {
+	if err := checkRepositoryState(repo); err != nil {
 		return err
 	}
 
-	// 4. Log Startup Stats
+	defer logger.Info("Kex Server Stopping...")
+
+	return startServer(repo)
+}
+
+func resolveCwd(c *cli.Context) (string, error) {
+	cwd := c.String("cwd")
+	if cwd == "" {
+		return os.Getwd()
+	}
+	return filepath.Abs(cwd)
+}
+
+func loadConfiguration(cwd string) (config.Config, error) {
+	return config.Load(cwd)
+}
+
+func setupAppLogger(c *cli.Context, cfg config.Config, cwd string) (logger.Logger, error) {
+	appLogger, err := resolveLogger(c, cfg, cwd)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
+		return logger.NewStderrLogger(), nil
+	}
+	return appLogger, nil
+}
+
+func createRepository(cfg config.Config, l logger.Logger, cwd string) (*fs.Indexer, []string, error) {
+	providers, loadedRoots, err := loadProviders(cfg, l, cwd)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(providers) == 0 {
+		return nil, nil, fmt.Errorf("no valid sources configured. Please check your .kex.yaml")
+	}
+
+	compositeProvider := fs.NewCompositeProvider(providers)
+	repo := fs.New(compositeProvider, l)
+
+	if err := repo.Load(); err != nil {
+		return nil, nil, fmt.Errorf("fatal: failed to load documents: %w", err)
+	}
+
+	if err := validateRepository(repo); err != nil {
+		return nil, nil, err
+	}
+
+	return repo, loadedRoots, nil
+}
+
+func logStartupStats(repo *fs.Indexer, loadedRoots []string) {
 	logger.Info("Kex Server Starting...")
 	logger.Info("Roots: %v", loadedRoots)
 
-	// Stats
 	var loadedIDs []string
 	for id := range repo.Documents {
 		loadedIDs = append(loadedIDs, id)
 	}
-
 	logger.Info("Documents Loaded: %d, IDs=%v", len(repo.Documents), loadedIDs)
-
-	// Fail if no documents found (per user request)
-	if len(repo.Documents) == 0 {
-		return cli.Exit("Error: No documents found in any sources. Please check your source/references path.", 1)
-	}
 
 	if len(repo.Errors) > 0 {
 		logger.Info("Load Errors: %d", len(repo.Errors))
 	} else {
 		logger.Info("Load Status: OK")
 	}
+}
 
-	defer logger.Info("Kex Server Stopping...")
-
-	return startServer(repo)
+func checkRepositoryState(repo *fs.Indexer) error {
+	if len(repo.Documents) == 0 {
+		return cli.Exit("Error: No documents found in any sources. Please check your source/references path.", 1)
+	}
+	return nil
 }
 
 func isURL(s string) bool {
@@ -146,7 +176,7 @@ func validateRepository(repo *fs.Indexer) error {
 		for _, e := range report.GlobalErrors {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", e)
 		}
-		return cli.Exit("Failed to start due to document errors. Run 'kex check' for details.", 1)
+		return fmt.Errorf("failed to start due to document errors. Run 'kex check' for details")
 	}
 
 	if !report.Valid {
@@ -158,7 +188,7 @@ func validateRepository(repo *fs.Indexer) error {
 				fmt.Fprintf(os.Stderr, "Error [%s]: %v\n", doc.ID, err)
 			}
 		}
-		return cli.Exit("Validation failed (documents contain errors). Run 'kex check' for details.", 1)
+		return fmt.Errorf("validation failed (documents contain errors). Run 'kex check' for details")
 	}
 	return nil
 }
