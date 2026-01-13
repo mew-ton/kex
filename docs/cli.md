@@ -35,14 +35,17 @@ Checks for:
 Starts the MCP Server.
 
 ```bash
-kex start [options] [path|url]
+kex start [options] [path|url...]
 ```
 
+Supports **Multiplexing** (combining multiple sources). You can specify multiple paths or URLs.
+
 - **Local Mode**: `kex start ./my-docs`
-- **Remote Mode**: `kex start https://example.com/docs/` (Must contain `kex.json`)
+- **Remote Mode**: `kex start https://example.com/docs/`
+- **Multiplexing**: `kex start ./backend ./frontend https://common-lib.com/docs/`
+
 - **Flags**:
     - `--log-file=<path>`: Write logs to a file instead of Stderr.
-    - `--root=<path>`: Specify the guidelines content root (Local mode).
 
 
 

@@ -22,11 +22,6 @@ var StartCommand = &cli.Command{
 	Usage: "Start MCP server",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:    "root",
-			Usage:   "Path to guidelines directory",
-			Aliases: []string{"r"},
-		},
-		&cli.StringFlag{
 			Name:  "log-file",
 			Usage: "Path to log file",
 		},
@@ -37,32 +32,86 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	arg := c.Args().First()
-	isRemote := strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://")
-
-	// 1. Resolve Project Root
-	projectRoot := "."
-	if !isRemote && arg != "" {
-		projectRoot = arg
+	args := c.Args().Slice()
+	if len(args) == 0 {
+		args = []string{"."}
 	}
 
-	// 2. Load Config
-	cfg, err := config.Load(projectRoot)
-	if err != nil {
-		// Proceed with default config if load fails (consistent with previous behavior)
+	// 1. Setup Logger (Use config from first local path or CWD)
+	// We make a best-effort attempt to load config for logging purposes
+	primaryRoot := "."
+	for _, arg := range args {
+		if !isURL(arg) {
+			primaryRoot = arg
+			break
+		}
 	}
 
-	// 3. Setup Logger
-	appLogger, err := resolveLogger(c, cfg, projectRoot)
+	// Load primary config for logging/global settings
+	primaryCfg, _ := config.Load(primaryRoot)
+
+	// Setup Logger
+	appLogger, err := resolveLogger(c, primaryCfg, primaryRoot)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
 		appLogger = logger.NewStderrLogger()
 	}
 	logger.SetGeneric(appLogger)
 
-	repo, err := createRepository(c, cfg, appLogger, arg, isRemote, projectRoot)
-	if err != nil {
-		return err
+	// 2. Create Providers
+	var providers []fs.DocumentProvider
+	var loadedRoots []string
+
+	for _, arg := range args {
+		if isURL(arg) {
+			// Remote Provider
+			token := os.Getenv("KEX_REMOTE_TOKEN")
+			// Try to use primary config's token as fallback if available
+			if token == "" && primaryCfg.RemoteToken != "" {
+				token = primaryCfg.RemoteToken
+			}
+
+			fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", arg)
+			p := fs.NewRemoteProvider(arg, token, appLogger)
+			providers = append(providers, p)
+			loadedRoots = append(loadedRoots, arg)
+			continue
+		}
+
+		// Local Provider (Project Root)
+		projectRoot := arg
+		if _, err := os.Stat(projectRoot); os.IsNotExist(err) {
+			return cli.Exit(fmt.Sprintf("Error: directory '%s' not found.", projectRoot), 1)
+		}
+
+		cfg, err := config.Load(projectRoot)
+		if err != nil {
+			logger.Error("Failed to load config for %s: %v", projectRoot, err)
+			// Continue with defaults? Or fail?
+			// config.Load returns defaults if file missing, so this error is for corrupt yaml etc.
+			// Let's warn and continue with defaults returned by Load?
+			// But Load returns error only if yaml unmarshal fails.
+		}
+
+		// Create a provider for the Source defined in this project
+		source := cfg.Source
+		fullSourcePath := filepath.Join(projectRoot, source)
+		if _, err := os.Stat(fullSourcePath); os.IsNotExist(err) {
+			return cli.Exit(fmt.Sprintf("Error: source directory '%s' not found in project '%s'.", source, projectRoot), 1)
+		}
+
+		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullSourcePath)
+		p := fs.NewLocalProvider(fullSourcePath, appLogger)
+		providers = append(providers, p)
+		loadedRoots = append(loadedRoots, projectRoot)
+	}
+
+	// 3. Create Composite Repository
+	compositeProvider := fs.NewCompositeProvider(providers)
+	repo := fs.New(compositeProvider, appLogger)
+
+	if err := repo.Load(); err != nil {
+		return cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
 	}
 
 	if err := validateRepository(repo); err != nil {
@@ -71,13 +120,9 @@ func runStart(c *cli.Context) error {
 
 	// 4. Log Startup Stats
 	logger.Info("Kex Server Starting...")
-	logger.Info("Root: %s", projectRoot)
-	logger.Info("Mode: %s", func() string {
-		if isRemote {
-			return "Remote"
-		}
-		return "Local"
-	}())
+	logger.Info("Roots: %v", loadedRoots)
+
+	// Stats
 	var loadedIDs []string
 	for id := range repo.Documents {
 		loadedIDs = append(loadedIDs, id)
@@ -93,6 +138,10 @@ func runStart(c *cli.Context) error {
 	defer logger.Info("Kex Server Stopping...")
 
 	return startServer(repo)
+}
+
+func isURL(s string) bool {
+	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
 }
 
 func resolveLogger(c *cli.Context, cfg config.Config, projectRoot string) (logger.Logger, error) {
@@ -113,49 +162,6 @@ func resolveLogger(c *cli.Context, cfg config.Config, projectRoot string) (logge
 		return fl, nil
 	}
 	return logger.NewStderrLogger(), nil
-}
-
-func createRepository(c *cli.Context, cfg config.Config, l logger.Logger, arg string, isRemote bool, projectRoot string) (*fs.Indexer, error) {
-	if isRemote {
-		pathOrUrl := arg
-		token := os.Getenv("KEX_REMOTE_TOKEN")
-		if token == "" {
-			if cfg.RemoteToken != "" {
-				token = cfg.RemoteToken
-			}
-		}
-
-		fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrUrl)
-		if token != "" {
-			fmt.Fprintf(os.Stderr, "Auth: Token provided\n")
-		} else {
-			fmt.Fprintf(os.Stderr, "Auth: None\n")
-		}
-
-		provider := fs.NewRemoteProvider(pathOrUrl, token, l)
-		repo := fs.New(provider, l)
-		if err := repo.Load(); err != nil {
-			return nil, cli.Exit(fmt.Sprintf("Failed to load remote index: %v", err), 1)
-		}
-		return repo, nil
-	}
-
-	// Local Mode
-	root := filepath.Join(projectRoot, cfg.Root)
-	if c.String("root") != "" {
-		root = c.String("root")
-	}
-
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		return nil, cli.Exit(fmt.Sprintf("Error: directory '%s' not found. Run 'kex init'?", root), 1)
-	}
-
-	provider := fs.NewLocalProvider(root, l)
-	repo := fs.New(provider, l)
-	if err := repo.Load(); err != nil {
-		return nil, cli.Exit(fmt.Sprintf("Fatal: failed to load documents: %v", err), 1)
-	}
-	return repo, nil
 }
 
 func validateRepository(repo *fs.Indexer) error {

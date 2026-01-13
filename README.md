@@ -21,10 +21,7 @@ kex init
 kex start .
 ```
 
-### 3. Start (Remote / GitHub Pages)
-```bash
-kex start https://my-org.github.io/guidelines/
-```
+*See [CLI Reference](docs/cli.md#kex-start) for advanced usage (Multiplexing, Remote).*
 
 ## Documentation
 

@@ -68,23 +68,30 @@ func loadConfig(projectRoot string) config.Config {
 }
 
 func scanDocuments(projectRoot string, cfg config.Config) (*fs.IndexSchema, error) {
-	root := filepath.Join(projectRoot, cfg.Root)
+	// Scan single source
+	l := logger.NewStderrLogger()
 	spinner, _ := pterm.DefaultSpinner.Start("Scanning documents...")
 
-	l := logger.NewStderrLogger()
+	source := cfg.Source
+	root := filepath.Join(projectRoot, source)
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		return nil, fmt.Errorf("source directory %s does not exist", source)
+	}
+
 	provider := fs.NewLocalProvider(root, l)
 	repo := fs.New(provider, l)
 
 	if err := repo.Load(); err != nil {
-		spinner.Fail(fmt.Sprintf("Failed to load: %v", err))
-		return nil, fmt.Errorf("failed to scan documents: %w", err)
+		return nil, fmt.Errorf("failed to load documents: %w", err)
 	}
-	spinner.Success("Documents scanned")
 
 	schema, err := repo.Export()
 	if err != nil {
 		return nil, fmt.Errorf("failed to export schema: %w", err)
 	}
+
+	spinner.Success("Documents scanned")
+
 	return schema, nil
 }
 
@@ -99,11 +106,12 @@ func prepareDistDir(outputDir string) error {
 }
 
 func copyContents(projectRoot, outputDir string, cfg config.Config, schema *fs.IndexSchema) error {
-	root := filepath.Join(projectRoot, cfg.Root)
 	copySpinner, _ := pterm.DefaultSpinner.Start("Copying files...")
 
+	source := cfg.Source
+
 	for _, doc := range schema.Documents {
-		srcPath := filepath.Join(root, doc.Path)
+		srcPath := filepath.Join(projectRoot, source, doc.Path)
 		dstPath := filepath.Join(outputDir, doc.Path)
 
 		if err := copyFile(srcPath, dstPath); err != nil {

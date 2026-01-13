@@ -49,9 +49,11 @@ func runCheck(c *cli.Context) error {
 	}
 
 	// 2. Resolve Content Directory
-	root := filepath.Join(projectRoot, cfg.Root)
+	// For Check, we iterate all sources and check the aggregate?
+	// Or strict check each source?
+	// Let's use CompositeProvider logic here too for consistency with Start.
 
-	repo, err := loadRepository(root, !isJSON)
+	repo, err := loadRepository(projectRoot, cfg.Source, !isJSON)
 	if err != nil {
 		if isJSON {
 			printJSONError(err.Error())
@@ -84,7 +86,7 @@ func resolveConfig(projectRoot string) (config.Config, error) {
 	return config.Load(projectRoot)
 }
 
-func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
+func loadRepository(projectRoot string, source string, showSpinner bool) (*fs.Indexer, error) {
 	var spinner *pterm.SpinnerPrinter
 	if showSpinner {
 		spinner, _ = pterm.DefaultSpinner.Start("Loading documents...")
@@ -92,8 +94,20 @@ func loadRepository(root string, showSpinner bool) (*fs.Indexer, error) {
 
 	// Use NoOpLogger for Check command to avoid clutter
 	l := &logger.NoOpLogger{}
-	provider := fs.NewLocalProvider(root, l)
-	repo := fs.New(provider, l)
+
+	var providers []fs.DocumentProvider
+
+	root := filepath.Join(projectRoot, source)
+	if _, err := os.Stat(root); !os.IsNotExist(err) {
+		providers = append(providers, fs.NewLocalProvider(root, l))
+	}
+
+	if len(providers) == 0 {
+		return nil, fmt.Errorf("no valid content directories found in input %s", source)
+	}
+
+	composite := fs.NewCompositeProvider(providers)
+	repo := fs.New(composite, l)
 	repo.IncludeDrafts = true
 	if err := repo.Load(); err != nil {
 		if spinner != nil {

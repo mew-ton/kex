@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Root        string       `yaml:"root"`
+	Source      string       `yaml:"source"`
 	BaseURL     string       `yaml:"baseURL,omitempty"`
 	RemoteToken string       `yaml:"remoteToken,omitempty"`
 	Update      UpdateConfig `yaml:"update"`
@@ -41,7 +41,7 @@ type AiSkills struct {
 func Load(projectRoot string) (Config, error) {
 	// 1. Set Defaults
 	config := Config{
-		Root:    "contents",
+		Source:  "contents",
 		BaseURL: "",
 		Update: UpdateConfig{
 			Documents: make(map[string]string),
@@ -59,6 +59,10 @@ func Load(projectRoot string) (Config, error) {
 
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return config, err
+	}
+
+	if config.Source == "" {
+		config.Source = "contents"
 	}
 
 	return config, nil
