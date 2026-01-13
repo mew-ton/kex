@@ -3,43 +3,24 @@ trigger: always_on
 ---
 # Coding Rules (Ref: Kex)
 
-This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these rules.
+This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
-**Core Rule (STRICT):** You are FORBIDDEN from writing any code until you have explicitly searched for and read relevant guidelines. "Guessing" or "Reading the room" is considered a violation.
+**PRIMARY DIRECTIVE (STRICT):**
+Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base.
 
-## Design & Implementation Phase
+**The "Search Signal" Protocol:**
+1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the rules."
+2.  **SEARCH**: Execute `search_documents` immediately.
+    *   **Keywords**: Use terms related to the task (e.g., "coding", "style", "testing", "naming", "architecture").
+    *   **Scope**: When working in a specific language/domain (e.g., Go, TypeScript), you MUST use `exactScopeMatch: true` with the relevant scope (e.g., `["coding", "go"]`).
+3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
-**Core Rule**: Before planning or coding, you must prove you have consulted the knowledge base.
+**Self-Hosting Development (Kex on Kex)**
+*   **Safety First**: Do NOT run `make build` or overwrite `./bin/kex` early. It breaks your tools.
+*   **Test Logic**: Use `go test` to verify changes before building.
 
-1.  **Mandatory Search** using `search_documents`.
-    *   **Keywords**: "architecture", "design", "coding", "style", "naming", "testing", "strategy".
-    *   **STOP**: Do not proceed until you have successfully retrieved and read at least one relevant document or confirmed none exist.
-2.  **Read relevant docs** using `read_document`.
-3.  **Validate your plan** (or existing code) against principles found.
+**Forbidden Actions**:
+*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `contents/`. Use Kex tools ONLY.
 
-## Refactoring & Code Audit Phase
 
-**Core Rule**: When asked to review code, find bugs, or check for guideline violations, you MUST NOT rely solely on your internal training.
 
-1.  **Identify the context** (Language, Framework, Component, Function).
-2.  **Search for specific rules** using `search_documents`.
-    *   **Keywords**: "anti-pattern", "best practice", "forbidden", "required", "error handling", [Context Specific Keywords].
-    *   **Requirement**: When focusing on a specific layer or component (e.g., `go`, `typescript`, `frontend`), you **MUST** use `search_documents` with `exactScopeMatch: true` and the scope names as keywords. This ensures you see *all* rules for that scope, protecting against "unknown unknowns".
-3.  **Verify the code** against the *explicit* rules retrieved from Kex.
-    *   *Do not assume* standard conventions apply if Kex has specific overrides.
-
-## Self-Hosting Development (Kex on Kex)
-
-**Core Rule**: When developing Kex itself, you MUST prioritize keeping the existing binary stable to continue using MCP tools.
-
-1.  **Do NOT run `make build`/`make e2e` immediately**: Overwriting `./bin/kex` during development risks breaking your MCP connection.
-2.  **Use `go test` for logic**: verify changes using `go test ./internal/...` or `go test ./e2e/...` (without build) first.
-3.  **Build Last**: Only run `make build` or full `make e2e` after logic is verified and tests pass.
-
-## Critical Anti-Patterns (Forbidden Actions)
-
-**Restriction**: You MUST NOT use file system tools (`list_dir`, `view_file`, `read_file_content`, `grep`) to read, search, or discover guidelines in `examples/contents` (or any configured Kex root).
-
-- **Why?**: Accessing files directly bypasses the "Dogfooding" process. We must test the *retrieval accuracy* of Kex itself. If you read the files directly, you are not testing the product.
-- **Correct Action**: Use `search_documents` and `read_document`.
-- **Exception**: You may read these files ONLY if your task is specifically to *edit* the text of the guideline itself (after retrieving it via Kex) or to debug the *parser logic*.
