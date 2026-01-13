@@ -58,8 +58,8 @@ Content`
 			t.Fatalf("Expected start to fail due to parse errors, but it succeeded.")
 		}
 
-		if !strings.Contains(string(output), "Failed to start") {
-			t.Errorf("Expected 'Failed to start' error, got: %s", output)
+		if !strings.Contains(string(output), "failed to start") {
+			t.Errorf("Expected 'failed to start' error, got: %s", output)
 		}
 	})
 }

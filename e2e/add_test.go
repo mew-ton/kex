@@ -1,6 +1,8 @@
 package e2e
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,21 +54,25 @@ func TestKexAdd(t *testing.T) {
 	t.Run("it should add remote URL reference to .kex.yaml", func(t *testing.T) {
 		dir := t.TempDir()
 
-		// We use a known stable URL, e.g. google.com or github.com
-		// Note: Tests depending on external network might be flaky/blocked.
-		// ideally we start a local test server.
-		// But for MVP let's assume network is available or skip if we want to be safe.
-		// Given user said "check reachability", let's try google.com.
+		// Start a local test server to simulate a remote Kex source
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/kex.json" {
+				w.WriteHeader(http.StatusOK)
+				// Serve a minimal valid kex.json
+				w.Write([]byte(`{"documents": []}`))
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}))
+		defer server.Close()
 
-		url := "https://www.google.com"
+		url := server.URL
 
 		cmd := exec.Command(kexBinary, "add", url)
 		cmd.Dir = dir
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			// If network fails, we might warn but fail the test?
-			// Let's assume network is available as user didn't specify offline mode.
-			t.Skipf("Skipping remote URL test due to potential network issues or use local server mock? Error: %v Output: %s", err, output)
+			t.Fatalf("kex add failed: %v\nOutput: %s", err, output)
 		} else {
 			content, _ := os.ReadFile(filepath.Join(dir, ".kex.yaml"))
 			if !strings.Contains(string(content), url) {
