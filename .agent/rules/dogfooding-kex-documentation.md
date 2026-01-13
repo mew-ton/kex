@@ -22,4 +22,4 @@ If `kex` MCP server is unavailable or `search_documents` fails:
 3.  **WAIT** for further instructions. Do **NOT** revert to manual file search (`grep`, `find`, etc.) without explicit permission.
 
 **Forbidden Actions**:
-*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `contents/`. Use Kex tools ONLY.
+*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `examples/contents/*. Use Kex tools ONLY.
