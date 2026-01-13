@@ -26,4 +26,4 @@ If `kex` MCP server is unavailable or `search_documents` fails:
 *   **Test Logic**: Use `go test` to verify changes before building.
 
 **Forbidden Actions**:
-*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `contents/`. Use Kex tools ONLY.
+*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `examples/contents/`. Use Kex tools ONLY.
