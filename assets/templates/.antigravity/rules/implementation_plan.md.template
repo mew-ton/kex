@@ -3,7 +3,7 @@ trigger: always_on
 ---
 # Implementation Plan (Ref: Kex)
 
-**Core Guideline**: When creating an `implementation_plan.md`, you MUST include a "Relevant Knowledge" section.
+**Core Rule**: When creating an `implementation_plan.md`, you MUST include a "Relevant Knowledge" section.
 
 ## Relevant Knowledge Section
 
