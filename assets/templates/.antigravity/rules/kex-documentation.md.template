@@ -3,7 +3,7 @@
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
 **PRIMARY DIRECTIVE (STRICT):**
-Before writing, editing, or restructuring any documentation, you **MUST** first search the knowledge base for style guides and conventions.
+Before writing, editing, or restructuring any documentation, you **MUST** first search the knowledge base using **Kex MCP** for style guides and conventions.
 
 **The "Search Signal" Protocol:**
 1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the style guidelines."
@@ -23,4 +23,4 @@ Before writing, editing, or restructuring any documentation, you **MUST** first 
 *   **Consistency**: Ensure the content structure and key information match across languages.
 
 **Forbidden Actions**:
-*   Do NOT use `grep`, `cat`, or file system tools to read/search existing content for the purpose of "learning the style". Use Kex tools ONLY.
+*   Do NOT use `grep`, `cat`, or file system tools to read/search existing content in `{{.Root}}/` for the purpose of "learning the style". Use Kex tools ONLY.

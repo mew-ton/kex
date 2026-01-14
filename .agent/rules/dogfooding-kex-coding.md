@@ -1,19 +1,23 @@
 ---
 trigger: always_on
 ---
-# Coding Rules (Ref: Kex)
+
+# Coding Guidelines (Ref: Kex)
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
 **PRIMARY DIRECTIVE (STRICT):**
-Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base.
+Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base using **Kex MCP**.
 
 **The "Search Signal" Protocol:**
-1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the rules."
+1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the guidelines."
 2.  **SEARCH**: Execute `search_documents` immediately.
     *   **Keywords**: Use terms related to the task (e.g., "coding", "style", "testing", "naming", "architecture", "function", "component").
     *   **Scope**: When working in a specific language/domain (e.g., Go, TypeScript), you MUST use `exactScopeMatch: true` with the relevant scope (e.g., `["coding", "go"]`, `["coding", "react", "component"]`, `["coding", "utils", "function"]`).
 3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
+
+**Forbidden Actions**:
+*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `contents/`. Use Kex tools ONLY.
 
 **MCP Failure Protocol:**
 If `kex` MCP server is unavailable or `search_documents` fails:

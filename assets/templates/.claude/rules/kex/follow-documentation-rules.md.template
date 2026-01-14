@@ -9,7 +9,7 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 
 ## Documentation Phase
 
-**Core Rule**: When editing documents under `./examples/contents`, maintain clarity and consistency.
+**Core Rule**: When editing documents under `{{.Root}}/`, maintain clarity and consistency.
 
 1.  **Search for style guides** using `search_documents`.
     *   **Keywords**: "documentation", "style", "markdown", "format".
