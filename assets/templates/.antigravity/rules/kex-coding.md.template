@@ -6,7 +6,13 @@ trigger: always_on
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
 **PRIMARY DIRECTIVE (STRICT):**
-Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base.
+Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base using **Kex MCP**.
+
+**Tool Awareness (CRITICAL):**
+You HAVE the **Kex MCP** tools (`mcp_kex_search_documents`, `mcp_kex_read_document`, etc.) available in your environment.
+- Do **NOT** assume you need to use a CLI tool.
+- Do **NOT** attempt to "install" or "find" Kex. It is already configured.
+- Use the MCP tools directly.
 
 **The "Search Signal" Protocol:**
 1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the guidelines."

@@ -22,6 +22,14 @@ Solve the problem in front of you, not the problem you imagine might exist. Avoi
 3.  **YAGNI**: Do not implement code "just in case" it's useful later.
 4.  **Revert**: If you find yourself adding logic not traceable to a requirement, revert it.
 
+### Exception: The Boy Scout Rule
+> "Always leave the campground cleaner than you found it."
+
+You **MAY** perform minor refactoring or cleanup (typo fixes, renaming, variable extraction) on code strictly *within the files you are already modifying* for the requested task, provided that:
+- It is low risk.
+- It does not distract from the main objective.
+- It is explicitly noted in the PR/Commit message.
+
 ## Examples
 
 ### Bad
