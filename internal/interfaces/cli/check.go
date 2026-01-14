@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
@@ -94,68 +93,33 @@ func loadRepository(projectRoot string, cfg config.Config, showSpinner bool) (*f
 
 	// Use NoOpLogger for Check command to avoid clutter
 	l := &logger.NoOpLogger{}
+	factory := fs.NewProviderFactory(cfg, l)
 
 	var providers []fs.DocumentProvider
 
 	// Helper to add provider
-	addProvider := func(pathOrURL string, isReference bool) error {
-		if strings.HasPrefix(pathOrURL, "http://") || strings.HasPrefix(pathOrURL, "https://") {
-			// Remote Provider
-			token := os.Getenv("KEX_REMOTE_TOKEN")
-			if token == "" && cfg.RemoteToken != "" {
-				token = cfg.RemoteToken
+	addProvider := func(pathOrURL string, isReference bool) {
+		provider, _, err := factory.CreateProvider(pathOrURL, isReference, projectRoot)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to load source/reference '%s': %v", pathOrURL, err)
+			if spinner != nil {
+				spinner.Warning(msg)
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: %s\n", msg)
 			}
-			providers = append(providers, fs.NewRemoteProvider(pathOrURL, token, l))
-			return nil
+			return
 		}
-
-		// Local Provider
-		var fullPath string
-		if filepath.IsAbs(pathOrURL) {
-			fullPath = pathOrURL
-		} else {
-			fullPath = filepath.Join(projectRoot, pathOrURL)
-		}
-
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			if isReference {
-				return fmt.Errorf("reference '%s' not found", pathOrURL)
-			}
-			return fmt.Errorf("source '%s' not found", pathOrURL)
-		}
-
-		providers = append(providers, fs.NewLocalProvider(fullPath, l))
-		return nil
+		providers = append(providers, provider)
 	}
 
 	// Load Local Source
 	if cfg.Source != "" {
-		if err := addProvider(cfg.Source, false); err != nil {
-			if spinner != nil {
-				// Warn but continue
-				// spinner.Fail would stop spinner?
-				// Maybe just print warning to stderr?
-				// Since spinner is active, printing to stderr might break layout.
-				// pterm spinner handles Warning?
-				// Let's just create a warning printer
-				spinner.Warning(fmt.Sprintf("Failed to load source '%s': %v", cfg.Source, err))
-			} else {
-				fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
-			}
-			// Do not return error
-		}
+		addProvider(cfg.Source, false)
 	}
 
 	// Load References
 	for _, ref := range cfg.References {
-		if err := addProvider(ref, true); err != nil {
-			if spinner != nil {
-				spinner.Warning(fmt.Sprintf("Failed to load reference '%s': %v", ref, err))
-			} else {
-				fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
-			}
-			// Do not return error
-		}
+		addProvider(ref, true)
 	}
 
 	if len(providers) == 0 {

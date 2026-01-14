@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/mew-ton/kex/internal/infrastructure/config"
+	kexfs "github.com/mew-ton/kex/internal/infrastructure/fs"
 )
 
 const ()
@@ -154,26 +155,29 @@ func (g *Generator) processAiSkills(cwd, localSource string, references []string
 	}
 
 	skillsGen := NewSkillsGenerator(cfg.AiSkills)
+	searchRoots := g.resolveSearchRoots(cwd, localSource, references)
+	skillTargets := cfg.AiSkills.Targets
 
-	// Gather all roots (Local Source (if absolute/relative resolved) + References)
-	// Note: localSource is usually a relative path like "contents" or "docs".
-	// references might be absolute or relative or URLs.
-	// We need to resolve them to absolute paths or handle them appropriately.
-	// Start/Check logic resolves them. Generator should too.
+	for _, t := range skillTargets {
+		agentName := strings.TrimSpace(t)
+		agentDef, ok := manifest.AiAgents[agentName]
+		if !ok {
+			continue
+		}
 
+		if err := g.processAgentSkills(cwd, agentDef, searchRoots, skillsGen); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (g *Generator) resolveSearchRoots(cwd, localSource string, references []string) []string {
 	var searchRoots []string
 	if localSource != "" {
 		searchRoots = append(searchRoots, filepath.Join(cwd, localSource))
 	}
 	for _, ref := range references {
-		// If URL, skip for now? Skills generator walks filesystem.
-		// Remote generator not supported yet for skills unless we fetch them to temp?
-		// Issue 72 description says "kex add remote path".
-		// If it's a remote URL, we probably can't walk it with filepath.WalkDir.
-		// So we skip URLs for skills generation for now unless we implement remote walker.
-		// The user requirement said: "When generating/updating skills, include documents from references".
-		// But if reference is remote, `go walk` won't work.
-		// We'll skip URL references for now and only support local references.
 		if strings.HasPrefix(ref, "http://") || strings.HasPrefix(ref, "https://") {
 			// TODO: Support remote references in skills generation
 			continue
@@ -185,62 +189,42 @@ func (g *Generator) processAiSkills(cwd, localSource string, references []string
 			searchRoots = append(searchRoots, filepath.Join(cwd, ref))
 		}
 	}
+	return searchRoots
+}
 
-	skillTargets := cfg.AiSkills.Targets
-	for _, t := range skillTargets {
-		agentName := strings.TrimSpace(t)
-		agentDef, ok := manifest.AiAgents[agentName]
-		if !ok {
-			continue
+func (g *Generator) processAgentSkills(cwd string, agentDef AgentDef, searchRoots []string, skillsGen *SkillsGenerator) error {
+	for _, skillManifestPath := range agentDef.Files.Skills {
+		skillTemplatePath := filepath.Join("templates", skillManifestPath)
+		skillTemplateData, err := fs.ReadFile(g.Assets, skillTemplatePath)
+		if err != nil {
+			return fmt.Errorf("failed to read skill template %s: %w", skillTemplatePath, err)
 		}
 
-		for _, skillManifestPath := range agentDef.Files.Skills {
-			skillTemplatePath := filepath.Join("templates", skillManifestPath)
-			skillTemplateData, err := fs.ReadFile(g.Assets, skillTemplatePath)
+		targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
+
+		// Iterate all roots and merge results
+		allSkills := make(map[string]string)
+
+		for _, root := range searchRoots {
+			if _, err := os.Stat(root); os.IsNotExist(err) {
+				continue
+			}
+
+			skills, err := skillsGen.Generate(root, string(skillTemplateData), targetPattern)
 			if err != nil {
-				return fmt.Errorf("failed to read skill template %s: %w", skillTemplatePath, err)
+				return fmt.Errorf("failed to generate skills for %s from root %s: %w", skillManifestPath, root, err)
 			}
-
-			targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
-
-			// Iterate all roots and merge results
-			allSkills := make(map[string]string)
-
-			for _, root := range searchRoots {
-				if _, err := os.Stat(root); os.IsNotExist(err) {
-					continue
-				}
-
-				skills, err := skillsGen.Generate(root, string(skillTemplateData), targetPattern)
-				if err != nil {
-					return fmt.Errorf("failed to generate skills for %s from root %s: %w", skillManifestPath, root, err)
-				}
-				for k, v := range skills {
-					allSkills[k] = v
-				}
+			for k, v := range skills {
+				allSkills[k] = v
 			}
+		}
 
-			for filename, content := range allSkills {
-				outPath := filepath.Join(cwd, filename)
-				if err := EnsureDir(filepath.Dir(outPath)); err != nil {
-					return err
-				}
-				if err := WriteFile(outPath, []byte(content)); err != nil {
-					return err
-				}
+		for filename, content := range allSkills {
+			outPath := filepath.Join(cwd, filename)
+			if err := kexfs.WriteFile(outPath, []byte(content)); err != nil {
+				return err
 			}
 		}
 	}
 	return nil
-}
-
-// Simple helpers - duplicate from internal/infrastructure/fs or similar if strictly needed there,
-// but for Generator package utils are fine.
-
-func EnsureDir(path string) error {
-	return os.MkdirAll(path, 0755)
-}
-
-func WriteFile(path string, data []byte) error {
-	return os.WriteFile(path, data, 0644)
 }
