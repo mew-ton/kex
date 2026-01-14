@@ -6,7 +6,7 @@ trigger: always_on
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 
 **PRIMARY DIRECTIVE (STRICT):**
-Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base.
+Before writing any code, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base using **Kex MCP**.
 
 **The "Search Signal" Protocol:**
 1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the guidelines."
@@ -16,7 +16,4 @@ Before writing any code, planning a refactor, or answering technical questions, 
 3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
 **Forbidden Actions**:
-*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `contents/`. Use Kex tools ONLY.
-
-
-
+*   Do NOT use `grep`, `cat`, or file system tools to read guidelines in `{{.Root}}/`. Use Kex tools ONLY.
