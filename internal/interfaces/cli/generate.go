@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 
@@ -99,7 +98,7 @@ func prepareDistDir(outputDir string) error {
 	if err := os.RemoveAll(outputDir); err != nil {
 		return fmt.Errorf("failed to clean dist: %w", err)
 	}
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := fs.EnsureDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create dist: %w", err)
 	}
 	return nil
@@ -114,7 +113,7 @@ func copyContents(projectRoot, outputDir string, cfg config.Config, schema *fs.I
 		srcPath := filepath.Join(projectRoot, source, doc.Path)
 		dstPath := filepath.Join(outputDir, doc.Path)
 
-		if err := copyFile(srcPath, dstPath); err != nil {
+		if err := fs.CopyFile(srcPath, dstPath); err != nil {
 			copySpinner.Fail(fmt.Sprintf("Failed to copy %s: %v", srcPath, err))
 			return fmt.Errorf("failed to copy file: %w", err)
 		}
@@ -147,25 +146,4 @@ func writeManifest(outputDir string, cfg config.Config, schema *fs.IndexSchema) 
 		return fmt.Errorf("failed to encode kex.json: %w", err)
 	}
 	return nil
-}
-
-func copyFile(src, dst string) error {
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
-		return err
-	}
-
-	s, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer s.Close()
-
-	d, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-
-	_, err = io.Copy(d, s)
-	return err
 }

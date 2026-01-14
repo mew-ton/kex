@@ -7,6 +7,7 @@ import (
 
 	"github.com/mew-ton/kex/assets"
 	"github.com/mew-ton/kex/internal/infrastructure/config"
+	"github.com/mew-ton/kex/internal/infrastructure/ui"
 	"github.com/mew-ton/kex/internal/usecase/generator"
 
 	"github.com/pterm/pterm"
@@ -28,12 +29,18 @@ var InitCommand = &cli.Command{
 			Aliases: []string{"s"},
 			Usage:   "Scopes to enable (coding, documentation)",
 		},
-		// Add skills flag for completeness?
 		&cli.StringSliceFlag{
 			Name:  "skills",
 			Usage: "Keywords for Skills (e.g. go, typescript)",
 		},
 	},
+}
+
+type initSelection struct {
+	mcpAgents      map[string]bool
+	mcpScopes      []string
+	skillsAgents   map[string]bool
+	skillsKeywords []string
 }
 
 func runInit(c *cli.Context) error {
@@ -44,89 +51,93 @@ func runInit(c *cli.Context) error {
 		return err
 	}
 
-	var selectedMcpAgents map[string]bool
-	var selectedMcpScopes []string
-	var selectedSkillsAgents map[string]bool
-	var skillsKeywords []string
-
-	// Check if flags are used for non-interactive mode
-	if c.IsSet("agents") || c.IsSet("scopes") || c.IsSet("skills") {
-		// Non-interactive mode
-		selectedMcpAgents = make(map[string]bool)
-		for _, a := range c.StringSlice("agents") {
-			selectedMcpAgents[strings.ToLower(a)] = true
-		}
-
-		selectedMcpScopes = c.StringSlice("scopes")
-
-		// If custom skills are provided, we enable skills for Claude by default?
-		// Or assume agents flag covers it?
-		// For backward compat (and simplicity), let's say if "claude" is in agents, we enable MCP rules.
-		// If "skills" are provided, we enable skills for Claude (since currently only Claude supports it).
-		if c.IsSet("skills") {
-			selectedSkillsAgents = map[string]bool{"claude": true}
-			skillsKeywords = c.StringSlice("skills")
-		}
-	} else {
-		// Interactive Mode
-		// 1. Select Capabilities
-		capabilities, err := selectCapabilities()
-		if err != nil {
-			return err
-		}
-
-		selectedMcpAgents = make(map[string]bool)
-		selectedSkillsAgents = make(map[string]bool)
-
-		hasMcpCapability := false
-		hasSkillsCapability := false
-
-		for _, cap := range capabilities {
-			if strings.Contains(cap, "(MCP Rules)") {
-				hasMcpCapability = true
-				agentName := strings.Split(cap, " ")[0]
-				selectedMcpAgents[strings.ToLower(agentName)] = true
-			}
-			if strings.Contains(cap, "(Skills)") {
-				hasSkillsCapability = true
-				agentName := strings.Split(cap, " ")[0]
-				selectedSkillsAgents[strings.ToLower(agentName)] = true
-			}
-		}
-
-		// 2. Select Scopes for MCP Rules
-		if hasMcpCapability {
-			// Issue #73: Implicitly enable coding scope if MCP agent is selected
-			selectedMcpScopes = append(selectedMcpScopes, "coding")
-
-			// Check if user wants to support indexable documentation
-			enableDocs, err := confirmDocumentationSupport()
-			if err != nil {
-				return err
-			}
-			if enableDocs {
-				selectedMcpScopes = append(selectedMcpScopes, "documentation")
-			}
-		}
-
-		// 3. Input Skills Keywords
-		if hasSkillsCapability {
-			keywords, err := inputSkillsKeywords()
-			if err != nil {
-				return err
-			}
-			skillsKeywords = keywords
-		}
+	selection, err := resolveSelection(c)
+	if err != nil {
+		return err
 	}
 
 	pterm.Info.Printf("Initializing in: %s\n", cwd)
 
-	if err := saveConfig(cwd, selectedMcpAgents, selectedMcpScopes, selectedSkillsAgents, skillsKeywords); err != nil {
+	if err := saveConfig(cwd, selection); err != nil {
 		return err
 	}
 
-	// Run Update logic
 	return runUpdate(c)
+}
+
+func resolveSelection(c *cli.Context) (*initSelection, error) {
+	if c.IsSet("agents") || c.IsSet("scopes") || c.IsSet("skills") {
+		return resolveNonInteractiveSelection(c)
+	}
+	return resolveInteractiveSelection()
+}
+
+func resolveNonInteractiveSelection(c *cli.Context) (*initSelection, error) {
+	sel := &initSelection{
+		mcpAgents: make(map[string]bool),
+	}
+
+	for _, a := range c.StringSlice("agents") {
+		sel.mcpAgents[strings.ToLower(a)] = true
+	}
+
+	sel.mcpScopes = c.StringSlice("scopes")
+
+	if c.IsSet("skills") {
+		sel.skillsAgents = map[string]bool{"claude": true}
+		sel.skillsKeywords = c.StringSlice("skills")
+	}
+
+	return sel, nil
+}
+
+func resolveInteractiveSelection() (*initSelection, error) {
+	capabilities, err := selectCapabilities()
+	if err != nil {
+		return nil, err
+	}
+
+	sel := &initSelection{
+		mcpAgents:    make(map[string]bool),
+		skillsAgents: make(map[string]bool),
+	}
+
+	hasMcpCapability := false
+	hasSkillsCapability := false
+
+	for _, cap := range capabilities {
+		if strings.Contains(cap, "(MCP Rules)") {
+			hasMcpCapability = true
+			agentName := strings.Split(cap, " ")[0]
+			sel.mcpAgents[strings.ToLower(agentName)] = true
+		}
+		if strings.Contains(cap, "(Skills)") {
+			hasSkillsCapability = true
+			agentName := strings.Split(cap, " ")[0]
+			sel.skillsAgents[strings.ToLower(agentName)] = true
+		}
+	}
+
+	if hasMcpCapability {
+		sel.mcpScopes = append(sel.mcpScopes, "coding")
+		enableDocs, err := confirmDocumentationSupport()
+		if err != nil {
+			return nil, err
+		}
+		if enableDocs {
+			sel.mcpScopes = append(sel.mcpScopes, "documentation")
+		}
+	}
+
+	if hasSkillsCapability {
+		keywords, err := inputSkillsKeywords()
+		if err != nil {
+			return nil, err
+		}
+		sel.skillsKeywords = keywords
+	}
+
+	return sel, nil
 }
 
 func printWelcome() {
@@ -142,24 +153,7 @@ func selectCapabilities() ([]string, error) {
 		return nil, err
 	}
 
-	// Dynamically build capabilities list from manifest
-	// For v2, we hardcode known logic mapping for now based on the feedback
-	// "Select Agent Capabilities to enable"
-	// [x] Antigravity (MCP Rules)
-	// [x] Claude (MCP Rules)
-	// [ ] Claude (Skills)
-	// [ ] Cursor (MCP Rules)
-
 	var options []string
-	// Sort agent keys to have consistent order?
-	var agentKeys []string
-	for k := range manifest.AiAgents {
-		agentKeys = append(agentKeys, k)
-	}
-	sort.Strings(agentKeys)
-
-	// Custom mapping logic for display
-	// Verify agent exists in manifest before adding option
 	if _, ok := manifest.AiAgents["antigravity"]; ok {
 		options = append(options, "Antigravity (MCP Rules)")
 	}
@@ -178,15 +172,13 @@ func selectCapabilities() ([]string, error) {
 		"Claude (MCP Rules)":      true,
 	}
 
-	return Multiselect("Select Agent Capabilities to enable", options, preSelected)
+	return ui.Multiselect("Select Agent Capabilities to enable", options, preSelected)
 }
 
 func confirmDocumentationSupport() (bool, error) {
 	pterm.Println()
 	pterm.Info.Println("Indexable documents allow the AI to answer questions about this repository's business logic, architecture, etc.")
 
-	// Default to false (No) to require explicit opt-in for documentation overhead
-	// The user request implies: "Do you want to provide indexable documents?"
 	return pterm.DefaultInteractiveConfirm.
 		WithDefaultText("Do you want to provide indexable documents in this repository?").
 		WithDefaultValue(false).
@@ -207,7 +199,6 @@ func inputSkillsKeywords() ([]string, error) {
 	}
 
 	if strings.TrimSpace(result) == "" {
-		// Defaults
 		return []string{"coding", "documentation", "kex"}, nil
 	}
 
@@ -222,36 +213,32 @@ func inputSkillsKeywords() ([]string, error) {
 	return keywords, nil
 }
 
-func saveConfig(cwd string, mcpAgents map[string]bool, mcpScopes []string, skillsAgents map[string]bool, skillsKeywords []string) error {
-	// Build AiMcpRules
+func saveConfig(cwd string, sel *initSelection) error {
 	var mcpTargets []string
-	for agent := range mcpAgents {
+	for agent := range sel.mcpAgents {
 		mcpTargets = append(mcpTargets, agent)
 	}
 	sort.Strings(mcpTargets)
 
-	// Build AiSkills
 	var skillsTargets []string
-	for agent := range skillsAgents {
+	for agent := range sel.skillsAgents {
 		skillsTargets = append(skillsTargets, agent)
 	}
 	sort.Strings(skillsTargets)
 
-	// Documents defaults
-	docs := buildDocumentsConfig(mcpScopes)
+	docs := buildDocumentsConfig(sel.mcpScopes)
 
-	// Create Config
 	cfg := config.Config{
 		Source: "contents",
 		Update: config.UpdateConfig{
 			Documents: docs,
 			AiMcpRules: config.AiMcpRules{
 				Targets: mcpTargets,
-				Scopes:  mcpScopes,
+				Scopes:  sel.mcpScopes,
 			},
 			AiSkills: config.AiSkills{
 				Targets:  skillsTargets,
-				Keywords: skillsKeywords,
+				Keywords: sel.skillsKeywords,
 			},
 		},
 	}

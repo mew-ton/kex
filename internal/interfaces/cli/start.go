@@ -208,55 +208,34 @@ func startServer(repo *fs.Indexer) error {
 func loadProviders(cfg config.Config, l logger.Logger, cwd string) ([]fs.DocumentProvider, []string, error) {
 	var providers []fs.DocumentProvider
 	var loadedRoots []string
+	factory := fs.NewProviderFactory(cfg, l)
 
 	// Helper to add provider
-	addProvider := func(pathOrURL string, isReference bool) error {
+	addProvider := func(pathOrURL string, isReference bool) {
+		provider, resolvedPath, err := factory.CreateProvider(pathOrURL, isReference, cwd)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load source/reference '%s': %v\n", pathOrURL, err)
+			return
+		}
+
+		sourceType := "Local"
 		if isURL(pathOrURL) {
-			// Remote Provider
-			token := os.Getenv("KEX_REMOTE_TOKEN")
-			if token == "" && cfg.RemoteToken != "" {
-				token = cfg.RemoteToken
-			}
-
-			fmt.Fprintf(os.Stderr, "Source: Remote (%s)\n", pathOrURL)
-			providers = append(providers, fs.NewRemoteProvider(pathOrURL, token, l))
-			loadedRoots = append(loadedRoots, pathOrURL)
-			return nil
+			sourceType = "Remote"
 		}
+		fmt.Fprintf(os.Stderr, "Source: %s (%s)\n", sourceType, resolvedPath)
 
-		// Local Provider
-		var fullPath string
-		if filepath.IsAbs(pathOrURL) {
-			fullPath = pathOrURL
-		} else {
-			fullPath = filepath.Join(cwd, pathOrURL)
-		}
-
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			if isReference {
-				return fmt.Errorf("reference '%s' not found", pathOrURL)
-			}
-			return fmt.Errorf("source '%s' not found", pathOrURL)
-		}
-
-		fmt.Fprintf(os.Stderr, "Source: Local (%s)\n", fullPath)
-		providers = append(providers, fs.NewLocalProvider(fullPath, l))
-		loadedRoots = append(loadedRoots, fullPath)
-		return nil
+		providers = append(providers, provider)
+		loadedRoots = append(loadedRoots, resolvedPath)
 	}
 
 	// Load Local Source
 	if cfg.Source != "" {
-		if err := addProvider(cfg.Source, false); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to load source '%s': %v\n", cfg.Source, err)
-		}
+		addProvider(cfg.Source, false)
 	}
 
 	// Load References
 	for _, ref := range cfg.References {
-		if err := addProvider(ref, true); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to load reference '%s': %v\n", ref, err)
-		}
+		addProvider(ref, true)
 	}
 
 	return providers, loadedRoots, nil
