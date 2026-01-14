@@ -96,11 +96,17 @@ func runInit(c *cli.Context) error {
 
 		// 2. Select Scopes for MCP Rules
 		if hasMcpCapability {
-			scopes, err := selectMcpScopes()
+			// Issue #73: Implicitly enable coding scope if MCP agent is selected
+			selectedMcpScopes = append(selectedMcpScopes, "coding")
+
+			// Check if user wants to support indexable documentation
+			enableDocs, err := confirmDocumentationSupport()
 			if err != nil {
 				return err
 			}
-			selectedMcpScopes = scopes
+			if enableDocs {
+				selectedMcpScopes = append(selectedMcpScopes, "documentation")
+			}
 		}
 
 		// 3. Input Skills Keywords
@@ -175,13 +181,16 @@ func selectCapabilities() ([]string, error) {
 	return Multiselect("Select Agent Capabilities to enable", options, preSelected)
 }
 
-func selectMcpScopes() ([]string, error) {
-	options := []string{"coding", "documentation"}
-	preSelected := map[string]bool{
-		"coding":        true,
-		"documentation": true,
-	}
-	return Multiselect("Select Scopes for MCP Rules (What logic should be enforced via MCP?)", options, preSelected)
+func confirmDocumentationSupport() (bool, error) {
+	pterm.Println()
+	pterm.Info.Println("Indexable documents allow the AI to answer questions about this repository's business logic, architecture, etc.")
+
+	// Default to false (No) to require explicit opt-in for documentation overhead
+	// The user request implies: "Do you want to provide indexable documents?"
+	return pterm.DefaultInteractiveConfirm.
+		WithDefaultText("Do you want to provide indexable documents in this repository?").
+		WithDefaultValue(false).
+		Show()
 }
 
 func inputSkillsKeywords() ([]string, error) {
