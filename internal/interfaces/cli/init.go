@@ -238,9 +238,7 @@ func saveConfig(cwd string, mcpAgents map[string]bool, mcpScopes []string, skill
 	sort.Strings(skillsTargets)
 
 	// Documents defaults
-	docs := map[string]string{
-		"kex": "all",
-	}
+	docs := buildDocumentsConfig(mcpScopes)
 
 	// Create Config
 	cfg := config.Config{
@@ -263,4 +261,15 @@ func saveConfig(cwd string, mcpAgents map[string]bool, mcpScopes []string, skill
 		return err
 	}
 	return nil
+}
+
+func buildDocumentsConfig(scopes []string) map[string]string {
+	docs := make(map[string]string)
+	for _, s := range scopes {
+		if s == "documentation" {
+			docs["kex"] = "all"
+			break
+		}
+	}
+	return docs
 }
