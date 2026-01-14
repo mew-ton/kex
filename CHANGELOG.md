@@ -1,5 +1,21 @@
 # Changelog
 
+## [v2.0.0](https://github.com/mew-ton/kex/compare/v1.0.3...v2.0.0) - 2026-01-14
+- Fix/issue 54 by @mew-ton in https://github.com/mew-ton/kex/pull/55
+- refactor: update kex rules structure and configuration strategies by @mew-ton in https://github.com/mew-ton/kex/pull/60
+- Fix/issue 59 by @mew-ton in https://github.com/mew-ton/kex/pull/61
+- feat: enhance check output and fix startup/logging issues (Ref #56, #62) by @mew-ton in https://github.com/mew-ton/kex/pull/64
+- feat: enhance server logging and global logger by @mew-ton in https://github.com/mew-ton/kex/pull/67
+- Fix/issue 63 by @mew-ton in https://github.com/mew-ton/kex/pull/69
+- Refactor/issue 65 by @mew-ton in https://github.com/mew-ton/kex/pull/70
+- Feat/issue 68 by @mew-ton in https://github.com/mew-ton/kex/pull/71
+- Feat/issue 34 by @mew-ton in https://github.com/mew-ton/kex/pull/75
+- Feat/issue 72 by @mew-ton in https://github.com/mew-ton/kex/pull/77
+- feat: add implementation plan template for antigravity by @mew-ton in https://github.com/mew-ton/kex/pull/79
+- docs: standardize on 'guidelines' terminology and add MCP failure pro… by @mew-ton in https://github.com/mew-ton/kex/pull/80
+- Fix/issue 73 by @mew-ton in https://github.com/mew-ton/kex/pull/81
+- refactor: address coding guideline violations (Issue #78) by @mew-ton in https://github.com/mew-ton/kex/pull/82
+
 ## [v1.0.3](https://github.com/mew-ton/kex/compare/v1.0.2...v1.0.3) - 2026-01-08
 - chore: refine Japanese documentation (Issue #39) by @mew-ton in https://github.com/mew-ton/kex/pull/48
 - chore: change build output path to bin/kex by @mew-ton in https://github.com/mew-ton/kex/pull/50
