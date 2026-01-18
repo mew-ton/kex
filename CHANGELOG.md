@@ -1,5 +1,8 @@
 # Changelog
 
+## [v2.0.2](https://github.com/mew-ton/kex/compare/v2.0.1...v2.0.2) - 2026-01-18
+- docs: update CLI and MCP documentation by @mew-ton in https://github.com/mew-ton/kex/pull/88
+
 ## [v2.0.1](https://github.com/mew-ton/kex/compare/v2.0.0...v2.0.1) - 2026-01-18
 - Fix/issue 85 by @mew-ton in https://github.com/mew-ton/kex/pull/86
 
