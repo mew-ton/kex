@@ -1,5 +1,8 @@
 # Changelog
 
+## [v2.0.1](https://github.com/mew-ton/kex/compare/v2.0.0...v2.0.1) - 2026-01-18
+- Fix/issue 85 by @mew-ton in https://github.com/mew-ton/kex/pull/86
+
 ## [v2.0.0](https://github.com/mew-ton/kex/compare/v1.0.3...v2.0.0) - 2026-01-14
 - Fix/issue 54 by @mew-ton in https://github.com/mew-ton/kex/pull/55
 - refactor: update kex rules structure and configuration strategies by @mew-ton in https://github.com/mew-ton/kex/pull/60
