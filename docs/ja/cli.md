@@ -47,7 +47,7 @@ kex add <path|url>
 MCP サーバーを起動します。
 
 ```bash
-kex start [options]
+kex start [options] [...paths|urls]
 ```
 
 MCP サーバーを起動します。
@@ -55,6 +55,7 @@ MCP サーバーを起動します。
 - **ソース**: `.kex.yaml`の設定を読み込みます。
     - メインの `source` ディレクトリ。
     - 設定されたすべての `references`（ローカルパスおよびリモートURL）。
+- **参照**: 引数として指定された追加のパスまたはURLは、一時的な参照として追加されます。
 
 > **Note**: ソースを設定するには `kex add` を使用するか、`.kex.yaml` を編集してください。
 

@@ -47,7 +47,7 @@ Checks for:
 Starts the MCP Server.
 
 ```bash
-kex start [options]
+kex start [options] [...paths|urls]
 ```
 
 Starts the MCP Server.
@@ -55,6 +55,7 @@ Starts the MCP Server.
 - **Sources**: Loads configuration from `.kex.yaml`.
     - Primary `source` directory.
     - All configured `references` (local paths and remote URLs).
+- **References**: Any additional paths or URLs provided as arguments are added as temporary references.
 
 > **Note**: To configure sources, use `kex add` or edit `.kex.yaml`.
 
