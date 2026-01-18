@@ -304,3 +304,48 @@ func TestKexStart_CwdFlag(t *testing.T) {
 		}
 	})
 }
+
+func TestKexStart_CLIReferences(t *testing.T) {
+	t.Run("it should start successfully when using CLI args as references", func(t *testing.T) {
+		tempDir := t.TempDir()
+
+		// Project 1
+		proj1 := filepath.Join(tempDir, "proj1")
+		os.MkdirAll(filepath.Join(proj1, "docs"), 0755)
+		// No .kex.yaml needed for purely reference-based if we point to docs dir directly
+		os.WriteFile(filepath.Join(proj1, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\n---\n"), 0644)
+
+		// Project 2
+		proj2 := filepath.Join(tempDir, "proj2")
+		os.MkdirAll(proj2, 0755)
+		os.WriteFile(filepath.Join(proj2, "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\n---\n"), 0644)
+
+		// Run start with two arguments
+		cmd := exec.Command(kexBinary, "start", filepath.Join(proj1, "docs"), proj2)
+		cmd.Dir = tempDir
+
+		if err := cmd.Start(); err != nil {
+			t.Fatalf("Failed to start command: %v", err)
+		}
+
+		defer func() {
+			if cmd.Process != nil {
+				cmd.Process.Kill()
+			}
+		}()
+
+		done := make(chan error, 1)
+		go func() {
+			done <- cmd.Wait()
+		}()
+
+		select {
+		case err := <-done:
+			if err != nil && !strings.Contains(err.Error(), "killed") {
+				t.Errorf("Command exited unexpectedly: %v", err)
+			}
+		case <-time.After(1 * time.Second):
+			cmd.Process.Kill()
+		}
+	})
+}

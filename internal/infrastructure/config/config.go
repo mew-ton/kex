@@ -67,3 +67,16 @@ func Load(projectRoot string) (Config, error) {
 
 	return config, nil
 }
+
+// FromCLI creates a Config object solely from CLI arguments.
+// This is used when the user provides references directly via the command line.
+func FromCLI(references []string, token string) Config {
+	return Config{
+		References:  references,
+		RemoteToken: token,
+		// Update strategy defaults are not populated here as this is an ephemeral runtime config
+		Update: UpdateConfig{
+			Documents: make(map[string]string),
+		},
+	}
+}
