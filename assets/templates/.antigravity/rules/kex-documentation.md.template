@@ -8,12 +8,25 @@ Before writing, editing, or restructuring any documentation, you **MUST** first 
 **The "Search Signal" Protocol:**
 1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the style guidelines."
 2.  **SEARCH**: Execute `search_documents` immediately.
-    *   **Scope Strategy**: Set the scope based on the **Technology** or **Domain** of your current task.
-        *   Example: If writing Kex docs, use `["kex"]`. If writing API docs, use `["api"]`.
+    *   **Scope Strategy**: Construct the scope hierarchy: `Domain` / `Platform` (Optional) / `Technology` (Optional).
+        *   **Rule**: You **MUST** include the `Domain` (e.g., `kex`, `api`).
+        *   **Manual Construction (Primary)**:
+            *   `["kex", "documentation"]` (Domain + Tech)
+            *   `["api", "documentation"]` (Domain + Tech)
+        *   **File Inference (Helper)**: `filePath` automatically infers scopes, but is secondary to understanding the correct domain.
+            *   `filePath: "docs/api.md"` infers `["api", "documentation"]`.
     *   **Keyword Strategy**: Combine keywords from these 3 dimensions:
         *   **Object**: Target entity (e.g., "frontmatter", "filename")
         *   **Symptom**: Context/Problem (e.g., "missing", "invalid")
         *   **Concept**: Quality/Goal (e.g., "consistency", "style")
+
+    > [!TIP]
+    > **Scope Cheatsheet (Documentation Context)**
+    > *   **Domain**: `kex`, `api`, `cli`, `sdk` (Target Product/Area)
+    > *   **Platform**: `user-guide`, `reference`, `architecture`
+    > *   **Technology**: `markdown`, `mermaid`, `godoc`
+    >
+    > **Construct the scope**: `[Domain, Platform, Technology]`
 3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
 **Adding New Knowledge**
