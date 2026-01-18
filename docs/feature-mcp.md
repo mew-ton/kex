@@ -8,6 +8,8 @@ Searches the knowledge base for relevant documents.
 
 - **Arguments**:
   - `keywords` (string[]): List of keywords to search for.
+  - `exactScopeMatch` (boolean): If true, treats keywords as exact scope names.
+    - **Use Case**: Useful during implementation planning when the final code structure is uncertain. It allows retrieving all guidelines within a specific scope (e.g., `["coding", "go"]`) to review relevant constraints before starting.
 - **Returns**: A list of document summaries (ID, Title, Description, Path).
 
 ## `read_document`
