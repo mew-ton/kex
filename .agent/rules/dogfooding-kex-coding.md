@@ -12,8 +12,22 @@ Before writing any code, planning a refactor, or answering technical questions, 
 **The "Search Signal" Protocol:**
 1.  **ACKNOWLEDGE**: When you receive a coding task, your *very first* reaction must be "I need to check the guidelines."
 2.  **SEARCH**: Execute `search_documents` immediately.
-    *   **Keywords**: Use terms related to the task (e.g., "coding", "style", "testing", "naming", "architecture", "function", "component").
-    *   **Scope**: When working in a specific language/domain (e.g., Go, TypeScript), you MUST use `exactScopeMatch: true` with the relevant scope (e.g., `["coding", "go"]`, `["coding", "react", "component"]`, `["coding", "utils", "function"]`).
+    *   **Scope Strategy**: Construct the scope hierarchy: `Domain` / `Platform` (Optional) / `Technology` (Optional).
+        *   **Rule**: You **MUST** include the `Domain` (e.g., `coding`, `security`). You **SHOULD** include Platform/Technology if relevant to the specific task (e.g., adding an API -> include `api`).
+        *   **Manual Construction (Best for Verification/Planning)**:
+            *   `["coding", "api", "go"]` (Domain + Platform + Tech)
+            *   `["security", "web"]` (Domain + Platform)
+        *   **File Inference (Fast Path for Coding)**: Use `filePath` to automatically infer scopes when editing existing files.
+            *   `filePath: "main.go"` implies `["coding", "go"]`.
+    *   **Keyword Strategy**: Combine keywords from these 3 dimensions (Object / Symptom / Concept).
+
+    > [!TIP]
+    > **Scope Cheatsheet (Common Examples)**
+    > *   **Domain**: `coding`, `security`, `architecture`, `vcs` (git)
+    > *   **Platform**: `web`, `api`, `cli`, `backend`, `frontend`, `mobile`
+    > *   **Technology**: `go`, `typescript`, `react`, `docker`, `sql`
+    >
+    > **Construct the scope combining**: `[Domain, Platform, Technology]`
 3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
 **Forbidden Actions**:

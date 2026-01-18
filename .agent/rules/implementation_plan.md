@@ -20,8 +20,9 @@ trigger: always_on
 
 ### Process
 
-1.  **Analyze Task**: "What guidelines might apply?" (e.g., "go", "testing", "naming").
-2.  **Search**: Use `search_documents`.
-3.  **Record**: Copy the file path and specific rule into the plan.
+1.  **Analyze Task**: Determine the **Scope** for the task (e.g., `["coding", "go"]`).
+2.  **Search**: Execute `search_documents` with `exactScopeMatch: true` for the identified scope.
+3.  **Record**: You **MUST** list **EVERY** guideline returned by the search in the "Relevant Knowledge" section.
+    *   **Constraint**: Do not filter, select, or exclude any results found by the scope search. Capture all of them.
 
 **(This section is mandatory. Plans without it are considered incomplete.)**

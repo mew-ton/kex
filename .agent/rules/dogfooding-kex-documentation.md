@@ -9,10 +9,27 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
 Before writing any documentation, planning a refactor, or answering technical questions, you **MUST** first search the knowledge base.
 
 **The "Search Signal" Protocol:**
-1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the rules."
+1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the style guidelines."
 2.  **SEARCH**: Execute `search_documents` immediately.
-    *   **Keywords**: Use terms related to the task (e.g., "documentation", "style", "formatting", "naming").
-    *   **Scope**: When working in a specific domain, you MUST use `exactScopeMatch: true` with the relevant scope (e.g., `["documentation", "kex"]`).
+    *   **Scope Strategy**: Construct the scope hierarchy: `Domain` / `Platform` (Optional) / `Technology` (Optional).
+        *   **Rule**: You **MUST** include the `Domain` (e.g., `kex`, `api`).
+        *   **Manual Construction (Primary)**:
+            *   `["kex", "documentation"]` (Domain + Tech)
+            *   `["api", "documentation"]` (Domain + Tech)
+        *   **File Inference (Helper)**: `filePath` automatically infers scopes, but is secondary to understanding the correct domain.
+            *   `filePath: "docs/api.md"` infers `["api", "documentation"]`.
+    *   **Keyword Strategy**: Combine keywords from these 3 dimensions:
+        *   **Object**: Target entity (e.g., "frontmatter", "filename")
+        *   **Symptom**: Context/Problem (e.g., "missing", "invalid")
+        *   **Concept**: Quality/Goal (e.g., "consistency", "style")
+
+    > [!TIP]
+    > **Scope Cheatsheet (Documentation Context)**
+    > *   **Domain**: `kex`, `api`, `cli`, `sdk` (Target Product/Area)
+    > *   **Platform**: `user-guide`, `reference`, `architecture`
+    > *   **Technology**: `markdown`, `mermaid`, `godoc`
+    >
+    > **Construct the scope**: `[Domain, Platform, Technology]`
 3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
 
 **MCP Failure Protocol:**

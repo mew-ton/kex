@@ -29,6 +29,10 @@ var StartCommand = &cli.Command{
 			Name:  "cwd",
 			Usage: "Working directory for the operation",
 		},
+		&cli.StringFlag{
+			Name:  "remote-token",
+			Usage: "Bearer token for remote configuration",
+		},
 	},
 	Action: runStart,
 }
@@ -36,27 +40,48 @@ var StartCommand = &cli.Command{
 func runStart(c *cli.Context) error {
 	fmt.Fprintf(os.Stderr, "Starting Kex Server...\n")
 
-	// 1. Resolve Working Directory
-	cwd, err := resolveCwd(c)
-	if err != nil {
-		return err
-	}
+	var cfg config.Config
+	var root string
+	var err error
 
-	// 2. Load Configuration
-	cfg, err := loadConfiguration(cwd)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: config load failed: %v. Using defaults.\n", err)
+	// 1. Resolve Configuration Strategy
+	if c.NArg() > 0 {
+		// CLI-only mode
+		// Explicitly handle error for Getwd
+		root, err = os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get current working directory: %w", err)
+		}
+
+		cfg = config.FromCLI(c.Args().Slice(), c.String("remote-token"))
+		fmt.Fprintf(os.Stderr, "Mode: CLI Args (%d references)\n", len(cfg.References))
+	} else {
+		// Config File mode
+		root, err = resolveCwd(c)
+		if err != nil {
+			return err
+		}
+
+		cfg, err = loadConfiguration(root)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: config load failed: %v. Using defaults.\n", err)
+		}
+		// If token provided via CLI override, allow it?
+		// User didn't explicitly ask for override in mixed mode, but it's good practice.
+		if token := c.String("remote-token"); token != "" {
+			cfg.RemoteToken = token
+		}
 	}
 
 	// 3. Setup Logger
-	appLogger, err := setupAppLogger(c, cfg, cwd)
+	appLogger, err := setupAppLogger(c, cfg, root)
 	if err != nil {
 		return err
 	}
 	logger.SetGeneric(appLogger)
 
 	// 4. Create and Prepare Repository
-	repo, loadedRoots, err := createRepository(cfg, appLogger, cwd)
+	repo, loadedRoots, err := createRepository(cfg, appLogger, root)
 	if err != nil {
 		return cli.Exit(err.Error(), 1)
 	}
@@ -81,12 +106,12 @@ func resolveCwd(c *cli.Context) (string, error) {
 	return filepath.Abs(cwd)
 }
 
-func loadConfiguration(cwd string) (config.Config, error) {
-	return config.Load(cwd)
+func loadConfiguration(root string) (config.Config, error) {
+	return config.Load(root)
 }
 
-func setupAppLogger(c *cli.Context, cfg config.Config, cwd string) (logger.Logger, error) {
-	appLogger, err := resolveLogger(c, cfg, cwd)
+func setupAppLogger(c *cli.Context, cfg config.Config, root string) (logger.Logger, error) {
+	appLogger, err := resolveLogger(c, cfg, root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: logger setup failed: %v. Using stderr.\n", err)
 		return logger.NewStderrLogger(), nil
