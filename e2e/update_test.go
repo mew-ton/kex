@@ -96,7 +96,10 @@ func TestKexUpdate(t *testing.T) {
 	// If logic is "Ignore", then Update() does nothing. File preserves state.
 
 	gen := generator.New(assets.Assets)
-	err = gen.Update(dir, "", nil, configFallback)
+	updateOpts := generator.UpdateOptions{
+		Cwd: dir, // dir is valid here, references tempDir
+	}
+	err = gen.Update(updateOpts, configFallback)
 	if err != nil {
 		t.Fatalf("Update (Empty Config) failed: %v", err)
 	}
