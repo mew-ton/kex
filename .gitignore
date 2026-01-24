@@ -36,3 +36,7 @@ bin
 
 # Kex
 .kex
+
+# Kex Generated Skills
+.agent/skills/kex.*
+.claude/skills/kex.*
