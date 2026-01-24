@@ -5,6 +5,7 @@ Kex は、互換性のある以下の AI エージェント向けに **動的ス
 - **Google Antigravity**
 - **Claude Desktop**
 - **Claude Code**
+- **Cursor**
 
 ## Skills とは?
 
@@ -31,7 +32,7 @@ Skills は、ドキュメントに基づいて Kex が生成する動的なル�
 ```yaml
 update:
   ai-skills:
-    targets: [claude, antigravity]        # スキルを生成する対象エージェント
+    targets: [claude, cursor, antigravity]        # スキルを生成する対象エージェント
     keywords: [go, testing]  # ナレッジを収集するキーワード
 ```
 
@@ -55,4 +56,5 @@ Skill ファイルは `kex update` によって自動的に生成されるため
 # Kex Generated Skills
 .agent/skills/kex.*
 .claude/skills/kex.*
+.cursor/skills/kex.*
 ```

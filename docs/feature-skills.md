@@ -5,6 +5,7 @@ Kex can generate **Dynamic Skills** for compatible AI agents:
 - **Google Antigravity**
 - **Claude Desktop**
 - **Claude Code**
+- **Cursor**
 
 ## What are Skills?
 
@@ -31,7 +32,7 @@ In `.kex.yaml`:
 ```yaml
 update:
   ai-skills:
-    targets: [claude, antigravity]        # Agents to generate skills for
+    targets: [claude, cursor, antigravity]        # Agents to generate skills for
     keywords: [go, testing]  # Keywords to gather knowledge about
 ```
 
@@ -55,4 +56,5 @@ Add the following to your `.gitignore`:
 # Kex Generated Skills
 .agent/skills/kex.*
 .claude/skills/kex.*
+.cursor/skills/kex.*
 ```
