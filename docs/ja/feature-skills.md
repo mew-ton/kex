@@ -1,6 +1,10 @@
 # AI Skills
 
-Kex は、互換性のある AI エージェント (現在は **Google Antigravity**、**Claude Desktop**、**Claude Code**) 向けに **動的スキル (Dynamic Skills)** を生成できます。
+Kex は、互換性のある以下の AI エージェント向けに **動的スキル (Dynamic Skills)** を生成できます:
+
+- **Google Antigravity**
+- **Claude Desktop**
+- **Claude Code**
 
 ## Skills とは?
 

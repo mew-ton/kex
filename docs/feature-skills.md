@@ -1,6 +1,10 @@
 # AI Skills
 
-Kex can generate **Dynamic Skills** for compatible AI agents (currently **Google Antigravity**, **Claude Desktop**, and **Claude Code**).
+Kex can generate **Dynamic Skills** for compatible AI agents:
+
+- **Google Antigravity**
+- **Claude Desktop**
+- **Claude Code**
 
 ## What are Skills?
 
