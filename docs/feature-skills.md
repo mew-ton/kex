@@ -1,6 +1,6 @@
 # AI Skills
 
-Kex can generate **Dynamic Skills** for compatible AI agents (currently Claude Desktop and Claude Code).
+Kex can generate **Dynamic Skills** for compatible AI agents (currently **Google Antigravity**, **Claude Desktop**, and **Claude Code**).
 
 ## What are Skills?
 
@@ -27,7 +27,7 @@ In `.kex.yaml`:
 ```yaml
 update:
   ai-skills:
-    targets: [claude]        # Agents to generate skills for
+    targets: [claude, antigravity]        # Agents to generate skills for
     keywords: [go, testing]  # Keywords to gather knowledge about
 ```
 
