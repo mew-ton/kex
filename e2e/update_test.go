@@ -36,8 +36,8 @@ func TestKexUpdate(t *testing.T) {
 		t.Fatalf("Failed to modify file: %v", err)
 	}
 
-	// 3. Setup user content in .antigravity/rules/kex-coding.md
-	rulePath := filepath.Join(dir, ".antigravity/rules/kex-coding.md")
+	// 3. Setup user content in .agent/rules/kex-coding.md
+	rulePath := filepath.Join(dir, ".agent/rules/kex-coding.md")
 
 	initialContent, _ := os.ReadFile(rulePath)
 	// Inject a custom header line
