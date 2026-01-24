@@ -14,7 +14,7 @@ kex init [options]
     - `--scopes=<scope>`: スコープを選択します (複数指定可)。
 - 指定された設定で `.kex.yaml` を作成します。
 - `contents/` ディレクトリを作成します。
-- 選択内容に基づいて、エージェントルールファイル (例: `.antigravity/rules/kex-coding.md`) を生成します。
+- 選択内容に基づいて、エージェントルールファイル (例: `.agent/rules/kex-coding.md`) を生成します。
 
 ## `kex check`
 

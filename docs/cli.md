@@ -14,7 +14,7 @@ kex init [options]
     - `--scopes=<scope>`: Select scopes (can be repeated).
 - Creates `.kex.yaml` with selected configuration.
 - Creates `contents/` directory.
-- Generates Agent Rule Files (e.g. `.antigravity/rules/kex-coding.md`) based on selections.
+- Generates Agent Rule Files (e.g. `.agent/rules/kex-coding.md`) based on selections.
 
 ## `kex check`
 

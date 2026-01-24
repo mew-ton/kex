@@ -34,9 +34,9 @@ func TestKexInit(t *testing.T) {
 			t.Error("contents/documentation/kex/write-concise-content.md was not extracted")
 		}
 
-		// Verify .antigravity/rules/kex-coding.md exists (antigravity agent)
-		if _, err := os.Stat(filepath.Join(tempDir, ".antigravity", "rules", "kex-coding.md")); os.IsNotExist(err) {
-			t.Error(".antigravity/rules/kex-coding.md was not created")
+		// Verify .agent/rules/kex-coding.md exists (antigravity agent)
+		if _, err := os.Stat(filepath.Join(tempDir, ".agent", "rules", "kex-coding.md")); os.IsNotExist(err) {
+			t.Error(".agent/rules/kex-coding.md was not created")
 		}
 
 		// Verify .claude/rules/kex/follow-coding-rules.md does NOT exist (unselected)
