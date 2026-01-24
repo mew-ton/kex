@@ -1,15 +1,18 @@
 package generator
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
+	"github.com/mew-ton/kex/internal/domain"
 	"github.com/mew-ton/kex/internal/infrastructure/config"
 	kexfs "github.com/mew-ton/kex/internal/infrastructure/fs"
+	"github.com/mew-ton/kex/internal/infrastructure/logger"
 )
 
 const ()
@@ -154,46 +157,88 @@ func (g *Generator) processAiSkills(cwd, localSource string, references []string
 		return nil
 	}
 
-	skillsGen := NewSkillsGenerator(cfg.AiSkills)
-	searchRoots := g.resolveSearchRoots(cwd, localSource, references)
-	skillTargets := cfg.AiSkills.Targets
+	// Initialize Infrastructure for Document Loading (Indexer)
+	// We use stderr logger for generator output
+	l := logger.NewStderrLogger()
 
-	for _, t := range skillTargets {
+	// Provider Factory (needs generic config)
+	// We reconstruct a partial config for factory
+	factoryCfg := config.Config{
+		Source:     localSource,
+		References: references,
+	}
+	factory := kexfs.NewProviderFactory(factoryCfg, l)
+
+	var providers []kexfs.DocumentProvider
+
+	// Add Local Source
+	if localSource != "" {
+		p, _, err := factory.CreateProvider(localSource, false, cwd)
+		if err != nil {
+			return fmt.Errorf("failed to create local provider for skills: %w", err)
+		}
+		providers = append(providers, p)
+	}
+
+	// Add References
+	for _, ref := range references {
+		p, _, err := factory.CreateProvider(ref, true, cwd)
+		if err != nil {
+			// Warn but continue for references?
+			fmt.Printf("Warning: failed to load reference '%s': %v\n", ref, err)
+			continue
+		}
+		providers = append(providers, p)
+	}
+
+	if len(providers) == 0 {
+		return nil
+	}
+
+	compositeProvider := kexfs.NewCompositeProvider(providers)
+	indexer := kexfs.New(compositeProvider, l)
+
+	if err := indexer.Load(); err != nil {
+		return fmt.Errorf("failed to load documents for skills generation: %w", err)
+	}
+
+	// Execute Search (Exact Match on Keywords as Scopes? Or just Keywords?)
+	// Implementation Plan says: Execute search: `search.Execute(keywords, "", true)` (exactScopeMatch=true).
+	// But we are calling Indexer directly.
+	// indexer.Search(keywords, scopes, exactScopeMatch)
+	// If we use exactScopeMatch=true, then `keywords` are treated as valid scopes.
+	// We pass `nil` for explicit scopes because the keywords provided in config ARE the scopes we want.
+	docs := indexer.Search(cfg.AiSkills.Keywords, nil, true)
+
+	// Ensure content is loaded
+
+	// Ensure content is loaded
+	var loadedDocs []*domain.Document
+	for _, d := range docs {
+		fullDoc, ok := indexer.GetByID(d.ID)
+		if ok {
+			loadedDocs = append(loadedDocs, fullDoc)
+		}
+	}
+
+	// Generate Skills for each Agent
+	for _, t := range cfg.AiSkills.Targets {
 		agentName := strings.TrimSpace(t)
 		agentDef, ok := manifest.AiAgents[agentName]
 		if !ok {
 			continue
 		}
 
-		if err := g.processAgentSkills(cwd, agentDef, searchRoots, skillsGen); err != nil {
+		if err := g.processAgentSkills(cwd, agentDef, loadedDocs); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (g *Generator) resolveSearchRoots(cwd, localSource string, references []string) []string {
-	var searchRoots []string
-	if localSource != "" {
-		searchRoots = append(searchRoots, filepath.Join(cwd, localSource))
-	}
-	for _, ref := range references {
-		if strings.HasPrefix(ref, "http://") || strings.HasPrefix(ref, "https://") {
-			// TODO: Support remote references in skills generation
-			continue
-		}
-
-		if filepath.IsAbs(ref) {
-			searchRoots = append(searchRoots, ref)
-		} else {
-			searchRoots = append(searchRoots, filepath.Join(cwd, ref))
-		}
-	}
-	return searchRoots
-}
-
-func (g *Generator) processAgentSkills(cwd string, agentDef AgentDef, searchRoots []string, skillsGen *SkillsGenerator) error {
+func (g *Generator) processAgentSkills(cwd string, agentDef AgentDef, docs []*domain.Document) error {
 	for _, skillManifestPath := range agentDef.Files.Skills {
+		// Load Template
 		skillTemplatePath := filepath.Join("templates", skillManifestPath)
 		skillTemplateData, err := fs.ReadFile(g.Assets, skillTemplatePath)
 		if err != nil {
@@ -201,25 +246,15 @@ func (g *Generator) processAgentSkills(cwd string, agentDef AgentDef, searchRoot
 		}
 
 		targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
+		tmplContent := string(skillTemplateData)
 
-		// Iterate all roots and merge results
-		allSkills := make(map[string]string)
-
-		for _, root := range searchRoots {
-			if _, err := os.Stat(root); os.IsNotExist(err) {
-				continue
-			}
-
-			skills, err := skillsGen.Generate(root, string(skillTemplateData), targetPattern)
+		// Generate files for each document
+		for _, doc := range docs {
+			filename, content, err := g.generateSkillFile(doc, tmplContent, targetPattern)
 			if err != nil {
-				return fmt.Errorf("failed to generate skills for %s from root %s: %w", skillManifestPath, root, err)
+				return fmt.Errorf("failed to generate skill for %s: %w", doc.ID, err)
 			}
-			for k, v := range skills {
-				allSkills[k] = v
-			}
-		}
 
-		for filename, content := range allSkills {
 			outPath := filepath.Join(cwd, filename)
 			if err := kexfs.WriteFile(outPath, []byte(content)); err != nil {
 				return err
@@ -227,4 +262,42 @@ func (g *Generator) processAgentSkills(cwd string, agentDef AgentDef, searchRoot
 		}
 	}
 	return nil
+}
+
+type SkillTemplateData struct {
+	SkillName   string
+	Title       string
+	Description string
+	Body        string
+}
+
+func (g *Generator) generateSkillFile(doc *domain.Document, templateContent, outputPattern string) (string, string, error) {
+	tmpl, err := template.New("skill").Parse(templateContent)
+	if err != nil {
+		return "", "", fmt.Errorf("parse template: %w", err)
+	}
+
+	filenameTmpl, err := template.New("filename").Parse(outputPattern)
+	if err != nil {
+		return "", "", fmt.Errorf("parse filename template: %w", err)
+	}
+
+	data := SkillTemplateData{
+		SkillName:   doc.ID,
+		Title:       doc.Title,
+		Description: doc.Description,
+		Body:        doc.Body,
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", "", fmt.Errorf("execute template: %w", err)
+	}
+
+	var filenameBuf bytes.Buffer
+	if err := filenameTmpl.Execute(&filenameBuf, data); err != nil {
+		return "", "", fmt.Errorf("execute filename template: %w", err)
+	}
+
+	return filenameBuf.String(), buf.String(), nil
 }

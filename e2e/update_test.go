@@ -119,7 +119,7 @@ update:
     scopes: [coding]
   ai-skills:
     targets: [claude]
-    keywords: [kex]
+    keywords: [documentation, kex]
 `
 	os.WriteFile(filepath.Join(dir, ".kex.yaml"), []byte(cfgData), 0644)
 
@@ -171,13 +171,15 @@ update:
 
 	foundSkill := false
 	filepath.WalkDir(filepath.Join(dir, ".claude", "skills"), func(path string, d os.DirEntry, err error) error {
-		if strings.Contains(path, "write-concise-content.md") {
+		// New structure: .claude/skills/kex.documentation.kex.write-concise-content/SKILL.md
+		// We check if "write-concise-content" is in the path.
+		if strings.Contains(path, "write-concise-content") {
 			foundSkill = true
 		}
 		return nil
 	})
 	if !foundSkill {
-		t.Errorf("Skill file for write-concise-content.md was not generated in .claude/skills")
+		t.Errorf("Skill directory for write-concise-content was not generated in .claude/skills")
 	}
 }
 

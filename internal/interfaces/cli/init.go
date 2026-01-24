@@ -156,6 +156,7 @@ func selectCapabilities() ([]string, error) {
 	var options []string
 	if _, ok := manifest.AiAgents["antigravity"]; ok {
 		options = append(options, "Antigravity (MCP Rules)")
+		options = append(options, "Antigravity (Skills)")
 	}
 	if _, ok := manifest.AiAgents["claude"]; ok {
 		options = append(options, "Claude (MCP Rules)")

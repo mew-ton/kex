@@ -19,7 +19,8 @@
         "documentation": [
           ".agent/rules/kex-documentation.md.template",
           ".agent/rules/implementation_plan.md.template"
-        ]
+        ],
+        "skills": [".agent/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     },
     "cursor": {
@@ -34,7 +35,7 @@
       "files": {
         "coding": [".claude/rules/kex/follow-coding-rules.md.template"],
         "documentation": [".claude/rules/kex/follow-documentation-rules.md.template"],
-        "skills": [".claude/skills/kex/{{.SkillName}}.md.template"]
+        "skills": [".claude/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     }
   }

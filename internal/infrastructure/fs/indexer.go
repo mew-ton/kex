@@ -221,9 +221,7 @@ func (i *Indexer) inferScopes(keywords []string, explicitScopes []string, exactS
 		// In exactScopeMatch, keywords are explicitly treated as scopes
 		for _, k := range keywords {
 			lowerK := strings.ToLower(k)
-			if _, ok := i.ScopeIndex[lowerK]; ok {
-				validScopes[lowerK] = struct{}{}
-			}
+			validScopes[lowerK] = struct{}{}
 		}
 	}
 	return validScopes

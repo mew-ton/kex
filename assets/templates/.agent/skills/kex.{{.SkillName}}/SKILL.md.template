@@ -1,0 +1,5 @@
+---
+name: {{.SkillName}}
+description: {{.Description}}
+---
+{{.Body}}
