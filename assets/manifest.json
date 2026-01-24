@@ -27,7 +27,8 @@
       "name": "Cursor",
       "files": {
         "coding": [".cursor/rules/kex-coding.md.template"],
-        "documentation": [".cursor/rules/kex-documentation.md.template"]
+        "documentation": [".cursor/rules/kex-documentation.md.template"],
+        "skills": [".cursor/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     },
     "claude": {

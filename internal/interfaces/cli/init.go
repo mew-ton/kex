@@ -164,6 +164,7 @@ func selectCapabilities() ([]string, error) {
 	}
 	if _, ok := manifest.AiAgents["cursor"]; ok {
 		options = append(options, "Cursor (MCP Rules)")
+		options = append(options, "Cursor (Skills)")
 	}
 
 	pterm.Info.Println("MCP Rules are static guidelines enforced by the AI. Skills are dynamic knowledge retrieved by keywords.")
