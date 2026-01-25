@@ -1,8 +1,14 @@
-source: examples/contents
+references:
+  - https://mew-ton.github.io/coding-guidelines
+
 logging:
   file: ".kex/kex.log"
   level: info
 
 update:
-  strategies:
-    kex: all
+  ai-skills:
+    targets:
+      - antigravity
+    keywords:
+      - coding
+      - go

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -62,6 +63,15 @@ func runInit(c *cli.Context) error {
 		return err
 	}
 
+	if err := saveConfig(cwd, selection); err != nil {
+		return err
+	}
+
+	// Ensure contents directory exists as it is the default source
+	if err := os.MkdirAll(filepath.Join(cwd, "contents"), 0755); err != nil {
+		return err
+	}
+
 	return runUpdate(c)
 }
 
@@ -84,7 +94,14 @@ func resolveNonInteractiveSelection(c *cli.Context) (*initSelection, error) {
 	sel.mcpScopes = c.StringSlice("scopes")
 
 	if c.IsSet("skills") {
-		sel.skillsAgents = map[string]bool{"claude": true}
+		if len(sel.mcpAgents) > 0 {
+			sel.skillsAgents = make(map[string]bool)
+			for a := range sel.mcpAgents {
+				sel.skillsAgents[a] = true
+			}
+		} else {
+			sel.skillsAgents = map[string]bool{"claude": true}
+		}
 		sel.skillsKeywords = c.StringSlice("skills")
 	}
 
@@ -156,6 +173,7 @@ func selectCapabilities() ([]string, error) {
 	var options []string
 	if _, ok := manifest.AiAgents["antigravity"]; ok {
 		options = append(options, "Antigravity (MCP Rules)")
+		options = append(options, "Antigravity (Skills)")
 	}
 	if _, ok := manifest.AiAgents["claude"]; ok {
 		options = append(options, "Claude (MCP Rules)")
@@ -163,6 +181,7 @@ func selectCapabilities() ([]string, error) {
 	}
 	if _, ok := manifest.AiAgents["cursor"]; ok {
 		options = append(options, "Cursor (MCP Rules)")
+		options = append(options, "Cursor (Skills)")
 	}
 
 	pterm.Info.Println("MCP Rules are static guidelines enforced by the AI. Skills are dynamic knowledge retrieved by keywords.")

@@ -45,7 +45,13 @@ func runUpdate(c *cli.Context) error {
 	sourceRoot := cfg.Source
 	// Note: if cfg.Source is empty, it means no local source. generator handles empty source string.
 
-	if err := gen.Update(cwd, sourceRoot, cfg.References, updateConfig); err != nil {
+	opts := generator.UpdateOptions{
+		Cwd:         cwd,
+		LocalSource: sourceRoot,
+		References:  cfg.References,
+	}
+
+	if err := gen.Update(opts, updateConfig); err != nil {
 		spinner.Fail(err.Error())
 		return err
 	}

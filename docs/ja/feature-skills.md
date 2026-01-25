@@ -1,6 +1,11 @@
 # AI Skills
 
-Kex は、互換性のある AI エージェント (現在は Claude Desktop と Claude Code) 向けに **動的スキル (Dynamic Skills)** を生成できます。
+Kex は、互換性のある以下の AI エージェント向けに **動的スキル (Dynamic Skills)** を生成できます:
+
+- **Google Antigravity**
+- **Claude Desktop**
+- **Claude Code**
+- **Cursor**
 
 ## Skills とは?
 
@@ -27,7 +32,7 @@ Skills は、ドキュメントに基づいて Kex が生成する動的なル�
 ```yaml
 update:
   ai-skills:
-    targets: [claude]        # スキルを生成する対象エージェント
+    targets: [claude, cursor, antigravity]        # スキルを生成する対象エージェント
     keywords: [go, testing]  # ナレッジを収集するキーワード
 ```
 
@@ -38,3 +43,18 @@ update:
 - **コンテキスト認識**: エージェントはすべてのファイルを読み込むことなく、*どのような* ガイドラインが存在するかを把握できます。
 - **トークン効率**: Skill ファイルには要約のみが含まれ、全文は含まれません。
 - **発見可能性**: エージェントは必要に応じて `search_documents` MCP ツールを使用して、特定の詳細を読むことができます。
+
+## ベストプラクティス
+
+### バージョン管理 (.gitignore)
+
+Skill ファイルは `kex update` によって自動的に生成されるため、**バージョン管理から除外する** ことを推奨します。これにより、リポジトリをクリーンに保ち、`kex update` を信頼できる唯一の情報源として運用できます。
+
+`.gitignore` に以下を追加してください:
+
+```gitignore
+# Kex Generated Skills
+.agent/skills/kex.*
+.claude/skills/kex.*
+.cursor/skills/kex.*
+```

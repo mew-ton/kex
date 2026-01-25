@@ -19,14 +19,16 @@
         "documentation": [
           ".agent/rules/kex-documentation.md.template",
           ".agent/rules/implementation_plan.md.template"
-        ]
+        ],
+        "skills": [".agent/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     },
     "cursor": {
       "name": "Cursor",
       "files": {
         "coding": [".cursor/rules/kex-coding.md.template"],
-        "documentation": [".cursor/rules/kex-documentation.md.template"]
+        "documentation": [".cursor/rules/kex-documentation.md.template"],
+        "skills": [".cursor/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     },
     "claude": {
@@ -34,7 +36,7 @@
       "files": {
         "coding": [".claude/rules/kex/follow-coding-rules.md.template"],
         "documentation": [".claude/rules/kex/follow-documentation-rules.md.template"],
-        "skills": [".claude/skills/kex/{{.SkillName}}.md.template"]
+        "skills": [".claude/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     }
   }
