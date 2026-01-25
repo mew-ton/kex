@@ -39,4 +39,5 @@ bin
 
 # Kex Generated Skills
 .agent/skills/kex.*
+.cursor/skills/kex.*
 .claude/skills/kex.*

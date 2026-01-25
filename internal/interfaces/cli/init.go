@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -62,6 +63,15 @@ func runInit(c *cli.Context) error {
 		return err
 	}
 
+	if err := saveConfig(cwd, selection); err != nil {
+		return err
+	}
+
+	// Ensure contents directory exists as it is the default source
+	if err := os.MkdirAll(filepath.Join(cwd, "contents"), 0755); err != nil {
+		return err
+	}
+
 	return runUpdate(c)
 }
 
@@ -84,7 +94,14 @@ func resolveNonInteractiveSelection(c *cli.Context) (*initSelection, error) {
 	sel.mcpScopes = c.StringSlice("scopes")
 
 	if c.IsSet("skills") {
-		sel.skillsAgents = map[string]bool{"claude": true}
+		if len(sel.mcpAgents) > 0 {
+			sel.skillsAgents = make(map[string]bool)
+			for a := range sel.mcpAgents {
+				sel.skillsAgents[a] = true
+			}
+		} else {
+			sel.skillsAgents = map[string]bool{"claude": true}
+		}
 		sel.skillsKeywords = c.StringSlice("skills")
 	}
 

@@ -168,12 +168,10 @@ func (g *Generator) processAiSkills(opts UpdateOptions, cfg config.UpdateConfig,
 	// 1. Setup Indexer (Load Documents)
 	indexer, err := g.setupSkillsIndexer(opts)
 	if err != nil {
-		// If setup fails (e.g. no providers), just return nil or error?
-		// setupSkillsIndexer returns error if critical failure, or nil indexer if no providers
-		if indexer == nil {
-			return nil
-		}
 		return err
+	}
+	if indexer == nil {
+		return nil
 	}
 
 	// 2. Search for relevant docs
