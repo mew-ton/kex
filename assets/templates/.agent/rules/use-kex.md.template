@@ -1,7 +1,7 @@
 ---
 trigger: always_on
 ---
-# Coding Guidelines (Ref: Kex)
+# Kex Usage Guidelines
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
 

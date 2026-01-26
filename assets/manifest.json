@@ -16,7 +16,7 @@
           ".agent/rules/use-kex.md.template"
         ],
         "documentation": [
-          ".agent/rules/kex-documentation.md.template"
+          ".agent/rules/follow-documentation-rules.md.template"
         ],
         "skills": [".agent/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
@@ -25,7 +25,7 @@
       "name": "Cursor",
       "files": {
         "common": [".cursor/rules/use-kex.md.template"],
-        "documentation": [".cursor/rules/kex-documentation.md.template"],
+        "documentation": [".cursor/rules/follow-documentation-rules.md.template"],
         "skills": [".cursor/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
     },
