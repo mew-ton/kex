@@ -22,21 +22,14 @@ type Logging struct {
 }
 
 type UpdateConfig struct {
-	Documents  map[string]string `yaml:"documents"`
-	AiMcpRules AiMcpRules        `yaml:"ai-mcp-rules"`
-	AiSkills   AiSkills          `yaml:"ai-skills"`
+	Documents map[string]string `yaml:"documents"`
+	Ai        AiConfig          `yaml:"ai"`
 }
 
-// AiMcpRules configuration
-type AiMcpRules struct {
-	Targets []string `yaml:"targets"` // List of agents: ["antigravity", "claude"]
-	Scopes  []string `yaml:"scopes"`  // List of scopes: ["coding", "documentation"]
-}
-
-// AiSkills configuration
-type AiSkills struct {
-	Targets  []string `yaml:"targets"`  // List of agents: ["claude"]
-	Keywords []string `yaml:"keywords"` // List of keywords to include
+// AiConfig configuration
+type AiConfig struct {
+	Targets  []string `yaml:"targets"` // List of agents: ["antigravity", "cursor", "claude"]
+	Keywords []string `yaml:"keywords,omitempty"`
 }
 
 func Load(projectRoot string) (Config, error) {

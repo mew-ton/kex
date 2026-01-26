@@ -70,20 +70,17 @@ func (g *Generator) determineFilesToUpdate(manifest *Manifest, cfg config.Update
 		}
 	}
 
-	// B. MCP Rules (AiMcpRules)
+	// B. MCP Rules (AiConfig)
 	g.resolveMcpFiles(manifest, cfg, filesToUpdate)
 
 	return filesToUpdate
 }
 
 func (g *Generator) resolveMcpFiles(manifest *Manifest, cfg config.UpdateConfig, filesToUpdate map[string]string) {
-	targets := cfg.AiMcpRules.Targets
-	scopesList := cfg.AiMcpRules.Scopes
-	// clean up whitespace
-	for i := range scopesList {
-		scopesList[i] = strings.TrimSpace(scopesList[i])
-	}
-
+	targets := cfg.Ai.Targets
+	// Scopes are now implicit/all-inclusive for enabled agents
+	// We include both common and documentation by default via "all"
+	scopesList := []string{"all"}
 	scopeStrategies := ResolveFileScopes(scopesList)
 
 	for _, t := range targets {
@@ -161,7 +158,7 @@ func (g *Generator) processTemplateFiles(cwd, rootDir string, filesToUpdate map[
 }
 
 func (g *Generator) processAiSkills(opts UpdateOptions, cfg config.UpdateConfig, manifest *Manifest) error {
-	if len(cfg.AiSkills.Targets) == 0 || len(cfg.AiSkills.Keywords) == 0 {
+	if len(cfg.Ai.Targets) == 0 || len(cfg.Ai.Keywords) == 0 {
 		return nil
 	}
 
@@ -175,10 +172,10 @@ func (g *Generator) processAiSkills(opts UpdateOptions, cfg config.UpdateConfig,
 	}
 
 	// 2. Search for relevant docs
-	docs := g.loadSkillsDocs(indexer, cfg.AiSkills.Keywords)
+	docs := g.loadSkillsDocs(indexer, cfg.Ai.Keywords)
 
 	// 3. Generate Skills for each Agent
-	return g.generateSkills(opts.Cwd, cfg.AiSkills.Targets, manifest, docs)
+	return g.generateSkills(opts.Cwd, cfg.Ai.Targets, manifest, docs)
 }
 
 func (g *Generator) setupSkillsIndexer(opts UpdateOptions) (*kexfs.Indexer, error) {

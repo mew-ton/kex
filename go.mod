@@ -7,6 +7,7 @@ require (
 	atomicgo.dev/keyboard v0.2.9
 	github.com/pterm/pterm v0.12.82
 	github.com/urfave/cli/v2 v2.27.7
+	golang.org/x/text v0.29.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -67,7 +68,6 @@ require (
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
 )
 
 tool github.com/evilmartians/lefthook

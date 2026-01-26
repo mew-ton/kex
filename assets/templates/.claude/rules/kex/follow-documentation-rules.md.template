@@ -5,11 +5,19 @@ trigger: always_on
 
 This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management. Before modifying code or Kex-managed documentation, please follow these rules.
 
-**Core Rule (STRICT):** You are FORBIDDEN from writing any content until you have explicitly searched for and read relevant guidelines. "Guessing" or "Reading the room" is considered a violation.
+**GUIDELINE RETRIEVAL:**
+Your context already contains high-priority guidelines (Skills) based on project keywords.
+
+**When to use Kex MCP (`search_documents`):**
+1.  **Missing Context**: If the current task involves a domain not covered by the loaded Skills.
+    *   *Action*: Search to find relevant guidelines.
+    *   *Follow-up*: If these guidelines are permanently relevant, **propose adding new keywords** to `.kex.yaml` and running `kex update`.
+2.  **Deep Dive**: If the Skill summary is insufficient and you need more specific implementation details.
+3.  **Verification**: To verify if a new pattern is compliant when in doubt.
 
 **The "Search Signal" Protocol:**
-1.  **ACKNOWLEDGE**: When you receive a documentation task, your *very first* reaction must be "I need to check the style guidelines."
-2.  **SEARCH**: Execute `search_documents` immediately.
+1.  **CHECK**: Review loaded Skills first.
+2.  **SEARCH**: If strictly necessary, execute `search_documents`.
     *   **Scope Strategy**: Construct the scope hierarchy: `Domain` / `Platform` (Optional) / `Technology` (Optional).
         *   **Rule**: You **MUST** include the `Domain` (e.g., `kex`, `api`).
         *   **Manual Construction (Primary)**:
@@ -29,7 +37,7 @@ This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management
     > *   **Technology**: `markdown`, `mermaid`, `godoc`
     >
     > **Construct the scope**: `[Domain, Platform, Technology]`
-3.  **VERIFY**: You are forbidden from proceeding until you have read at least one relevant guideline or proven none exist.
+3.  **VERIFY**: Use the retrieved knowledge to supplement your context.
 
 ## Adding New Knowledge
 
