@@ -7,7 +7,7 @@ import (
 )
 
 type AgentFiles struct {
-	Coding        []string `json:"coding"`
+	Common        []string `json:"common"`
 	Documentation []string `json:"documentation"`
 	Skills        []string `json:"skills"` // List of template patterns
 }

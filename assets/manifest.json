@@ -12,13 +12,11 @@
     "antigravity": {
       "name": "Google Antigravity",
       "files": {
-        "coding": [
-          ".agent/rules/kex-coding.md.template",
-          ".agent/rules/implementation_plan.md.template"
+        "common": [
+          ".agent/rules/use-kex.md.template"
         ],
         "documentation": [
-          ".agent/rules/kex-documentation.md.template",
-          ".agent/rules/implementation_plan.md.template"
+          ".agent/rules/kex-documentation.md.template"
         ],
         "skills": [".agent/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
@@ -26,7 +24,7 @@
     "cursor": {
       "name": "Cursor",
       "files": {
-        "coding": [".cursor/rules/kex-coding.md.template"],
+        "common": [".cursor/rules/use-kex.md.template"],
         "documentation": [".cursor/rules/kex-documentation.md.template"],
         "skills": [".cursor/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }
@@ -34,7 +32,7 @@
     "claude": {
       "name": "Claude",
       "files": {
-        "coding": [".claude/rules/kex/follow-coding-rules.md.template"],
+        "common": [".claude/rules/kex/use-kex.md.template"],
         "documentation": [".claude/rules/kex/follow-documentation-rules.md.template"],
         "skills": [".claude/skills/kex.{{.SkillName}}/SKILL.md.template"]
       }

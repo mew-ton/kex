@@ -36,15 +36,15 @@ func TestKexUpdate(t *testing.T) {
 		t.Fatalf("Failed to modify file: %v", err)
 	}
 
-	// 3. Setup user content in .agent/rules/kex-coding.md
-	rulePath := filepath.Join(dir, ".agent/rules/kex-coding.md")
+	// 3. Setup user content in .agent/rules/use-kex.md
+	rulePath := filepath.Join(dir, ".agent/rules/use-kex.md")
 
 	initialContent, _ := os.ReadFile(rulePath)
 	// Inject a custom header line
 	customHeader := "# My Custom Rules\n" + string(initialContent)
 	err = os.WriteFile(rulePath, []byte(customHeader), 0644)
 	if err != nil {
-		t.Fatalf("Failed to write kex-coding.md: %v", err)
+		t.Fatalf("Failed to write use-kex.md: %v", err)
 	}
 
 	// 4. Run Update (Antigravity should overwrite by default based on kex init setting overwrite? No, wait.)
@@ -62,10 +62,7 @@ func TestKexUpdate(t *testing.T) {
 		t.Errorf("System document was NOT overwritten/updated")
 	}
 
-	// 6. Verify kex-coding.md is OVERWRITTEN (Because kex init sets it to overwrite)
-	// ISSUE: the test expected "preserved" before because defaults were "skip".
-	// Now defaults are "ignore", but init sets to "overwrite".
-	// If I want to test "skip" (Create Only), I need to modify config.
+	// 6. Verify use-kex.md is OVERWRITTEN (Because kex init sets it to overwrite)
 
 	contentOverwrittenInit, _ := os.ReadFile(rulePath)
 	if strings.Contains(string(contentOverwrittenInit), "# My Custom Rules") {
@@ -91,7 +88,7 @@ func TestKexUpdate(t *testing.T) {
 
 	configFallback := config.UpdateConfig{
 		Documents: make(map[string]string),
-		// Empty AiMcpRules effectively means no targets
+		// Empty Ai effective means no targets
 	}
 	// If logic is "Ignore", then Update() does nothing. File preserves state.
 
@@ -117,10 +114,7 @@ func TestKexUpdate(t *testing.T) {
 update:
   documents:
     kex: all
-  ai-mcp-rules:
-    targets: [claude]
-    scopes: [coding]
-  ai-skills:
+  ai:
     targets: [claude]
     keywords: [documentation, kex]
 `
@@ -137,9 +131,9 @@ update:
 
 	runKex("update")
 
-	claudeRulePath := filepath.Join(dir, ".claude/rules/kex/follow-coding-rules.md")
+	claudeRulePath := filepath.Join(dir, ".claude/rules/kex/use-kex.md")
 	if _, err := os.Stat(claudeRulePath); os.IsNotExist(err) {
-		t.Errorf("Claude rules were not generated in .claude/rules/kex/follow-coding-rules.md")
+		t.Errorf("Claude rules were not generated in .claude/rules/kex/use-kex.md")
 	}
 
 	// Verify Skill Generation

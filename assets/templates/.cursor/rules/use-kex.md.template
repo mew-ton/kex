@@ -1,0 +1,25 @@
+---
+trigger: always_on
+---
+# Coding Guidelines (Ref: Kex)
+
+This project uses [Kex](https://github.com/mew-ton/kex) for knowledge management.
+
+**GUIDELINE RETRIEVAL:**
+Your context already contains high-priority guidelines (Skills) based on project keywords.
+
+**When to use Kex MCP (`search_documents`):**
+1.  **Missing Context**: If the current task involves a domain not covered by the loaded Skills.
+    *   *Action*: Search to find relevant guidelines.
+    *   *Follow-up*: If these guidelines are permanently relevant, **propose adding new keywords** to `.kex.yaml` and running `kex update`.
+2.  **Deep Dive**: If the Skill summary is insufficient and you need more specific implementation details.
+3.  **Verification**: To verify if a new pattern is compliant when in doubt.
+
+**The "Search Signal" Protocol:**
+1.  **CHECK**: Review loaded Skills first.
+2.  **SEARCH**: If strictly necessary, execute `search_documents` with specific keywords/scopes.
+3.  **VERIFY**: Use the retrieved knowledge to supplement your context.
+
+**Fallback:**
+If no relevant skills are found via MCP, refer to general coding standards or project-specific documentation in `{{.Root}}/`.
+
