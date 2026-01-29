@@ -31,7 +31,7 @@ func TestAntigravitySkillsGeneration(t *testing.T) {
 	// So we use keywords "kex".
 	cfgData := `source: contents
 update:
-  ai-skills:
+  ai:
     targets: [antigravity]
     keywords: [documentation, kex]
 `

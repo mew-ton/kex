@@ -29,7 +29,7 @@ func TestCursorSkillsGeneration(t *testing.T) {
 	// 2. Configure .kex.yaml for Cursor skills
 	cfgData := `source: contents
 update:
-  ai-skills:
+  ai:
     targets: [cursor]
     keywords: [documentation, kex]
 `

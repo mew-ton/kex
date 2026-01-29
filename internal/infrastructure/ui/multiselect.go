@@ -38,7 +38,7 @@ func Multiselect(prompt string, options []string, preSelected map[string]bool) (
 	// Initial Render
 	render := func() string {
 		var b strings.Builder
-		b.WriteString(pterm.DefaultInteractiveMultiselect.TextStyle.Sprint(prompt) + "\n")
+		b.WriteString(pterm.Cyan("? ") + pterm.DefaultInteractiveMultiselect.TextStyle.Sprint(prompt) + "\n")
 
 		for i, opt := range options {
 			// Selector

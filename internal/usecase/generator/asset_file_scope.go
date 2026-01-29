@@ -5,11 +5,11 @@ type AssetFileScopeStrategy interface {
 	SelectFiles(def AgentDef) []string
 }
 
-// CodingFileScope handles identifying coding-related files
-type CodingFileScope struct{}
+// CommonFileScope handles identifying common-related files
+type CommonFileScope struct{}
 
-func (s *CodingFileScope) SelectFiles(def AgentDef) []string {
-	return def.Files.Coding
+func (s *CommonFileScope) SelectFiles(def AgentDef) []string {
+	return def.Files.Common
 }
 
 // DocumentationFileScope handles identifying documentation-related files
@@ -25,12 +25,11 @@ func ResolveFileScopes(scopes []string) []AssetFileScopeStrategy {
 
 	for _, scope := range scopes {
 		switch scope {
-		case "coding":
-			strategies = append(strategies, &CodingFileScope{})
 		case "documentation":
+			strategies = append(strategies, &CommonFileScope{})
 			strategies = append(strategies, &DocumentationFileScope{})
 		case "all":
-			return []AssetFileScopeStrategy{&CodingFileScope{}, &DocumentationFileScope{}}
+			return []AssetFileScopeStrategy{&CommonFileScope{}, &DocumentationFileScope{}}
 		}
 	}
 	return strategies
