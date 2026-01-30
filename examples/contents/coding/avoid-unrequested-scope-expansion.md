@@ -1,4 +1,6 @@
 ---
+extensions: [go, ts]
+type: indicator
 title: Avoid Unrequested Scope Expansion
 description: When planning work, avoid implementing unrequested features (scope creep) and stay focused on the immediate problem.
 keywords:

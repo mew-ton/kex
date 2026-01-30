@@ -1,4 +1,5 @@
 ---
+type: indicator
 
 title: Use BDD-style test naming
 description: >

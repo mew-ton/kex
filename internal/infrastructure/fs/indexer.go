@@ -59,7 +59,9 @@ func (i *Indexer) Load() error {
 			Title:       sd.Title,
 			Description: sd.Description,
 			Keywords:    sd.Keywords,
+			Extensions:  sd.Extensions,
 			Scopes:      sd.Scopes,
+			Type:        domain.DocumentType(sd.Type),
 			Status:      domain.DocumentStatus(sd.Status),
 			Path:        sd.Path,
 		}
@@ -100,7 +102,9 @@ func (i *Indexer) Export() (*IndexSchema, error) {
 			Title:       doc.Title,
 			Description: doc.Description,
 			Keywords:    doc.Keywords,
+			Extensions:  doc.Extensions,
 			Scopes:      doc.Scopes,
+			Type:        string(doc.Type),
 			// Status is implicitly adopted in kex.json output?
 			// Or we can include it.
 			// Task said "Status field removed (implict adopted)".
@@ -185,15 +189,23 @@ func (i *Indexer) Search(keywords []string, scopes []string, exactScopeMatch boo
 
 	// 2. Find Candidates (Standard OR Logic)
 	// If exactScopeMatch is true, we ONLY match scopes, not keywords.
+	// 2. Find Candidates (Standard OR Logic)
+	// If exactScopeMatch is true, we ONLY match scopes, not keywords.
 	candidates := i.findCandidates(keywords, exactScopeMatch, validScopes)
 
 	// 3. Filter Candidates by Scope Subset Rule
 	var results []*domain.Document
+
+	fmt.Printf("DEBUG: Searching keywords: %v, Scopes: %v. Candidates found: %d\n", keywords, scopes, len(candidates))
+
 	for _, doc := range candidates {
 		// Strict Rule: Document Scopes MUST be a subset of the Query Scopes (validScopes)
 		// Exception: If Document has NO scopes (Root doc), it is always included.
 		if isSubset(doc.Scopes, validScopes) {
+			fmt.Printf("DEBUG: Match: %s\n", doc.ID)
 			results = append(results, doc)
+		} else {
+			fmt.Printf("DEBUG: Reject: %s (Scopes: %v)\n", doc.ID, doc.Scopes)
 		}
 	}
 

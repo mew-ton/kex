@@ -1,5 +1,8 @@
 ---
+extensions: [md]
+type: indicator
 
+type: constraint
 title: Use imperative filenames
 description: >
   When naming Kex knowledge base files (in {{.Root}}/), use imperative, action-oriented kebab-case names.

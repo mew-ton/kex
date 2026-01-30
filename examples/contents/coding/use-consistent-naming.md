@@ -1,4 +1,6 @@
 ---
+extensions: [go, ts]
+type: indicator
 
 title: Naming Conventions
 description: >

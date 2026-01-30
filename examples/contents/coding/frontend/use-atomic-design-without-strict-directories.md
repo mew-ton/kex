@@ -1,4 +1,5 @@
 ---
+type: indicator
 
 title: Component Design (Atomic Principles)
 description: >

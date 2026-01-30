@@ -1,4 +1,6 @@
 ---
+extensions: [go]
+type: constraint
 
 title: Explicit Error Handling
 description: >

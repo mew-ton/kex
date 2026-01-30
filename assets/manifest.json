@@ -13,20 +13,22 @@
       "name": "Google Antigravity",
       "files": {
         "common": [
-          ".agent/rules/use-kex.md.template"
+          ".agent/rules/kex.use-kex.md.template"
         ],
         "documentation": [
-          ".agent/rules/follow-documentation-rules.md.template"
+          ".agent/rules/kex.follow-documentation-rules.md.template"
         ],
-        "skills": [".agent/skills/kex.{{.SkillName}}/SKILL.md.template"]
+        "skills": [".agent/skills/kex.{{.SkillName}}/SKILL.md.template"],
+        "rules": [".agent/rules/kex.{{.SkillName}}.md.template"]
       }
     },
     "cursor": {
       "name": "Cursor",
       "files": {
-        "common": [".cursor/rules/use-kex.md.template"],
-        "documentation": [".cursor/rules/follow-documentation-rules.md.template"],
-        "skills": [".cursor/skills/kex.{{.SkillName}}/SKILL.md.template"]
+        "common": [".cursor/rules/kex/use-kex.md.template"],
+        "documentation": [".cursor/rules/kex/follow-documentation-rules.md.template"],
+        "skills": [".cursor/skills/kex.{{.SkillName}}/SKILL.md.template"],
+        "rules": [".cursor/rules/kex/{{.SkillName}}.md.template"]
       }
     },
     "claude": {
@@ -34,7 +36,8 @@
       "files": {
         "common": [".claude/rules/kex/use-kex.md.template"],
         "documentation": [".claude/rules/kex/follow-documentation-rules.md.template"],
-        "skills": [".claude/skills/kex.{{.SkillName}}/SKILL.md.template"]
+        "skills": [".claude/skills/kex.{{.SkillName}}/SKILL.md.template"],
+        "rules": [".claude/rules/kex/{{.SkillName}}.md.template"]
       }
     }
   }

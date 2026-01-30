@@ -22,6 +22,7 @@ func TestKexGenerate_Success(t *testing.T) {
 		doc1 := `---
 id: doc-1
 title: Doc 1
+type: indicator
 status: adopted
 ---
 Content 1`
@@ -30,6 +31,7 @@ Content 1`
 		docDraft := `---
 id: doc-draft
 title: Draft
+type: indicator
 status: draft
 ---
 Draft Content`
@@ -107,6 +109,7 @@ func TestKexGenerate_WithBaseURL(t *testing.T) {
 
 		doc := `---
 title: Doc Base
+type: indicator
 status: adopted
 ---
 Content`

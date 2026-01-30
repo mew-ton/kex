@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Include valid frontmatter
 description: When creating new guidelines, ensure valid frontmatter with required ID, title, and description.

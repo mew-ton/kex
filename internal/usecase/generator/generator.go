@@ -256,22 +256,47 @@ func (g *Generator) generateSkills(cwd string, targets []string, manifest *Manif
 }
 
 func (g *Generator) processAgentSkills(cwd string, agentDef AgentDef, docs []*domain.Document) error {
-	for _, skillManifestPath := range agentDef.Files.Skills {
+	// Separate documents by type
+	var skillDocs, ruleDocs []*domain.Document
+	for _, d := range docs {
+		switch d.Type {
+		case domain.TypeIndicator:
+			skillDocs = append(skillDocs, d)
+		case domain.TypeConstraint:
+			ruleDocs = append(ruleDocs, d)
+		}
+	}
+
+	// Process Skills (Indicators)
+	if err := g.generateFromTemplates(cwd, agentDef.Files.Skills, skillDocs); err != nil {
+		return fmt.Errorf("failed to generate skills: %w", err)
+	}
+
+	// Process Rules (Constraints)
+	if err := g.generateFromTemplates(cwd, agentDef.Files.Rules, ruleDocs); err != nil {
+		return fmt.Errorf("failed to generate rules: %w", err)
+	}
+
+	return nil
+}
+
+func (g *Generator) generateFromTemplates(cwd string, templatePaths []string, docs []*domain.Document) error {
+	for _, tmplPath := range templatePaths {
 		// Load Template
-		skillTemplatePath := filepath.Join("templates", skillManifestPath)
-		skillTemplateData, err := fs.ReadFile(g.Assets, skillTemplatePath)
+		fullTmplPath := filepath.Join("templates", tmplPath)
+		tmplData, err := fs.ReadFile(g.Assets, fullTmplPath)
 		if err != nil {
-			return fmt.Errorf("failed to read skill template %s: %w", skillTemplatePath, err)
+			return fmt.Errorf("failed to read template %s: %w", fullTmplPath, err)
 		}
 
-		targetPattern := strings.TrimSuffix(skillManifestPath, ".template")
-		tmplContent := string(skillTemplateData)
+		targetPattern := strings.TrimSuffix(tmplPath, ".template")
+		tmplContent := string(tmplData)
 
 		// Generate files for each document
 		for _, doc := range docs {
 			filename, content, err := g.generateSkillFile(doc, tmplContent, targetPattern)
 			if err != nil {
-				return fmt.Errorf("failed to generate skill for %s: %w", doc.ID, err)
+				return fmt.Errorf("failed to generate file for %s: %w", doc.ID, err)
 			}
 
 			outPath := filepath.Join(cwd, filename)
@@ -288,10 +313,16 @@ type SkillTemplateData struct {
 	Title       string
 	Description string
 	Body        string
+	Keywords    []string
+	Globs       []string
 }
 
 func (g *Generator) generateSkillFile(doc *domain.Document, templateContent, outputPattern string) (string, string, error) {
-	tmpl, err := template.New("skill").Parse(templateContent)
+	funcMap := template.FuncMap{
+		"join": strings.Join,
+	}
+
+	tmpl, err := template.New("skill").Funcs(funcMap).Parse(templateContent)
 	if err != nil {
 		return "", "", fmt.Errorf("parse template: %w", err)
 	}
@@ -301,11 +332,24 @@ func (g *Generator) generateSkillFile(doc *domain.Document, templateContent, out
 		return "", "", fmt.Errorf("parse filename template: %w", err)
 	}
 
+	var globs []string
+	if len(doc.Extensions) > 0 {
+		for _, ext := range doc.Extensions {
+			globs = append(globs, fmt.Sprintf("**/*.%s", strings.TrimPrefix(ext, ".")))
+		}
+	} else {
+		// Default to everything if no extensions specified?
+		// Or keep empty? User said "globs ... from keywords is bad".
+		// Maybe default to **/* for now if it's a rule?
+	}
+
 	data := SkillTemplateData{
 		SkillName:   doc.ID,
 		Title:       doc.Title,
 		Description: doc.Description,
 		Body:        doc.Body,
+		Keywords:    doc.Keywords,
+		Globs:       globs,
 	}
 
 	var buf bytes.Buffer

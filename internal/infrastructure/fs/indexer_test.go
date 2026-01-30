@@ -18,6 +18,7 @@ func TestIndexer_Search(t *testing.T) {
 	}
 
 	doc1 := `---
+type: indicator
 title: Doc 1
 status: adopted
 keywords: [apple, banana]
@@ -26,6 +27,7 @@ Content 1`
 
 	// Doc 3 in coding directory
 	doc3 := `---
+type: indicator
 title: Doc 3 Coding
 status: adopted
 keywords: [zebra]
@@ -33,6 +35,7 @@ keywords: [zebra]
 Content 3`
 
 	doc2 := `---
+type: indicator
 title: Doc 2
 status: adopted
 keywords: [banana, cherry]
@@ -140,6 +143,7 @@ func TestIndexer_Load_DefaultStatus(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	doc := `---
+type: indicator
 title: Doc No Status
 keywords: [test]
 ---
@@ -198,7 +202,7 @@ func TestIndexer_ScopeFiltering(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, "coding"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	docCoding := "---\ntitle: Coding Rule\n---\nContent"
+	docCoding := "---\ntype: indicator\ntitle: Coding Rule\n---\nContent"
 	if err := os.WriteFile(filepath.Join(tmpDir, "coding", "rule.md"), []byte(docCoding), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +211,7 @@ func TestIndexer_ScopeFiltering(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, "coding", "go"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	docGo := "---\ntitle: Go Rule\n---\nContent"
+	docGo := "---\ntype: indicator\ntitle: Go Rule\n---\nContent"
 	if err := os.WriteFile(filepath.Join(tmpDir, "coding", "go", "rule.md"), []byte(docGo), 0644); err != nil {
 		t.Fatal(err)
 	}

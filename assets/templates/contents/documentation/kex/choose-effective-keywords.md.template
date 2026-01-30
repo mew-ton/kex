@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Choose effective keywords (3 Dimensions)
 description: >
@@ -9,6 +11,8 @@ keywords:
   - discoverability
   - metadata
   - strategy
+  - kex
+  - documentation
 ---
 
 ## Summary

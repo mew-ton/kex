@@ -1,4 +1,6 @@
 ---
+extensions: [ts]
+type: constraint
 
 title: Avoid using the any type
 description: >

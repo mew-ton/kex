@@ -1,4 +1,6 @@
 ---
+extensions: [go]
+type: indicator
 
 title: Use Clean Architecture
 description: >

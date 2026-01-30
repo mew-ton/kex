@@ -1,4 +1,6 @@
 ---
+extensions: [go, ts]
+type: indicator
 
 title: Keep functions short by top-down decomposition
 description: >

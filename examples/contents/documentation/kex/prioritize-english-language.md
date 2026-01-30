@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Prioritize English language
 description: When writing documentation, prioritize English to optimize for AI processing and universality.

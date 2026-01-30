@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Synchronize multilingual content
 description: >

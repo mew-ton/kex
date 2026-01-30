@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Write concise content
 description: When writing content, keep text concise and focused on "what" and "why".

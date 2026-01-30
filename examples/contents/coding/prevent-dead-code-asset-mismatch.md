@@ -1,4 +1,5 @@
 ---
+type: constraint
 title: Prevent Dead Code and Asset Mismatch
 description: When modifying code or assets, prevent dead code and ensure synchronization between application logic and static resources.
 keywords:

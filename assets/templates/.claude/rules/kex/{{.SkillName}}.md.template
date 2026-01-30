@@ -1,0 +1,10 @@
+---
+description: {{.Description}}
+{{if .Globs}}
+globs: {{ join .Globs ", " }}
+{{end}}
+---
+
+# {{.Title}}
+
+{{.Body}}

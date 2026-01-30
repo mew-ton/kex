@@ -26,12 +26,17 @@ func TestAntigravitySkillsGeneration(t *testing.T) {
 	// 1. Init (generates default content)
 	runKex("init", "--agents=antigravity", "--scopes=documentation")
 
+	// Debug content
+	debugPath := filepath.Join(dir, "contents", "documentation", "kex", "choose-effective-keywords.md")
+	debugContent, _ := os.ReadFile(debugPath)
+	t.Logf("Generated Document Content:\n%s", string(debugContent))
+
 	// 2. Configure .kex.yaml for Antigravity skills
 	// We want to target documents that exist. 'kex init' creates 'contents/documentation/kex/...'
 	// So we use keywords "kex".
 	cfgData := `source: contents
 update:
-  ai:
+  ai-skills:
     targets: [antigravity]
     keywords: [documentation, kex]
 `

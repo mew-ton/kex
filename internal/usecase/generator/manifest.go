@@ -10,6 +10,7 @@ type AgentFiles struct {
 	Common        []string `json:"common"`
 	Documentation []string `json:"documentation"`
 	Skills        []string `json:"skills"` // List of template patterns
+	Rules         []string `json:"rules"`  // List of template patterns
 }
 
 type AgentDef struct {

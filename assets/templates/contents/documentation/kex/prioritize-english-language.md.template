@@ -1,5 +1,8 @@
 ---
+extensions: [md]
+type: indicator
 
+type: constraint
 title: Prioritize English language
 description: >
   When writing content for the Kex knowledge base (in {{.Root}}/), use English as the primary language to maximize accessibility.

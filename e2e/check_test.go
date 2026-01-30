@@ -69,6 +69,7 @@ func TestKexCheck_JSONOutput(t *testing.T) {
 		// Create a dummy document
 		doc := `---
 title: JSON Test
+type: indicator
 keywords: [json]
 ---
 Content`
@@ -104,6 +105,7 @@ func TestKexCheck_Success(t *testing.T) {
 		// Valid Document
 		doc := `---
 title: Valid Document
+type: indicator
 status: adopted
 keywords: [valid]
 ---
@@ -138,6 +140,7 @@ func TestKexCheck_PositionalArg(t *testing.T) {
 		// Create a valid document
 		doc := `---
 title: Positional Check Doc
+type: indicator
 status: adopted
 ---
 Content`
@@ -174,6 +177,7 @@ func TestKexCheck_References(t *testing.T) {
 		os.MkdirAll(refDir, 0755)
 		invalidDoc := `---
 title: Invalid Doc
+type: indicator
 : invalid
 ---
 Content`
