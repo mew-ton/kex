@@ -14,7 +14,9 @@ type DocumentSchema struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Keywords    []string `json:"keywords"`
+	Extensions  []string `json:"extensions,omitempty"`
 	Scopes      []string `json:"scopes"`
+	Type        string   `json:"type,omitempty"`
 	Status      string   `json:"status,omitempty"`
 	Path        string   `json:"path"` // Relative path to markdown file
 }

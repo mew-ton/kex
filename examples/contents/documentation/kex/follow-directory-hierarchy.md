@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Folder Structure
 description: When organizing documents, structure folders by Domain, Platform, and Technology.

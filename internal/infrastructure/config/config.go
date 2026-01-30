@@ -23,7 +23,7 @@ type Logging struct {
 
 type UpdateConfig struct {
 	Documents map[string]string `yaml:"documents"`
-	Ai        AiConfig          `yaml:"ai"`
+	Ai        AiConfig          `yaml:"ai-skills"`
 }
 
 // AiConfig configuration

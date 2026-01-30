@@ -18,6 +18,7 @@ func TestIndexer_StrictScope_Subset(t *testing.T) {
 		t.Fatal(err)
 	}
 	docCoding := `---
+type: indicator
 title: Coding Rule
 keywords: [guideline]
 ---
@@ -32,6 +33,7 @@ Content`
 		t.Fatal(err)
 	}
 	docGo := `---
+type: indicator
 title: Go Rule
 keywords: [guideline]
 ---
@@ -46,6 +48,7 @@ Content`
 		t.Fatal(err)
 	}
 	docDoc := `---
+type: indicator
 title: Documentation Rule
 keywords: [guideline]
 ---
@@ -57,6 +60,7 @@ Content`
 	// 4. Root doc (Scope: [])
 	// Keywords: [guideline]
 	docRoot := `---
+type: indicator
 title: Root Rule
 keywords: [guideline]
 ---

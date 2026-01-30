@@ -8,12 +8,22 @@ const (
 	StatusAdopted DocumentStatus = "adopted"
 )
 
+// DocumentType represents the type of document (indicator or constraint)
+type DocumentType string
+
+const (
+	TypeConstraint DocumentType = "constraint"
+	TypeIndicator  DocumentType = "indicator"
+)
+
 // Document represents a single guideline document
 type Document struct {
 	ID          string         `yaml:"-"`
 	Title       string         `yaml:"title"`
 	Description string         `yaml:"description"`
+	Type        DocumentType   `yaml:"type"`
 	Keywords    []string       `yaml:"keywords"`
+	Extensions  []string       `yaml:"extensions,omitempty"`
 	Status      DocumentStatus `yaml:"status"`
 	Sources     []struct {
 		Name string `yaml:"name"`

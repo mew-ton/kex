@@ -1,4 +1,5 @@
 ---
+type: constraint
 
 title: Commit Messages (Conventional Commits)
 description: >

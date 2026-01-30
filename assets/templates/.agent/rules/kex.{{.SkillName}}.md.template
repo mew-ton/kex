@@ -1,0 +1,13 @@
+---
+description: {{.Description}}
+{{if .Globs}}
+trigger: glob
+globs: {{ join .Globs ", " }}
+{{else}}
+trigger: always_on
+{{end}}
+---
+
+# {{.Title}}
+
+{{.Body}}

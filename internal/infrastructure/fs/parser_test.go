@@ -16,6 +16,7 @@ func TestParseDocumentContent(t *testing.T) {
 		{
 			name: "it should parse valid documents correctly",
 			content: `---
+type: indicator
 title: Test Document
 description: This is a test
 keywords: [test, doc]
@@ -73,6 +74,7 @@ Body`,
 		}
 
 		content := `---
+type: indicator
 title: Style Guide
 ---
 Body`

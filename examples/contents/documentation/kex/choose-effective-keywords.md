@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Choose effective keywords (3 Dimensions)
 description: When defining document metadata, select keywords across Object, Symptom, and Concept dimensions.

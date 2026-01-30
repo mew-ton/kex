@@ -1,0 +1,13 @@
+---
+description: {{.Description}}
+globs: {{ if .Globs }}{{ join .Globs ", " }}{{ else }}**/*{{ end }}
+{{if .Globs}}
+alwaysApply: false
+{{else}}
+alwaysApply: true
+{{end}}
+---
+
+# {{.Title}}
+
+{{.Body}}

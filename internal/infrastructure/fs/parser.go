@@ -99,5 +99,9 @@ func parseDocumentContent(path string, content []byte) (*domain.Document, error)
 		return nil, fmt.Errorf("title is required")
 	}
 
+	if doc.Type != domain.TypeConstraint && doc.Type != domain.TypeIndicator {
+		return nil, fmt.Errorf("invalid type: %s (must be 'constraint' or 'indicator')", doc.Type)
+	}
+
 	return doc, nil
 }

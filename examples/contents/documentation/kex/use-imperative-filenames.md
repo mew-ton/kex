@@ -1,4 +1,6 @@
 ---
+extensions: [md]
+type: indicator
 
 title: Use imperative filenames
 description: When naming guideline files, create imperative filenames that act as actionable prompts.

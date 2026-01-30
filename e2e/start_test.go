@@ -42,6 +42,7 @@ func TestKexStart_Failure_ParseErrors(t *testing.T) {
 		doc := `---
 id: broken
 title: Broken
+type: indicator
 : invalid-yaml
 ---
 Content`
@@ -72,13 +73,13 @@ func TestKexStart_References(t *testing.T) {
 		proj1 := filepath.Join(tempDir, "proj1")
 		os.MkdirAll(filepath.Join(proj1, "docs"), 0755)
 		os.WriteFile(filepath.Join(proj1, ".kex.yaml"), []byte("source: docs\n"), 0644)
-		os.WriteFile(filepath.Join(proj1, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\n---\n"), 0644)
+		os.WriteFile(filepath.Join(proj1, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\ntype: indicator\n---\n"), 0644)
 
 		// Project 2
 		proj2 := filepath.Join(tempDir, "proj2")
 		os.MkdirAll(filepath.Join(proj2, "notes"), 0755)
 		os.WriteFile(filepath.Join(proj2, ".kex.yaml"), []byte("source: notes\n"), 0644)
-		os.WriteFile(filepath.Join(proj2, "notes", "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\n---\n"), 0644)
+		os.WriteFile(filepath.Join(proj2, "notes", "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\ntype: indicator\n---\n"), 0644)
 
 		// Main Config with references
 		configContent := `references:
@@ -131,6 +132,7 @@ func TestKexStart_LogFile(t *testing.T) {
 		doc := `---
 id: log-doc
 title: Log Doc
+type: indicator
 description: Test
 ---
 Content`
@@ -186,7 +188,7 @@ func TestKexStart_InvalidReference_ShouldNotFailIfDocsExist(t *testing.T) {
 	// Create valid content
 	contentDir := filepath.Join(tmpDir, "contents")
 	os.Mkdir(contentDir, 0755)
-	os.WriteFile(filepath.Join(contentDir, "doc.md"), []byte("---\ntitle: Test Doc\n---\nHello"), 0644)
+	os.WriteFile(filepath.Join(contentDir, "doc.md"), []byte("---\ntitle: Test Doc\ntype: indicator\n---\nHello"), 0644)
 
 	// Create config with valid source AND invalid reference
 	cfg := config.Config{
@@ -270,7 +272,7 @@ func TestKexStart_CwdFlag(t *testing.T) {
 
 		// Create a valid configuration and document in a sub-folder
 		os.WriteFile(filepath.Join(projectDir, ".kex.yaml"), []byte("source: docs\n"), 0644)
-		os.WriteFile(filepath.Join(projectDir, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\n---\n"), 0644)
+		os.WriteFile(filepath.Join(projectDir, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\ntype: indicator\n---\n"), 0644)
 
 		// Run start from the parent tempDir (not inside projectDir)
 		cmd := exec.Command(kexBinary, "start", "--cwd", projectDir)
@@ -313,12 +315,12 @@ func TestKexStart_CLIReferences(t *testing.T) {
 		proj1 := filepath.Join(tempDir, "proj1")
 		os.MkdirAll(filepath.Join(proj1, "docs"), 0755)
 		// No .kex.yaml needed for purely reference-based if we point to docs dir directly
-		os.WriteFile(filepath.Join(proj1, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\n---\n"), 0644)
+		os.WriteFile(filepath.Join(proj1, "docs", "doc1.md"), []byte("---\nid: doc1\ntitle: Doc 1\ntype: indicator\n---\n"), 0644)
 
 		// Project 2
 		proj2 := filepath.Join(tempDir, "proj2")
 		os.MkdirAll(proj2, 0755)
-		os.WriteFile(filepath.Join(proj2, "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\n---\n"), 0644)
+		os.WriteFile(filepath.Join(proj2, "doc2.md"), []byte("---\nid: doc2\ntitle: Doc 2\ntype: indicator\n---\n"), 0644)
 
 		// Run start with two arguments
 		cmd := exec.Command(kexBinary, "start", filepath.Join(proj1, "docs"), proj2)

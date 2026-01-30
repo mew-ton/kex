@@ -72,7 +72,9 @@ func (l *LocalProvider) Load() (*IndexSchema, []error) {
 			Title:       doc.Title,
 			Description: doc.Description,
 			Keywords:    doc.Keywords,
+			Extensions:  doc.Extensions,
 			Scopes:      doc.Scopes,
+			Type:        string(doc.Type),
 			Status:      string(doc.Status),
 			Path:        relPath, // Relative to Root
 		})
